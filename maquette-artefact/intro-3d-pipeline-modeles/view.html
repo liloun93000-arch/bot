@@ -1,0 +1,18 @@
+<!doctype html><meta charset=utf-8><body style="margin:0;background:#333">
+<script type="module">
+import * as THREE from './three.module.js';
+const q=new URLSearchParams(location.search); const name=q.get('n')||'jacob'; const ang=parseFloat(q.get('a')||'0');
+const meta=await (await fetch(name+'_mesh.json')).json(); const buf=await (await fetch(name+'_mesh.bin')).arrayBuffer();
+const n=meta.n,t=meta.t; const pos=new Float32Array(buf,0,n*3),nor=new Float32Array(buf,n*12,n*3),uv=new Float32Array(buf,n*24,n*2),idx=new Uint32Array(buf,n*32,t*3);
+const ji=new Uint8Array(buf,n*32+t*12,n*4),jw=new Float32Array(buf,n*32+t*12+n*4,n*4);
+const g=new THREE.BufferGeometry();g.setAttribute('skinIndex',new THREE.BufferAttribute(new Uint16Array(ji),4));g.setAttribute('skinWeight',new THREE.BufferAttribute(jw,4)); g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setAttribute('normal',new THREE.BufferAttribute(nor,3));g.setAttribute('uv',new THREE.BufferAttribute(uv,2));g.setIndex(new THREE.BufferAttribute(idx,1));
+const tex=await new THREE.TextureLoader().loadAsync(name+'_base.jpg'); tex.flipY=false; tex.colorSpace=THREE.SRGBColorSpace;
+const bones=[];meta.bones.forEach(b=>{const o=new THREE.Bone();o.name=b.name;bones.push(o)});
+meta.bones.forEach((b,i)=>{const p=b.parent?meta.bones.findIndex(x=>x.name===b.parent):-1; if(p>=0){bones[p].add(bones[i]);bones[i].position.set(b.pos[0]-meta.bones[p].pos[0],b.pos[1]-meta.bones[p].pos[1],b.pos[2]-meta.bones[p].pos[2])}else bones[i].position.set(...b.pos)});
+const skel=new THREE.Skeleton(bones);const m=new THREE.SkinnedMesh(g,new THREE.MeshLambertMaterial({map:tex,side:THREE.DoubleSide}));m.add(bones[0]);m.bind(skel);m.frustumCulled=false;
+const pose=JSON.parse(q.get('pose')||'{}');for(const k in pose){const b=bones.find(x=>x.name===k);if(b)b.rotation.set(...pose[k].map(v=>v*Math.PI/180))}
+const r=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true}); r.setSize(500,700); document.body.append(r.domElement);
+const sc=new THREE.Scene(); sc.background=new THREE.Color(0x555555); sc.add(new THREE.AmbientLight(0xffffff,1.4)); const dl=new THREE.DirectionalLight(0xffffff,1.5); dl.position.set(1,2,3); sc.add(dl);
+sc.add(m); m.rotation.y=ang*Math.PI/180;
+const cam=new THREE.PerspectiveCamera(30,500/700,0.1,50); cam.position.set(0,0,5.5); r.render(sc,cam); window.done=true;
+</script>

@@ -1,0 +1,267 @@
+/*
+ * Introduction animée ARBI JACOB — styles isolés (préfixe `aj-intro` / `aj-bub` / `pp`).
+ * Aucun impact sur le reste du site : tout est sous des classes dédiées.
+ */
+
+/* Voile noir immédiat (posé par le script de démarrage, avant le premier affichage). */
+html.aj-intro-on body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  background: #0a0a0c;
+}
+
+.aj-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483001;
+  overflow: hidden;
+  background: #0a0a0c;
+  --aj-floor: 70%;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  clip-path: circle(150% at 50% 62%);
+  transition: clip-path 0.9s cubic-bezier(0.7, 0, 0.3, 1);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+.aj-intro-contained {
+  position: absolute;
+  z-index: 50;
+}
+.aj-intro.aj-reveal {
+  clip-path: circle(0% at 50% 62%);
+}
+.aj-intro.aj-reveal-fast {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.aj-intro-glow {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(70% 38% at 50% var(--aj-floor), rgba(225, 15, 31, 0.34), rgba(225, 15, 31, 0) 72%),
+    radial-gradient(120% 70% at 50% 0%, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0) 60%);
+}
+.aj-intro-floor {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: var(--aj-floor);
+  bottom: 0;
+  background: linear-gradient(180deg, #1a0a0d 0%, #0a0a0c 62%);
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 -2px 36px rgba(225, 15, 31, 0.38);
+}
+.aj-intro-stage {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* ── Marionnettes ── */
+.pp {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  will-change: transform;
+  contain: layout style;
+}
+.pp-body {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+.pp-img {
+  position: absolute;
+  max-width: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
+  will-change: opacity;
+}
+.pp-view {
+  position: absolute;
+  bottom: 0;
+}
+.pp-l {
+  position: absolute;
+  inset: 0;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  will-change: transform;
+}
+.pp-shadow {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0));
+  transform-origin: 50% 50%;
+}
+
+/* ── Bulles ── */
+.aj-bub {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: max-content;
+  background: #fff;
+  color: #101012;
+  border-radius: 18px;
+  padding: 11px 15px 12px;
+  font-weight: 650;
+  font-size: 15.5px;
+  line-height: 1.36;
+  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.6), 0 0 0 2px rgba(225, 15, 31, 0.9);
+  pointer-events: none;
+  opacity: 0;
+  text-wrap: pretty;
+}
+.aj-bub.aj-in {
+  animation: ajBubIn 0.36s cubic-bezier(0.2, 1.5, 0.4, 1) forwards;
+}
+.aj-bub.aj-out {
+  animation: ajBubOut 0.25s ease-in forwards;
+}
+@keyframes ajBubIn {
+  from { opacity: 0; transform: scale(0.55) translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes ajBubOut {
+  from { opacity: 1; transform: none; }
+  to { opacity: 0; transform: scale(0.8) translateY(-12px); }
+}
+.aj-bub-txt {
+  display: block;
+}
+.aj-w {
+  display: inline-block;
+  white-space: nowrap;
+}
+.aj-c {
+  opacity: 0;
+}
+.aj-c.on {
+  opacity: 1;
+}
+.aj-bub-tail {
+  position: absolute;
+  bottom: -8px;
+  width: 17px;
+  height: 17px;
+  background: #fff;
+  transform: translateX(-50%) rotate(45deg);
+  border-radius: 0 0 5px 0;
+  box-shadow: 3px 3px 0 0 rgba(225, 15, 31, 0.9);
+  clip-path: polygon(100% 0, 100% 100%, 0 100%);
+}
+.aj-bub-caret {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 2px;
+  background: #e10f1f;
+  opacity: 0;
+  animation: ajCaret 0.7s steps(2, jump-none) infinite;
+}
+.aj-bub-caret.done {
+  display: none;
+}
+@keyframes ajCaret {
+  0% { background: #e10f1f; }
+  100% { background: transparent; }
+}
+.aj-bub-shout {
+  font-weight: 900;
+  font-size: 29px;
+  line-height: 1.08;
+  letter-spacing: 0.05em;
+  color: #e10f1f;
+  padding: 10px 20px 11px;
+}
+.aj-bub-shout .aj-bub-txt {
+  display: inline-block;
+  animation: ajShake 0.5s 0.22s both;
+}
+@keyframes ajShake {
+  0%, 100% { transform: none; }
+  15% { transform: translate(-3px, 1px) rotate(-1.5deg); }
+  30% { transform: translate(3px, -1px) rotate(1.5deg); }
+  45% { transform: translate(-2px, 0) rotate(-1deg); }
+  60% { transform: translate(2px, 1px) rotate(1deg); }
+}
+
+/* ── Passer ── */
+.aj-intro-skip {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 10px);
+  right: 12px;
+  z-index: 5;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(20, 20, 24, 0.55);
+  color: #ececee;
+  font: 600 14px/1 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  opacity: 0.8;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.aj-intro-skip::after {
+  content: " ›";
+}
+.aj-intro-skip:hover {
+  opacity: 1;
+}
+.aj-intro-skip:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+  opacity: 1;
+}
+
+/* ── Cœurs (clin d'œil de Lilou) ── */
+.aj-heart {
+  position: absolute;
+  font-size: calc(22px * var(--s, 1));
+  color: #ff3d9a;
+  text-shadow: 0 0 12px rgba(255, 61, 154, 0.7);
+  opacity: 0;
+  pointer-events: none;
+  animation: ajHeart 1.9s ease-out forwards;
+}
+@keyframes ajHeart {
+  0% { opacity: 0; transform: translate(0, 0) scale(0.4); }
+  15% { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--dx, 0), -110px) scale(1.15) rotate(12deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aj-intro { transition: none; }
+}
+
+/* ── Intro 3D : joué PAR-DESSUS le vrai dashboard (fond transparent). Le dashboard est déjà chargé dessous. ── */
+.aj-intro3d-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
+.aj-intro.aj-intro3d {
+  /* Le dashboard reste lisible dessous : léger assombrissement + vignettage + halo doux derrière les personnages. */
+  background:
+    radial-gradient(70% 42% at 50% 88%, rgba(255, 90, 110, 0.20), rgba(255, 90, 110, 0) 70%),
+    radial-gradient(130% 90% at 50% 55%, rgba(6, 6, 10, 0.10) 40%, rgba(6, 6, 10, 0.50) 100%),
+    linear-gradient(rgba(8, 8, 14, 0.14), rgba(8, 8, 14, 0.14));
+  clip-path: none;
+  opacity: 1;
+  transition: opacity var(--aj-fade, 450ms) ease;
+}
+.aj-intro.aj-intro3d.aj-intro3d-pre { opacity: 0; pointer-events: none; }
+.aj-intro.aj-intro3d.aj-intro3d-out { opacity: 0; pointer-events: none; }
+.aj-intro3d .aj-intro-skip { top: auto; bottom: calc(env(safe-area-inset-bottom, 0px) + 14px); right: 12px; opacity: 0.92; background: rgba(14, 14, 18, 0.72); }

@@ -188,7 +188,7 @@ export function recentClientPhotos(core: Core, waId: string): { media: Array<{ f
   const media = pics.slice(-3).map((r) => ({ file: r.mediaFile, mime: r.mediaMime }));
   const last = pics[pics.length - 1];
   const analysis = last
-    ? last.content.replace(/^\[Photo du client — analyse automatique[^\]]*\]\s*/, "").replace(/^\[.*\]$/, "").slice(0, 400)
+    ? last.contenu.replace(/^\[Photo du client — analyse automatique[^\]]*\]\s*/, "").replace(/^\[.*\]$/, "").slice(0, 400)
     : "";
   return { media, analysis };
 }

@@ -14,6 +14,7 @@ export default function LoginPage() {
         onSubmit={() => {
           try {
             sessionStorage.setItem("aj-tab-ok", "1"); // cet onglet est autorisé (voir TabGuard)
+            sessionStorage.setItem("aj-video-pending", "1"); // vidéo d'accueil après CETTE connexion
           } catch {
             /* ignoré */
           }

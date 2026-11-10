@@ -28,6 +28,8 @@ COPY --from=build /app/apps/bot/dist ./apps/bot/dist
 # Dashboard en sortie standalone (embarque son node_modules minimal)
 COPY --from=build /app/apps/dashboard/.next/standalone ./dashboard
 COPY --from=build /app/apps/dashboard/.next/static ./dashboard/apps/dashboard/.next/static
+# Fichiers publics (vidéo d'accueil après connexion)
+COPY --from=build /app/apps/dashboard/public ./dashboard/apps/dashboard/public
 # Seed du catalogue HORS de /app/data : le volume Railway masque ce chemin
 COPY data/catalogue.md ./seed/catalogue.md
 COPY data/catalogues ./seed/catalogues

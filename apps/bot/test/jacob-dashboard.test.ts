@@ -33,8 +33,9 @@ describe("Onglet Jacob (données du back-office)", () => {
     core.knowledge.escalations.resolve(escId, { reponseJacob: "Oui, 2 semaines", entryId: null });
     expect(jacobPendingCount(core)).toBe(1);
     const h = jacobHistory(core);
-    expect(h[0]!.statutLabel).toBe("Résolu par Jacob");
-    expect(h[0]!.reponse).toBe("Oui, 2 semaines");
+    const hq = h.find((r) => r.kind === "question")!;
+    expect(hq.statutLabel).toBe("Résolu par Jacob");
+    expect(hq.reponse).toBe("Oui, 2 semaines");
 
     core.alerts.markTreated(p.find((r) => r.kind === "alerte")!.id);
     expect(jacobPendingCount(core)).toBe(0);

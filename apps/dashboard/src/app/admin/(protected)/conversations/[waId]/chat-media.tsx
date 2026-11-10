@@ -1,5 +1,6 @@
 "use client";
 
+import { Portal } from "../../portal";
 import { useEffect, useState } from "react";
 
 /**
@@ -83,14 +84,15 @@ function ChatImage({ src, alt }: { src: string; alt: string }) {
       </button>
 
       {open && (
+        <Portal onClose={() => setOpen(false)}>
         <div
           role="dialog"
           aria-modal="true"
           aria-label="Photo en grand"
-          className="fixed inset-0 z-[100] flex flex-col bg-black/95"
+          className="aj-lightbox"
           onClick={() => setOpen(false)}
         >
-          <div className="flex items-center justify-between p-3 text-white" onClick={(e) => e.stopPropagation()}>
+          <div className="aj-lightbox-bar flex items-center justify-between p-3 text-white" onClick={(e) => e.stopPropagation()}>
             <button type="button" onClick={() => setOpen(false)} className="rounded-lg bg-white/15 px-3 py-2 text-sm">
               ← Retour à la conversation
             </button>
@@ -119,6 +121,7 @@ function ChatImage({ src, alt }: { src: string; alt: string }) {
             <img src={src} alt={alt} className="max-h-full max-w-full object-contain" onClick={(e) => e.stopPropagation()} />
           </div>
         </div>
+        </Portal>
       )}
     </>
   );

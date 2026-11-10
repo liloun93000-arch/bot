@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { Portal } from "./portal";
 import { Icon, idx } from "./icons";
 
 /** Chiffre qui monte doucement de 0 à sa valeur (désactivé si « mouvement réduit »). */
@@ -79,6 +80,7 @@ export function PhotoGallery({ photos, variant }: { photos: PhotoItem[]; variant
       </div>
 
       {current && index !== null && (
+        <Portal onClose={() => setIndex(null)}>
         <div className="aj-lightbox" role="dialog" aria-modal="true" aria-label="Photo en grand">
           <div className="flex items-center justify-between gap-3 p-3 text-white">
             <div className="min-w-0">
@@ -125,6 +127,7 @@ export function PhotoGallery({ photos, variant }: { photos: PhotoItem[]; variant
             )}
           </div>
         </div>
+        </Portal>
       )}
     </>
   );

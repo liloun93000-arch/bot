@@ -1085,7 +1085,7 @@ a {
 .aj-lightbox {
   position: fixed;
   inset: 0;
-  z-index: 100;
+  z-index: 1000; /* au-dessus de la barre du haut, du menu et de la barre du bas */
   display: flex;
   flex-direction: column;
   background: rgba(0, 0, 0, 0.94);
@@ -1466,3 +1466,19 @@ td {
 .aj-cv-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 4px; }
 .aj-cv-flag { font-size: 0.72rem; font-weight: 700; color: #93c5fd; }
 .aj-cv-score { font-size: 0.72rem; color: var(--aj-gray); }
+
+/* Barre de la photo en grand (nom, date, croix) : sous l'encoche / la barre d'état du téléphone. */
+.aj-lightbox > :first-child {
+  flex: none;
+  padding-top: calc(env(safe-area-inset-top, 0px) + 14px);
+  padding-left: max(12px, env(safe-area-inset-left, 0px));
+  padding-right: max(12px, env(safe-area-inset-right, 0px));
+}
+.aj-lightbox .aj-iconbtn,
+.aj-lightbox-bar button {
+  min-width: 44px;
+  min-height: 44px;
+}
+.aj-lightbox > :last-child {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
+}

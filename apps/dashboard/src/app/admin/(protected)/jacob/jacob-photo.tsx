@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Icon } from "../icons";
+import { Portal } from "../portal";
 
 /** Photo du client dans une demande : miniature visible, clic = plein écran. */
 export function JacobPhoto({ file, nom }: { file: string; nom: string }) {
@@ -14,6 +15,7 @@ export function JacobPhoto({ file, nom }: { file: string; nom: string }) {
         <img src={src} alt={`Photo de ${nom}`} loading="lazy" />
       </button>
       {open && (
+        <Portal onClose={() => setOpen(false)}>
         <div className="aj-lightbox" role="dialog" aria-modal="true" aria-label="Photo en grand">
           <div className="flex items-center justify-between gap-3 p-3 text-white">
             <div className="truncate text-sm font-semibold">{nom}</div>
@@ -26,6 +28,7 @@ export function JacobPhoto({ file, nom }: { file: string; nom: string }) {
             <img src={src} alt={`Photo de ${nom}`} className="max-h-full max-w-full rounded-xl object-contain" />
           </div>
         </div>
+        </Portal>
       )}
     </>
   );

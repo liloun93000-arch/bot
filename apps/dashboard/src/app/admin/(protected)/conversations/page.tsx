@@ -23,8 +23,8 @@ async function readConvFilter(): Promise<{ q: string; statut: string } | null> {
 }
 
 function statusBadge(row: { modeHumain: number; alertesOuvertes: number; optOut: number; statut: string }) {
-  if (row.optOut) return <span className="badge badge-neutre">opt-out</span>;
   if (row.alertesOuvertes > 0) return <span className="badge badge-alerte">alerte</span>;
+  if (row.optOut) return <span className="badge badge-neutre">opt-out</span>;
   if (row.modeHumain) return <span className="badge badge-humain">humain</span>;
   if (row.statut === "cloturee") return <span className="badge badge-neutre">clôturée</span>;
   return <span className="badge badge-bot">bot</span>;
@@ -32,8 +32,9 @@ function statusBadge(row: { modeHumain: number; alertesOuvertes: number; optOut:
 
 /** Couleur de la conversation (bande à gauche) : rouge = alerte, orange = Jacob a la main, vert = bot. */
 function convKind(row: { modeHumain: number; alertesOuvertes: number; optOut: number; statut: string }): string {
-  if (row.optOut || row.statut === "cloturee") return "off";
+  // Une alerte en cours passe AVANT tout le reste : trait rouge, toujours.
   if (row.alertesOuvertes > 0) return "alerte";
+  if (row.optOut || row.statut === "cloturee") return "off";
   if (row.modeHumain) return "humain";
   return "bot";
 }

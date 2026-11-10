@@ -1253,7 +1253,8 @@ export function createCore(options: CreateCoreOptions) {
       .prepare(
         `SELECT c.wa_id AS waId, c.nom, c.statut, c.opt_out AS optOut, c.mode_humain AS modeHumain,
                 m.contenu AS dernierMessage, m.ts AS dernierTs, m.role AS dernierRole,
-                (SELECT COUNT(*) FROM alerts a WHERE a.wa_id = c.wa_id AND a.statut = 'ouverte') AS alertesOuvertes,
+                ((SELECT COUNT(*) FROM alerts a WHERE a.wa_id = c.wa_id AND a.statut = 'ouverte')
+                 + (SELECT COUNT(*) FROM escalations e WHERE e.wa_id = c.wa_id AND e.statut = 'en_attente')) AS alertesOuvertes,
                 (SELECT MAX(score) FROM leads l WHERE l.wa_id = c.wa_id) AS score,
                 s.service_en_cours AS serviceEnCours, s.last_intent AS lastIntent
          FROM contacts c

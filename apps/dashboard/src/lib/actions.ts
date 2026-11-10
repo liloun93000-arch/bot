@@ -569,6 +569,65 @@ export async function markAlertTreatedAction(alertId: number, waId: string): Pro
   revalidatePath("/admin");
 }
 
+/**
+ * Onglet Jacob : tout ce qui attend Jacob pour CE client est clos (alertes traitées, demandes
+ * résolues), ses questions sortent de « sans réponse », et la main est rendue au bot.
+ */
+function treatClient(core: Core, waId: string, reponse: string): void {
+  for (const a of core.alerts.open().filter((x) => x.waId === waId)) core.alerts.markTreated(a.id);
+  for (const e of core.knowledge.escalations.open().filter((x) => x.waId === waId)) {
+    if (reponse) core.knowledge.escalations.resolve(e.id, { reponseJacob: reponse, entryId: null });
+    else core.knowledge.escalations.cancel(e.id);
+  }
+  core.questions.markAnsweredFor(waId);
+  core.contacts.setModeHumain(waId, false);
+  core.contacts.setStatut(waId, "en_cours");
+}
+
+function revalidateJacob(waId: string): void {
+  revalidatePath("/admin/jacob");
+  revalidatePath(`/admin/conversations/${waId}`);
+  revalidatePath("/admin/conversations");
+  revalidatePath("/admin");
+}
+
+/** « Marquer traité » depuis l'onglet Jacob (questions inconnues comme alertes). */
+export async function markClientTreatedAction(waId: string): Promise<void> {
+  await requireSession();
+  const { core, log } = getRuntime();
+  treatClient(core, waId, "");
+  logDecision(log, "jacob_client_treated", { waId });
+  revalidateJacob(waId);
+}
+
+/**
+ * Réponse directe depuis l'onglet Jacob : le message part chez le client, puis la demande passe
+ * automatiquement en TRAITÉ et la main est rendue au bot.
+ */
+export async function jacobReplyAction(waId: string, formData: FormData): Promise<void> {
+  await requireSession();
+  const text = String(formData.get("message") ?? "").trim();
+  if (!text) return;
+  const { core, wa, log } = getRuntime();
+  let sent = false;
+  const result = await wa.sendText(waId, text, { manual: true });
+  if (result.sent) sent = true;
+  else if (result.reason === "outside_24h_window") {
+    const fallback = await sendViaRelanceTemplate(core, wa, waId, text);
+    sent = fallback.status === "sent_with_text";
+  }
+  if (!sent) {
+    logDecision(log, "jacob_reply_failed", { waId, reason: result.reason });
+    const msg = encodeURIComponent(`⚠️ Message NON envoyé : ${blockedSendMessage(result.reason)}`);
+    redirect(`/admin/jacob?msg=${msg}&client=${waId}&draft=${encodeURIComponent(text.slice(0, DRAFT_MAX_CHARS))}`);
+  }
+  recordHumanMessage(core, waId, text);
+  treatClient(core, waId, text); // après l'enregistrement : la main revient bien au bot
+  logDecision(log, "jacob_reply_sent_and_treated", { waId });
+  revalidateJacob(waId);
+  redirect(`/admin/jacob?msg=${encodeURIComponent("✅ Réponse envoyée — demande traitée, le bot a repris la main.")}`);
+}
+
 // ── Mémoire client (§5) ──
 
 const FACT_MAX_CHARS = 300;

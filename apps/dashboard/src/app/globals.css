@@ -1549,3 +1549,13 @@ td {
   pointer-events: none;
   animation: none;
 }
+.aj-req-reply {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  margin-top: 10px;
+  min-width: 0;
+}
+.aj-req-reply textarea { min-width: 0; resize: vertical; }
+.aj-req-reply .btn { align-self: end; }
+.aj-req-hint { grid-column: 1 / -1; font-size: 0.72rem; color: var(--aj-gray); }

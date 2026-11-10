@@ -2,14 +2,13 @@ import Link from "next/link";
 import { requireSession } from "@/lib/auth";
 import { getRuntime } from "@/lib/core";
 import { jacobHistory, jacobPending, waitingLabel, type JacobItem } from "@/lib/jacob";
-import { markAlertTreatedAction } from "@/lib/actions";
-import { cancelEscalationAction } from "@/lib/manager-actions";
+import { jacobReplyAction, markClientTreatedAction } from "@/lib/actions";
 import { Icon, idx } from "../icons";
 import { JacobPhoto } from "./jacob-photo";
 
 export const dynamic = "force-dynamic";
 
-function Request({ r, i }: { r: JacobItem; i: number }) {
+function Request({ r, i, draft = "" }: { r: JacobItem; i: number; draft?: string }) {
   return (
     <article className={`aj-req aj-rise ${r.resolu ? "is-done" : "is-live"}`} style={idx(Math.min(i, 8))}>
       <header className="aj-req-head">
@@ -33,28 +32,38 @@ function Request({ r, i }: { r: JacobItem; i: number }) {
         <Link href={`/admin/conversations/${r.waId}`} className="btn btn-secondary">
           Voir la conversation
         </Link>
-        {!r.resolu && r.kind === "alerte" && (
-          <form action={markAlertTreatedAction.bind(null, r.id, r.waId)}>
+        {!r.resolu && (
+          <form action={markClientTreatedAction.bind(null, r.waId)}>
             <button type="submit" className="btn btn-primary">
-              Traité — le bot reprend
-            </button>
-          </form>
-        )}
-        {!r.resolu && r.kind === "question" && (
-          <form action={cancelEscalationAction.bind(null, r.id)}>
-            <button type="submit" className="btn btn-secondary">
-              Classer sans suite
+              ✅ Marquer traité
             </button>
           </form>
         )}
       </footer>
+      {!r.resolu && (
+        <form action={jacobReplyAction.bind(null, r.waId)} className="aj-req-reply">
+          <textarea
+            name="message"
+            required
+            rows={2}
+            className="input"
+            placeholder={`Répondre à ${r.nom}…`}
+            aria-label={`Réponse à ${r.nom}`}
+            defaultValue={draft}
+          />
+          <button type="submit" className="btn btn-primary">
+            Envoyer
+          </button>
+          <span className="aj-req-hint">À l&apos;envoi : demande traitée et main rendue au bot.</span>
+        </form>
+      )}
     </article>
   );
 }
 
-export default async function JacobPage({ searchParams }: { searchParams: Promise<{ vue?: string }> }) {
+export default async function JacobPage({ searchParams }: { searchParams: Promise<{ vue?: string; msg?: string; client?: string; draft?: string }> }) {
   await requireSession();
-  const { vue = "attente" } = await searchParams;
+  const { vue = "attente", msg = "", client = "", draft = "" } = await searchParams;
   const { core } = getRuntime();
   const pending = jacobPending(core);
   const history = vue === "historique" ? jacobHistory(core, 40) : [];
@@ -71,6 +80,8 @@ export default async function JacobPage({ searchParams }: { searchParams: Promis
         </p>
       </div>
 
+      {msg && <div className="card text-sm font-medium">{msg}</div>}
+
       <div className="aj-jtabs" role="tablist">
         <Link href="/admin/jacob" className={`aj-jtab ${vue !== "historique" ? "is-on" : ""}`} role="tab">
           En attente <b>{pending.length}</b>
@@ -86,7 +97,7 @@ export default async function JacobPage({ searchParams }: { searchParams: Promis
         ) : (
           <div className="aj-reqlist">
             {pending.map((r, i) => (
-              <Request key={r.key} r={r} i={i} />
+              <Request key={r.key} r={r} i={i} draft={r.waId === client ? draft : ""} />
             ))}
           </div>
         )

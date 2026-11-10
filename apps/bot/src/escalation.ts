@@ -81,6 +81,12 @@ export async function escalateAndAck(
     categorie?: string;
     intention?: string;
     state?: ConversationStateData;
+    /**
+     * Envoyer le message d'information figé au client. Par défaut : oui en mode « question »,
+     * NON en mode « alerte » (script V9.1 : aucune réponse figée, c'est l'agent qui écrit au client).
+     * Forcé à true uniquement en dernier recours (incident technique, aucun texte à envoyer).
+     */
+    ack?: boolean;
   },
 ): Promise<EscalationOutcome> {
   const { core, wa, log } = env;
@@ -127,7 +133,8 @@ export async function escalateAndAck(
   // Un seul accusé par (demande, client) — verrou posé AVANT l'envoi.
   let ackSent = false;
   const contact = core.contacts.get(input.waId);
-  if (!contact?.modeHumain && !contact?.optOut) {
+  const wantAck = input.ack ?? mode === "question";
+  if (wantAck && !contact?.modeHumain && !contact?.optOut) {
     const key = `${ackPrefix}:${result.escalationId}:${input.waId}`;
     if (core.sends.claim(key)) {
       const text = escalationAckText(input.state?.toneRegister);
@@ -168,7 +175,7 @@ export function looksLikeNoAnswer(reply: string): boolean {
 
 /** Parcours de paiement / engagement ferme : le SEUL cas où le contact de Jacob peut être donné. */
 const PAYMENT_STAGE_RE =
-  /\b(paiement|payer|paye|regler|reglement|virement|rib|iban|crypto|acompte|facture|encaiss|commande ferme|devis ferme|bon de commande|engagement|signer|paypal|pcs|cash|especes|lydia|western union|pas de carte|sans carte|carte bancaire|cb)/;
+  /\b(paiement|payer|paye|regler|reglement|virement|rib|iban|crypto|acompte|facture|encaiss|commande ferme|devis ferme|bon de commande|engagement|signer|paypal|pcs|cash|especes|lydia|western union|pas de carte|sans carte|carte bancaire|cb|acheter|achete|commander|je prends|je le prends|je la prends)/;
 
 export function isPaymentStage(...texts: Array<string | undefined>): boolean {
   return PAYMENT_STAGE_RE.test(normalizeText(texts.filter(Boolean).join(" ")));

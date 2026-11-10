@@ -23,7 +23,7 @@ const envSchema = z.object({
   // 8 s : un client qui tape sur mobile laisse souvent plus de 2,5 s entre
   // deux messages. Trop court, ses messages partaient en lots séparés et le
   // bot répondait au premier avant d'avoir lu le suivant.
-  DEBOUNCE_MS: z.coerce.number().int().positive().default(8000),
+  DEBOUNCE_MS: z.coerce.number().int().positive().default(5000),
   GRAPH_API_BASE: z.string().default("https://graph.facebook.com/v21.0"),
   /** Clé secrète Stripe (lien de paiement + sondage des factures). Vide = pas de Stripe. */
   STRIPE_SECRET_KEY: z.string().default(""),

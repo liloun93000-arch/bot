@@ -51,6 +51,16 @@ export async function sendNiveau4(
   return false;
 }
 
+/**
+ * Outils réellement proposés au modèle avec le script V9.1 : les prix, grilles et parcours viennent du
+ * script (pas de grille « get_offer » ni de menu de pôles), et le numéro de Jacob est écrit par le
+ * modèle lui-même dans les deux cas de la section 11 (pas de message niveau 4 figé).
+ * niveau4_humain / get_offer / send_menu restent exécutables pour compatibilité.
+ */
+export function exposedTools(): Anthropic.Messages.Tool[] {
+  return [...toolDefinitions.filter((t) => ["send_file", "save_lead", "raise_alert"].includes(t.name)), askDirectorTool];
+}
+
 export const toolDefinitions: Anthropic.Messages.Tool[] = [
   {
     name: "get_offer",
@@ -132,12 +142,12 @@ export const toolDefinitions: Anthropic.Messages.Tool[] = [
 export const askDirectorTool: Anthropic.Messages.Tool = {
   name: "ask_director",
   description:
-    "Pose une question à Jacob (le directeur) sur WhatsApp quand tu manques VRAIMENT d'une information factuelle après avoir cherché dans la grille, le catalogue, les documents et les connaissances validées. Jacob répond, puis tu relaies sa réponse au client. N'invente jamais à la place. Le client est prévenu automatiquement (un seul message, sans numéro) : après l'appel, ta réponse doit être VIDE.",
+    "Crée une ALERTE pour Jacob (script, section 14) dans l'un des cinq cas : information absente de la base, client insatisfait de ta réponse, erreur probable de ta part, demande hors catalogue (après-vente / litige : raise_alert). Jacob est notifié avec la question, le contexte et la photo éventuelle, et reprend lui-même la conversation ici. Après l'appel, écris toi-même le message au client selon le résultat de l'outil. N'invente jamais à la place ; jamais pour un prix présent dans la base.",
   input_schema: {
     type: "object",
     properties: {
       question: { type: "string", description: "La question à Jacob, courte et claire, en une phrase, sans donnée personnelle superflue" },
-      categorie: { type: "string", enum: ["Digital", "China", "Formation", "Société", "Autre"] },
+      categorie: { type: "string", description: "Catégorie concernée (ex. Fournisseur Apple, Véhicules, Drones, Volants, Formation, Agents, Snapchat, Autre)" },
     },
     required: ["question"],
   },
@@ -263,8 +273,9 @@ export async function executeTool(
           { waId, question: ctx.lastClientMessage || motif, categorie: parsed.success ? parsed.data.categorie : undefined, state: ctx.state },
         );
         ctx.flags.alertFired = true;
-        ctx.flags.escalationAckSent = true;
         logDecision(log, "niveau4_redirected_to_escalation", { waId, motif, escalationId: out.escalationId, ackSent: out.ackSent });
+        if (core.settings.get("escalation_mode") !== "question") return out.deduped ? "Une alerte est déjà ouverte pour ce client : Jacob est prévenu. Ne répète pas l'annonce ; réponds simplement à ce que le client vient de dire (s'il dit juste merci / ok, une réponse très courte suffit). Jamais son numéro." : "Alerte créée : Jacob est prévenu (question, contexte, photo éventuelle) et reprendra la conversation ici. Écris maintenant TOI-MÊME au client, comme le script l'indique (section 14) : ce que tu sais déjà + tu fais remonter à Jacob qui revient vers lui ici même + tu continues sur ce que tu peux traiter. Jamais son numéro.";
+        ctx.flags.escalationAckSent = true;
         return "Demande transmise à Jacob en interne et le client a été prévenu (une seule fois). Ta réponse doit être VIDE : n'ajoute rien, ne donne aucun numéro.";
       }
       const delivered = await sendNiveau4(core, wa, waId);
@@ -302,7 +313,7 @@ export async function executeTool(
       });
       ctx.flags.alertFired = true;
       return result.deduped
-        ? "Une alerte est déjà ouverte pour ce client : Jacob est déjà prévenu et le client aussi. Ta réponse doit être VIDE : n'envoie aucun nouveau message d'attente."
+        ? "Une alerte est déjà ouverte pour ce client : Jacob est prévenu. Ne répète pas l'annonce ; réponds simplement à ce que le client vient de dire (s'il dit juste merci / ok, une réponse très courte suffit). Jamais son numéro."
         : "Alerte envoyée à Jacob. Dis au client EN UNE SEULE PHRASE que Jacob a été prévenu et reviendra vers lui rapidement, sans numéro ni détail.";
     }
 
@@ -317,6 +328,7 @@ export async function executeTool(
       );
       // La question reste « non répondue » côté statistiques tant que Jacob n'a pas répondu.
       ctx.flags.alertFired = true;
+      if (core.settings.get("escalation_mode") !== "question") return out.deduped ? "Une alerte est déjà ouverte pour ce client : Jacob est prévenu. Ne répète pas l'annonce ; réponds simplement à ce que le client vient de dire (s'il dit juste merci / ok, une réponse très courte suffit). Jamais son numéro." : "Alerte créée : Jacob est prévenu (question, contexte, photo éventuelle) et reprendra la conversation ici. Écris maintenant TOI-MÊME au client, comme le script l'indique (section 14) : ce que tu sais déjà + tu fais remonter à Jacob qui revient vers lui ici même + tu continues sur ce que tu peux traiter. Jamais son numéro.";
       ctx.flags.escalationAckSent = true;
       return out.deduped && !out.ackSent
         ? "Jacob a déjà été sollicité (réponse attendue) et le client a déjà été prévenu. Ta réponse doit être VIDE : ne renvoie AUCUN message d'attente."

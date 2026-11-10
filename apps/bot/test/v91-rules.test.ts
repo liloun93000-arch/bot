@@ -79,7 +79,7 @@ const digitsOf = (t = "") => t.replace(/\D/g, "");
 
 describe("V9.1 — question inconnue : ALERTE, Jacob reprend la conversation", () => {
   it("info absente (Starlink) : alerte complète, UN message, aucun numéro, aucune demande WhatsApp « question »", async () => {
-    const env = setup([{ tool: "ask_director", input: { question: "Prix du Starlink ?" } }, { text: "" }]);
+    const env = setup([{ tool: "ask_director", input: { question: "Prix du Starlink ?" } }, { text: "Le prix du Starlink, je ne l'ai pas sous la main : je fais remonter à Jacob, il revient vers toi ici même. En attendant, dis-moi pour quel usage tu le veux ?" }]);
     await clientSays(env, "Le Starlink c'est combien ?");
     const msgs = toClient(env);
     expect(msgs).toHaveLength(1);
@@ -92,20 +92,25 @@ describe("V9.1 — question inconnue : ALERTE, Jacob reprend la conversation", (
   });
 
   it("TEST 24 — « ok merci » après l'alerte : aucune nouvelle réponse (Jacob reprend la main)", async () => {
-    const env = setup([{ tool: "ask_director", input: { question: "Prix Falcon Pro ?" } }, { text: "Avec plaisir !" }]);
+    const env = setup([
+      { tool: "ask_director", input: { question: "Prix Falcon Pro ?" } },
+      { text: "Le Falcon Pro est dispo, prix sur demande : je fais remonter à Jacob, il revient vers toi ici même." },
+      { text: "Pour la livraison, compte 15 jours ouvrables." },
+    ]);
     await clientSays(env, "Combien le Falcon Pro ?");
     await clientSays(env, "ok merci");
-    await clientSays(env, "??");
-    expect(toClient(env)).toHaveLength(1);
-    // Jacob traite l'alerte depuis l'onglet Jacob → le bot reprend
-    env.core.alerts.markTreated(env.core.alerts.open()[0]!.id);
+    await clientSays(env, "d'accord 👍");
+    expect(toClient(env)).toHaveLength(1); // aucun message en trop
+    expect(env.core.alerts.countOpen()).toBe(1);
+    // Une vraie question : le bot continue de répondre (script, section 14 : ne pas laisser le client en plan)
     await clientSays(env, "et pour la livraison ?");
     expect(toClient(env)).toHaveLength(2);
+    expect(env.core.alerts.countOpen()).toBe(1);
     env.core.close();
   });
 
   it("même webhook rejoué 3 fois : une seule alerte, un seul message", async () => {
-    const env = setup([{ tool: "ask_director", input: { question: "Samsung ?" } }, { text: "" }]);
+    const env = setup([{ tool: "ask_director", input: { question: "Samsung ?" } }, { text: "Pas chez ce fournisseur, mais je lance la recherche : je fais remonter à Jacob, il revient vers toi ici même." }]);
     env.core.messages.insert(CLIENT, "user", "T'as des Samsung ?");
     for (let i = 0; i < 3; i++) await env.handle(CLIENT, [{ text: "T'as des Samsung ?" }]);
     expect(toClient(env)).toHaveLength(1);
@@ -115,11 +120,11 @@ describe("V9.1 — question inconnue : ALERTE, Jacob reprend la conversation", (
 });
 
 describe("V9.1 — paiement : boutique d'abord, numéro de Jacob seulement en secours", () => {
-  it("le prompt impose le lien boutique et réserve niveau4 au paiement impossible", () => {
+  it("le prompt impose le lien du produit et réserve le numéro aux deux cas de la section 11", () => {
     const p = buildStaticPrompt("catalogue", [], [], [], "", "autonome", [], true);
-    expect(p).toContain("chinacces.com/products");
-    expect(p).toContain("tu n'envoies PAS le numéro de Jacob");
-    expect(p).toContain("niveau4_humain UNIQUEMENT si le paiement sur la boutique est impossible");
+    expect(p).toContain("LIEN DU PRODUIT");
+    expect(p).toContain("uniquement dans les deux cas de la section 11");
+    expect(p).toContain("Une question de prix ne mène JAMAIS à Jacob");
   });
 
   it("« J'ai pas de carte, PayPal ça passe ? » ouvre le secours (numéro + boutons)", async () => {
@@ -151,7 +156,7 @@ describe("V9.1 — Telegram, honnêteté, langue", () => {
     // Les instructions (hors contenu du catalogue, qui sera remplacé par la V9.1) ne citent plus Telegram.
     const sys = all.replace(/<catalogue>[\s\S]*?<\/catalogue>/g, "");
     expect(sys).not.toContain("t.me/");
-    expect(sys).toContain("Telegram n'est PAS un canal de contact");
+    expect(sys).toContain("Telegram n'est pas un canal de contact : jamais pour joindre Jacob");
     expect(sys).toContain("tu ne mens pas");
     expect(sys).toContain("langue du client");
     env.core.close();
@@ -180,5 +185,56 @@ describe("V9.1 — catalogues PDF installés automatiquement", () => {
     await installCatalogues(core, mkdtempSync(join(tmpdir(), "s-")), mkdtempSync(join(tmpdir(), "m-")), silentLogger());
     expect(String(core.settings.get("niveau4_message"))).toContain("boutique");
     core.close();
+  });
+});
+
+describe("V9.1 — rythme des réponses (bloc 1)", () => {
+  it("délai proportionnel : 2 s minimum, 12 s maximum, ~1 s par 17 mots", async () => {
+    const { replyDelayMs } = await import("../src/pacing");
+    expect(replyDelayMs("250 €, à vie.")).toBe(2000);
+    expect(replyDelayMs(Array(85).fill("mot").join(" "))).toBeGreaterThanOrEqual(4500);
+    expect(replyDelayMs(Array(1000).fill("mot").join(" "))).toBe(12000);
+  });
+
+  it("une grille longue part en 2 ou 3 messages, une réponse courte en un seul", async () => {
+    const { splitReply } = await import("../src/pacing");
+    expect(splitReply("Court.")).toHaveLength(1);
+    const long = Array.from({ length: 12 }, (_, i) => `Bloc ${i}\n` + "iPhone 18 Pro Max 256 Go 1 204 – 1 388 €\n".repeat(3)).join("\n\n");
+    const parts = splitReply(long);
+    expect(parts.length).toBeGreaterThanOrEqual(2);
+    expect(parts.length).toBeLessThanOrEqual(3);
+    expect(parts.join(" ").replace(/\s+/g, " ").trim()).toBe(long.replace(/\s+/g, " ").trim());
+  });
+});
+
+describe("V9.1 — script installé en entier, en tête du prompt", () => {
+  it("le script V9.1 complet remplace le catalogue une seule fois, et figure en tête du prompt", async () => {
+    const { installScript } = await import("../src/catalog-seed");
+    const core = testCore();
+    const path = join(mkdtempSync(join(tmpdir(), "v91-")), "script.txt");
+    writeFileSync(path, "SCRIPT COMPLET — BOT CHINA ACCESS\n...\nFIN DU SCRIPT V9.1\n=====\n");
+    expect(await installScript(core, path, silentLogger())).toBe(true);
+    expect(core.catalogue.current().contenu).toContain("FIN DU SCRIPT V9.1");
+    expect(await installScript(core, path, silentLogger())).toBe(false);
+    const p = buildStaticPrompt(core.catalogue.current().contenu, [], [], [], "", "autonome", [], true);
+    expect(p.startsWith("<catalogue>\nSCRIPT COMPLET — BOT CHINA ACCESS")).toBe(true);
+    core.close();
+  });
+
+  it("un fichier tronqué (sans « FIN DU SCRIPT V9.1 ») n'est jamais installé", async () => {
+    const { installScript } = await import("../src/catalog-seed");
+    const core = testCore();
+    const path = join(mkdtempSync(join(tmpdir(), "v91-")), "script.txt");
+    writeFileSync(path, "SCRIPT COMPLET — BOT CHINA ACCESS\n... coupé");
+    expect(await installScript(core, path, silentLogger())).toBe(false);
+    core.close();
+  });
+
+  it("le vrai fichier livré est complet (63 sections, marqueur de fin)", async () => {
+    const { readFileSync } = await import("node:fs");
+    const txt = readFileSync(join(__dirname, "../../../data/catalogue.md"), "utf8");
+    expect(txt.trimEnd().endsWith("=")).toBe(true);
+    expect(txt).toContain("FIN DU SCRIPT V9.1");
+    expect(txt).toMatch(/^63\. /m);
   });
 });

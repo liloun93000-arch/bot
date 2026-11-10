@@ -17,6 +17,7 @@ import type { SalesAgent } from "./agent";
 import { analyzeInbound, type Analysis } from "./brain";
 import { sendNiveau4 } from "./tools";
 import { escalateAndAck } from "./escalation";
+import { PACING, replyDelayMs, splitReply } from "./pacing";
 import type { InboundItem } from "./queue";
 
 /**
@@ -148,7 +149,16 @@ export interface HandlerDeps {
    */
   llm?: Anthropic;
   model?: string;
+  /**
+   * Rythme des réponses (script V9.1) : attente avant envoi. Absent = envoi immédiat
+   * (tests) ; en production, une vraie attente (indicateur « en train d'écrire » affiché).
+   */
+  pace?: (ms: number) => Promise<void>;
 }
+
+/** Simple accusé de réception du client (« ok merci », « d'accord », 👍) : rien à répondre. */
+const PURE_ACK_RE =
+  /^(?:ok(?:ay)?|okk+|oki|d'?acc?(?:ord)?|dac|merci(?: beaucoup| bien)?|mrc|top|parfait|super|nickel|cool|ça marche|ca marche|vu|bien re[cç]u|re[cç]u|thanks?|thank you|👍|🙏|👌|✅)(?:[\s,.!]*(?:ok|merci(?: beaucoup)?|bien|à plus|a plus|bonne journée|bonne soirée|frère|frerot|khouya|👍|🙏))*[\s.!]*$/i;
 
 /**
  * Orchestration d'un batch débouncé : opt-out → mode humain → bot actif →
@@ -159,6 +169,36 @@ export interface HandlerDeps {
 export function createHandler(deps: HandlerDeps) {
   return async function handleBatch(waId: string, items: InboundItem[]): Promise<void> {
     const { core, wa, agent, log } = deps;
+    const startedAt = Date.now();
+
+    /**
+     * Envoi d'une réponse du bot au rythme d'un humain (script V9.1, bloc 1) : indicateur
+     * « en train d'écrire », délai proportionnel à la longueur (2 à 12 s, temps de rédaction
+     * déduit), réponse longue découpée en 2-3 messages espacés de 1,5 s.
+     */
+    const deliver = async (text: string, coveredMessageId?: number | null): Promise<boolean> => {
+      const parts = splitReply(text);
+      if (deps.pace) {
+        const wamid = core.messages.lastInboundWamid(waId);
+        if (wamid && typeof (wa as { sendTyping?: unknown }).sendTyping === "function") {
+          void wa.sendTyping(waId, wamid).catch(() => undefined);
+        }
+        const wait = replyDelayMs(parts[0] ?? text) - (Date.now() - startedAt);
+        if (wait > 0) await deps.pace(wait);
+      }
+      let any = false;
+      for (let i = 0; i < parts.length; i++) {
+        const part = parts[i] as string;
+        if (i > 0 && deps.pace) await deps.pace(PACING.gapMs);
+        const sendResult = await wa.sendText(waId, part);
+        logDecision(log, "reply_dispatched", { waId, sent: sendResult.sent, reason: sendResult.reason, part: i + 1, of: parts.length });
+        if (!sendResult.sent) break;
+        core.messages.insert(waId, "assistant", part);
+        if (!any && coveredMessageId) core.state.setReplied(waId, coveredMessageId);
+        any = true;
+      }
+      return any;
+    };
     const profileName = [...items].reverse().find((i) => i.profileName)?.profileName;
     core.contacts.upsert(waId, profileName ?? null);
     const contact = core.contacts.get(waId);
@@ -220,10 +260,10 @@ export function createHandler(deps: HandlerDeps) {
       return;
     }
 
-    // ── Alerte ouverte (mode « alerte ») : Jacob reprend lui-même la conversation, le bot ne
-    //    répond plus à ce client (ni « ok merci », ni relance) tant que l'alerte n'est pas traitée. ──
-    if (core.settings.get("escalation_mode") !== "question" && core.alerts.hasOpenFor(waId)) {
-      logDecision(log, "silent_alert_open", { waId });
+    // ── Alerte ouverte : Jacob va reprendre la conversation. Un simple « ok merci » n'appelle
+    //    aucune réponse (pas de message en trop) ; une vraie question, le bot continue d'y répondre. ──
+    if (core.alerts.hasOpenFor(waId) && items.every((i) => !i.buttonId && PURE_ACK_RE.test(i.text.trim()))) {
+      logDecision(log, "silent_ack_after_alert", { waId });
       return;
     }
 
@@ -310,16 +350,30 @@ export function createHandler(deps: HandlerDeps) {
       // la route alerte et enferme le client dans une boucle d'accusés.
       state.sansProgression = 0;
       core.state.save(state);
-      const ack = analysis.intent === "reclamation" ? RECLAMATION_ACK : ALERT_ACK;
-      // Une seule notification client par alerte : tant que l'alerte reste ouverte, les messages
-      // suivants du client ne redéclenchent pas l'accusé (plus de boucle d'accusés).
-      const ackKey = `alert-ack:${result.alertId}:${waId}`;
-      if (core.sends.claim(ackKey)) {
-        const ackResult = await wa.sendText(waId, ack);
-        if (ackResult.sent) core.messages.insert(waId, "assistant", ack);
-        else core.sends.release(ackKey);
-      }
+      // Pas de réponse figée (script V9.1, règle 2) : l'alerte est créée, Jacob est prévenu, et c'est
+      // l'agent qui répond au client avec ses propres mots (il sait qu'une alerte est ouverte).
+      logDecision(log, "alert_routed_to_agent", { waId, alertId: result.alertId });
       core.questions.record({ ...questionDraft, repondue: false, alerteId: result.alertId, issue: "jacob" });
+      const r = await agent.respond(waId, analysis);
+      if (r.text) await deliver(r.text, r.coveredMessageId);
+      return;
+    }
+
+    if (analysis.route === "niveau4" && core.settings.get("escalation_mode") !== "question") {
+      // Le client demande Jacob : ALERTE (Jacob reprend la conversation ici), puis l'agent répond
+      // lui-même au client — sans numéro, sans message figé.
+      await triggerAlert(deps.alertDeps, {
+        waId,
+        motif: "le client demande à parler à Jacob",
+        intention: analysis.intent,
+        categorie: analysis.categorie,
+        dernierMessage: lastText.slice(0, 300),
+      });
+      state.sansProgression = 0;
+      core.state.save(state);
+      core.questions.record({ ...questionDraft, repondue: false, issue: "jacob" });
+      const r = await agent.respond(waId, analysis);
+      if (r.text) await deliver(r.text, r.coveredMessageId);
       return;
     }
 
@@ -350,14 +404,7 @@ export function createHandler(deps: HandlerDeps) {
     // ── Niveaux 1-3 : agent ──
     const result = await agent.respond(waId, analysis);
     if (result.text) {
-      const sendResult = await wa.sendText(waId, result.text);
-      if (sendResult.sent) {
-        core.messages.insert(waId, "assistant", result.text);
-        // Marqué APRÈS l'envoi : si l'envoi échoue, le message client reste
-        // « non répondu » et le prochain batch le reprendra.
-        if (result.coveredMessageId) core.state.setReplied(waId, result.coveredMessageId);
-      }
-      logDecision(log, "reply_dispatched", { waId, sent: sendResult.sent, reason: sendResult.reason });
+      await deliver(result.text, result.coveredMessageId);
     } else {
       // Escalade vers Jacob : le message d'information a déjà été envoyé (une seule fois) par
       // escalateAndAck. Le message client est marqué couvert pour ne pas être retraité.

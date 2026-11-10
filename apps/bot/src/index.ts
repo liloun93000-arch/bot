@@ -15,7 +15,7 @@ import {
   type AlertDeps,
 } from "@arbi/core";
 import { readFile } from "node:fs/promises";
-import { installCatalogues } from "./catalog-seed";
+import { installCatalogues, installScript } from "./catalog-seed";
 import { dirname, join } from "node:path";
 import { SalesAgent } from "./agent";
 import { loadConfig } from "./config";
@@ -35,6 +35,7 @@ async function main(): Promise<void> {
   });
 
   // Catalogues PDF China Access : installés automatiquement dans « Fichiers du bot ».
+  await installScript(core, config.CATALOGUE_PATH, log);
   await installCatalogues(core, join(dirname(config.CATALOGUE_PATH), "catalogues"), config.MEDIA_DIR, log);
 
   const gate = createGate({
@@ -122,6 +123,8 @@ async function main(): Promise<void> {
     llm,
     model: config.ANTHROPIC_MODEL,
     readMedia,
+    // Rythme humain (script V9.1) : indicateur « en train d'écrire » + délai proportionnel.
+    pace: (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms)),
   });
   const queue = new DebounceQueue(
     config.DEBOUNCE_MS,

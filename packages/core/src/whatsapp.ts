@@ -184,6 +184,20 @@ export class WhatsAppClient {
     });
   }
 
+  /**
+   * Indicateur « en train d'écrire » (et accusé de lecture) sur le dernier message du client.
+   * WhatsApp l'affiche jusqu'à la réponse (25 s max). Échec sans conséquence.
+   */
+  async sendTyping(waId: string, messageId: string): Promise<SendResult> {
+    if (!messageId) return { sent: false, reason: "no_message_id" };
+    return this.dispatch(waId, "typing", {
+      messaging_product: "whatsapp",
+      status: "read",
+      message_id: messageId,
+      typing_indicator: { type: "text" },
+    });
+  }
+
   /** Boutons de réponse interactifs (max 3, titres ≤ 20 caractères). */
   async sendButtons(waId: string, bodyText: string, buttons: InteractiveButton[]): Promise<SendResult> {
     const gate = this.gate.canSendFreeForm(waId);

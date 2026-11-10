@@ -60,8 +60,8 @@ describe("buildStaticPrompt — documents de référence (§3)", () => {
     expect(prompt).toContain("# Documents de référence fournis par Jacob (contexte complémentaire)");
     expect(prompt).toContain("## Grille interne — usage interne");
     expect(prompt).toContain("Détails du produit X.");
-    expect(prompt).toContain("Ces documents complètent le catalogue");
-    expect(prompt).toContain("tout montant vient de la grille tarifaire");
+    expect(prompt).toContain("Ces documents complètent le script");
+    expect(prompt).toContain("en cas de contradiction, le script gagne");
     core.close();
   });
 
@@ -109,7 +109,7 @@ describe("buildStaticPrompt — guide de style appris (§6)", () => {
     core.close();
   });
 
-  it("injecte le guide juste après la Personnalité et avant la Logique à 4 niveaux", () => {
+  it("injecte le guide après le script et les règles de l'application", () => {
     const core = testCore();
     const prompt = buildStaticPrompt(
       core.catalogue.current().contenu,
@@ -120,12 +120,9 @@ describe("buildStaticPrompt — guide de style appris (§6)", () => {
     );
     expect(prompt).toContain("# Guide de style observé chez Jacob (à respecter)");
     expect(prompt).toContain("- Jamais de point d'exclamation.");
-    const personnaliteIndex = prompt.indexOf("# Personnalité et ton");
-    const styleIndex = prompt.indexOf("# Guide de style observé chez Jacob");
-    const logiqueIndex = prompt.indexOf("# Logique à 4 niveaux");
-    expect(personnaliteIndex).toBeGreaterThanOrEqual(0);
-    expect(personnaliteIndex).toBeLessThan(styleIndex);
-    expect(styleIndex).toBeLessThan(logiqueIndex);
+    // Le guide de style vient APRÈS le script (en tête, mis en cache) et après les règles de l'application.
+    expect(prompt.indexOf("# Guide de style observé chez Jacob")).toBeGreaterThan(prompt.indexOf("# Ton rôle"));
+    expect(prompt).toContain("le script prime");
     core.close();
   });
 });

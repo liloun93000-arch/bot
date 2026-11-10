@@ -45,22 +45,10 @@ describe("garde-fou : refus de prix hors catalogue", () => {
   });
 });
 
-describe("aucun prix en dur dans le prompt (la table pricing fait autorité)", () => {
-  it("tous les montants du prompt statique viennent de la grille", () => {
-    const rows = core.pricing.active();
-    const prompt = buildStaticPrompt("", rows);
-    const allowedFromPricing = allowedAmounts(rows, "");
-    expect(findForeignPrices(prompt, allowedFromPricing)).toEqual([]);
-    expect(amountsIn(prompt).length).toBeGreaterThan(5);
-  });
-
-  it("un changement de tarif au dashboard se propage aux few-shots", () => {
-    const localCore = testCore();
-    localCore.pricing.update("logo", { prixMin: 80 });
-    const prompt = buildStaticPrompt("", localCore.pricing.active());
-    expect(prompt).toContain("« 80 €. »");
-    expect(prompt).not.toContain("« 50 €. »");
-    localCore.close();
+describe("aucun prix en dur dans le prompt (script V9.1 : le catalogue fait autorité)", () => {
+  it("les consignes de l'application ne contiennent aucun montant : tous les prix viennent du script", () => {
+    const prompt = buildStaticPrompt("", core.pricing.active());
+    expect(amountsIn(prompt)).toEqual([]);
   });
 });
 

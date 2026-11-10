@@ -1,4 +1,4 @@
-import { copyFile, mkdir, stat } from "node:fs/promises";
+import { copyFile, mkdir, readFile, stat } from "node:fs/promises";
 import { join } from "node:path";
 import { NIVEAU4_MESSAGE, NIVEAU4_MESSAGE_V8, type Core, type Logger } from "@arbi/core";
 
@@ -44,4 +44,30 @@ export async function installCatalogues(core: Core, seedDir: string, mediaDir: s
       }
     }
   }
+}
+
+/**
+ * Script China Access V9.1 : remplace ENTIÈREMENT le catalogue en place (notice : « on ne fusionne
+ * pas, on écrase »), une seule fois, et seulement si le fichier livré est complet (« FIN DU SCRIPT
+ * V9.1 » tout en bas). L'ancienne version reste dans l'historique des versions du back-office.
+ */
+export const SCRIPT_END_MARKER = "FIN DU SCRIPT V9.1";
+
+export async function installScript(core: Core, path: string, log: Logger): Promise<boolean> {
+  let content: string;
+  try {
+    content = await readFile(path, "utf8");
+  } catch (err) {
+    log.error({ err: String(err), path }, "script_v91_read_failed");
+    return false;
+  }
+  if (!content.trimEnd().split("\n").slice(-3).join("\n").includes(SCRIPT_END_MARKER)) {
+    log.error({ path }, "script_v91_incomplete");
+    return false;
+  }
+  if (core.catalogue.current().contenu === content) return false;
+  if (!core.sends.claim("seed:catalogue:v9.1")) return false; // déjà installé une fois : Jacob garde la main ensuite
+  core.catalogue.save(content, "Script China Access V9.1 — remplace entièrement l'ancien catalogue");
+  log.info({ chars: content.length }, "script_v91_installed");
+  return true;
 }

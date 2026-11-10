@@ -436,6 +436,13 @@ export function createCore(options: CreateCoreOptions) {
         .orderBy(asc(schema.messages.id))
         .all();
     },
+    /** wamid du dernier message reçu du client (indicateur « en train d'écrire »). */
+    lastInboundWamid(waId: string): string | null {
+      const row = sqlite
+        .prepare(`SELECT wamid FROM messages WHERE wa_id = ? AND role = 'user' AND wamid IS NOT NULL ORDER BY id DESC LIMIT 1`)
+        .get(waId) as { wamid: string | null } | undefined;
+      return row?.wamid ?? null;
+    },
     lastInboundTs(waId: string): number | null {
       const row = sqlite
         .prepare(`SELECT MAX(ts) AS ts FROM messages WHERE wa_id = ? AND role = 'user'`)

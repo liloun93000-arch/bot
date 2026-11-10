@@ -19,8 +19,8 @@ import {
 } from "@arbi/core";
 import type { Analysis } from "./brain";
 import { buildDynamicContext, buildStaticPrompt } from "./prompt";
-import { askDirectorTool, executeTool, toolDefinitions, type ToolContext } from "./tools";
-import { escalateAndAck, looksLikeNoAnswer, stripJacobNumbers } from "./escalation";
+import { executeTool, exposedTools, type ToolContext } from "./tools";
+import { escalateAndAck, isPaymentStage, looksLikeNoAnswer, stripJacobNumbers } from "./escalation";
 
 interface HistoryRow {
   role: string;
@@ -289,6 +289,9 @@ export class SalesAgent {
         .filter((a) => a.actif)
         .map((a) => a.number),
     ];
+    // Script V9.1, section 11 : le numéro de Jacob est permis au moment du PAIEMENT (paiement autrement
+    // que par carte, offre personnelle hors boutique). Partout ailleurs, il est retiré.
+    if (isPaymentStage(analysis.combinedText)) return { text: reply, blocked: false };
     const cleaned = stripJacobNumbers(reply, numbers);
     if (cleaned.stripped) {
       logDecision(log, "jacob_number_stripped", { waId });
@@ -398,7 +401,9 @@ export class SalesAgent {
       core.settings.get("contact_direct"),
       core.facts.actifs(waId, 20),
       this.managerContext(waId, analysis),
-    );
+    ) + (core.alerts.hasOpenFor(waId)
+      ? "\n- ALERTE DÉJÀ OUVERTE pour ce client : Jacob est prévenu et va reprendre la conversation ici. Ne recrée pas d'alerte et ne répète pas l'annonce ; continue sur ce que tu peux traiter."
+      : "");
     const system: Anthropic.Messages.TextBlockParam[] = [
       { type: "text", text: this.staticPrompt, cache_control: { type: "ephemeral" } },
       { type: "text", text: dynamicContext },
@@ -415,7 +420,9 @@ export class SalesAgent {
           model,
           max_tokens: budget,
           system,
-          tools: core.settings.get("manager_ia_actif") ? [...toolDefinitions, askDirectorTool] : toolDefinitions,
+          tools: exposedTools(),
+          // Prix justes sur un long script : température basse à modérée (notice V9.1, §5).
+          temperature: 0.4,
           messages,
         },
         // Coupe l'appel dès qu'un nouveau message client arrive : inutile de
@@ -551,10 +558,23 @@ export class SalesAgent {
       // message client, aucun numéro.
       if (!guarded.blocked && (looksLikeNoAnswer(guarded.text) || guarded.text.length === 0)) {
         logDecision(log, "no_answer_reply_converted_to_escalation", { waId });
+        const alertMode = core.settings.get("escalation_mode") !== "question";
         await escalateAndAck(
           { core, wa: this.deps.wa, llm: this.deps.alertDeps.llm, model: this.deps.alertDeps.model, log, readMedia: this.deps.readBotFile, alertDeps: this.deps.alertDeps },
-          { waId, question: analysis.combinedText.slice(0, 500), categorie: analysis.categorie, intention: analysis.intent, state },
+          {
+            waId,
+            question: analysis.combinedText.slice(0, 500),
+            categorie: analysis.categorie,
+            intention: analysis.intent,
+            state,
+            // Mode alerte : la réponse du modèle (« je n'ai pas l'info sous la main… ») part telle quelle ;
+            // le message figé ne sert qu'en dernier recours, s'il n'y a aucun texte à envoyer.
+            ...(alertMode && guarded.text.length === 0 ? { ack: true } : {}),
+          },
         );
+        if (alertMode && guarded.text.length > 0) {
+          return { text: guarded.text, alertFired: true, niveau4Sent: false, commit: () => this.persistTurn(state, guarded.text) };
+        }
         flags.alertFired = true;
         this.persistTurn(state, "");
         return { text: null, alertFired: true, niveau4Sent: false, escalated: true };
@@ -602,7 +622,8 @@ export class SalesAgent {
     logDecision(this.deps.log, "safety_fallback_escalation", { waId, motif });
     await escalateAndAck(
       { core: this.deps.core, wa: this.deps.wa, llm: this.deps.alertDeps.llm, model: this.deps.alertDeps.model, log: this.deps.log, readMedia: this.deps.readBotFile, alertDeps: this.deps.alertDeps },
-      { waId, question: analysis.combinedText.slice(0, 500) || motif, categorie: analysis.categorie, intention: analysis.intent, state },
+      // Incident technique : aucun texte du modèle → le message d'information est le dernier recours.
+      { waId, question: analysis.combinedText.slice(0, 500) || motif, categorie: analysis.categorie, intention: analysis.intent, state, ack: true },
     );
     this.persistTurn(state, "");
     return { text: null, alertFired: true, niveau4Sent: flags.niveau4Sent, escalated: true };

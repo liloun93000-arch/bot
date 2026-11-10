@@ -11,7 +11,8 @@ import {
 import { join } from "node:path";
 import type { Analysis } from "../src/brain";
 
-export const CATALOGUE_PATH = join(__dirname, "..", "..", "..", "data", "catalogue.md");
+// Ancien catalogue (avant V9.1) : sert de jeu de données stable aux tests des mécanismes (prix, gardes-fous).
+export const CATALOGUE_PATH = join(__dirname, "fixtures", "catalogue-ancien.md");
 
 export function silentLogger(): Logger {
   return createLogger("silent");

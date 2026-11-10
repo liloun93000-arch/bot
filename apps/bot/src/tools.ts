@@ -2,7 +2,6 @@ import type Anthropic from "@anthropic-ai/sdk";
 import {
   describeOffer,
   logDecision,
-  escalateToDirector,
   triggerAlert,
   type AlertDeps,
   type ConversationStateData,
@@ -11,6 +10,7 @@ import {
   type WhatsAppClient,
 } from "@arbi/core";
 import { z } from "zod";
+import { escalateAndAck, isPaymentStage } from "./escalation";
 
 export const NIVEAU4_BUTTONS = [
   { id: "btn_rapide", title: "⚡ Réponse rapide" },
@@ -95,7 +95,7 @@ export const toolDefinitions: Anthropic.Messages.Tool[] = [
   {
     name: "niveau4_humain",
     description:
-      "Niveau 4 — intervention humaine : envoie au client le message standard + les 2 boutons (⚡ réponse rapide en écrivant à Jacob / 🔔 laisser une alerte). À utiliser quand tu n'as pas l'information, quand le prix n'existe pas dans la grille, pour un devis personnalisé, ou pour finaliser un paiement. Après l'appel, n'ajoute RIEN d'autre.",
+      "Niveau 4 — PARCOURS DE PAIEMENT UNIQUEMENT (paiement, acompte, virement, commande ferme) : envoie au client le message standard + les 2 boutons. N'utilise JAMAIS cet outil pour une information manquante ou une question inconnue : utilise ask_director. Après l'appel, n'ajoute RIEN d'autre.",
     input_schema: {
       type: "object",
       properties: {
@@ -132,7 +132,7 @@ export const toolDefinitions: Anthropic.Messages.Tool[] = [
 export const askDirectorTool: Anthropic.Messages.Tool = {
   name: "ask_director",
   description:
-    "Pose une question à Jacob (le directeur) sur WhatsApp quand tu manques VRAIMENT d'une information factuelle après avoir cherché dans la grille, le catalogue, les documents et les connaissances validées. Jacob répond, puis tu relaies sa réponse au client. N'invente jamais à la place. Après l'appel, dis au client que tu te renseignes et que tu reviens vers lui.",
+    "Pose une question à Jacob (le directeur) sur WhatsApp quand tu manques VRAIMENT d'une information factuelle après avoir cherché dans la grille, le catalogue, les documents et les connaissances validées. Jacob répond, puis tu relaies sa réponse au client. N'invente jamais à la place. Le client est prévenu automatiquement (un seul message, sans numéro) : après l'appel, ta réponse doit être VIDE.",
   input_schema: {
     type: "object",
     properties: {
@@ -170,28 +170,11 @@ export interface ToolContext {
   state: ConversationStateData;
   log: Logger;
   /** Positionné à true si une alerte/niveau4 a été déclenché pendant le tour. */
-  flags: { alertFired: boolean; niveau4Sent: boolean };
+  flags: { alertFired: boolean; niveau4Sent: boolean; escalationAckSent?: boolean };
   lastClientMessage: string;
 }
 
-/**
- * Photos du client à joindre à une demande pour Jacob : celles reçues depuis la dernière réponse du bot,
- * à défaut la plus récente des derniers messages (« Vous avez celui-ci ? » peut suivre la photo).
- */
-export function recentClientPhotos(core: Core, waId: string): { media: Array<{ file: string; mime: string }>; analysis: string } {
-  const rows = core.messages.history(waId, 10);
-  const isImg = (r: { role: string; mediaFile: string; mediaMime: string }) =>
-    r.role === "user" && !!r.mediaFile && r.mediaMime.startsWith("image/");
-  const lastAssistant = [...rows].map((r) => r.role).lastIndexOf("assistant");
-  let pics = rows.slice(lastAssistant + 1).filter(isImg);
-  if (pics.length === 0) pics = rows.filter(isImg).slice(-1);
-  const media = pics.slice(-3).map((r) => ({ file: r.mediaFile, mime: r.mediaMime }));
-  const last = pics[pics.length - 1];
-  const analysis = last
-    ? last.contenu.replace(/^\[Photo du client — analyse automatique[^\]]*\]\s*/, "").replace(/^\[.*\]$/, "").slice(0, 400)
-    : "";
-  return { media, analysis };
-}
+export { recentClientPhotos } from "./escalation";
 
 export async function executeTool(
   name: string,
@@ -211,7 +194,7 @@ export async function executeTool(
           .active()
           .map((p) => p.serviceKey)
           .join(", ");
-        return `Clé inconnue. Clés valides : ${keys}. Si l'offre demandée n'existe pas dans la grille : niveau4_humain.`;
+        return `Clé inconnue. Clés valides : ${keys}. Si l'offre demandée n'existe pas dans la grille : ask_director.`;
       }
       if (!ctx.state.offresPresentees.includes(row.label)) {
         ctx.state.offresPresentees.push(row.label);
@@ -271,6 +254,19 @@ export async function executeTool(
     case "niveau4_humain": {
       const parsed = motifSchema.safeParse(input);
       const motif = parsed.success ? parsed.data.motif : "non précisé";
+      // Le contact de Jacob n'existe QUE dans le parcours de paiement / engagement ferme.
+      // Toute autre raison (info inconnue, demande floue…) devient une validation interne
+      // de Jacob : une demande, un seul message client, aucun numéro.
+      if (!isPaymentStage(motif, ctx.lastClientMessage)) {
+        const out = await escalateAndAck(
+          { core, wa, llm: ctx.alertDeps.llm, model: ctx.alertDeps.model, log, readMedia: ctx.readBotFile },
+          { waId, question: ctx.lastClientMessage || motif, categorie: parsed.success ? parsed.data.categorie : undefined, state: ctx.state },
+        );
+        ctx.flags.alertFired = true;
+        ctx.flags.escalationAckSent = true;
+        logDecision(log, "niveau4_redirected_to_escalation", { waId, motif, escalationId: out.escalationId, ackSent: out.ackSent });
+        return "Demande transmise à Jacob en interne et le client a été prévenu (une seule fois). Ta réponse doit être VIDE : n'ajoute rien, ne donne aucun numéro.";
+      }
       const delivered = await sendNiveau4(core, wa, waId);
       if (!delivered) {
         // Client injoignable (fenêtre 24 h, erreur API…) : ne pas mentir au
@@ -285,7 +281,7 @@ export async function executeTool(
         });
         ctx.flags.alertFired = true;
         logDecision(log, "niveau4_send_failed", { waId, motif });
-        return "ÉCHEC d'envoi du message standard (WhatsApp indisponible). Jacob a été alerté. Réponds au client en une phrase courte en lui donnant le contact direct de Jacob.";
+        return "ÉCHEC d'envoi du message standard (WhatsApp indisponible). Jacob a été alerté. Réponds au client en une phrase courte : sa demande de paiement est bien enregistrée et Jacob revient vers lui. Ne donne AUCUN numéro.";
       }
       ctx.flags.niveau4Sent = true;
       core.contacts.setStatut(waId, "attente_choix");
@@ -306,46 +302,25 @@ export async function executeTool(
       });
       ctx.flags.alertFired = true;
       return result.deduped
-        ? "Une alerte était déjà ouverte pour ce client : Jacob est déjà prévenu. Rassure simplement le client."
-        : "Alerte envoyée à Jacob. Dis au client que Jacob a été prévenu et reviendra vers lui rapidement, sans en faire trop.";
+        ? "Une alerte est déjà ouverte pour ce client : Jacob est déjà prévenu et le client aussi. Ta réponse doit être VIDE : n'envoie aucun nouveau message d'attente."
+        : "Alerte envoyée à Jacob. Dis au client EN UNE SEULE PHRASE que Jacob a été prévenu et reviendra vers lui rapidement, sans numéro ni détail.";
     }
 
     case "ask_director": {
       const parsed = askDirectorSchema.safeParse(input);
       if (!parsed.success) return "Erreur : `question` manquante.";
-      // Photo(s) du client concernée(s) : elles suivent la demande jusqu'à Jacob (question + photo + contexte).
-      const { media, analysis } = recentClientPhotos(core, waId);
-      const contexteParts = [
-        analysis ? `Photo (analyse du bot) : ${analysis}` : "",
-        ctx.state.serviceEnCours ? `Service en cours : ${ctx.state.serviceEnCours}` : "",
-        ctx.state.besoin ? `Besoin exprimé : ${ctx.state.besoin}` : "",
-      ].filter(Boolean);
-      const result = await escalateToDirector(
-        {
-          core,
-          wa,
-          llm: ctx.alertDeps.llm,
-          model: ctx.alertDeps.model,
-          log,
-          readMedia: ctx.readBotFile,
-        },
-        {
-          waId,
-          question: parsed.data.question,
-          categorie: parsed.data.categorie ?? "Autre",
-          intention: ctx.state.lastIntent ?? "",
-          media,
-          contexte: contexteParts.join("\n"),
-        },
+      // La photo éventuelle, le contexte et le message d'information (UN SEUL, sans numéro)
+      // sont gérés par escalateAndAck.
+      const out = await escalateAndAck(
+        { core, wa, llm: ctx.alertDeps.llm, model: ctx.alertDeps.model, log, readMedia: ctx.readBotFile },
+        { waId, question: parsed.data.question, categorie: parsed.data.categorie, state: ctx.state },
       );
       // La question reste « non répondue » côté statistiques tant que Jacob n'a pas répondu.
       ctx.flags.alertFired = true;
-      if (!result.notified) {
-        return "Impossible de joindre Jacob pour l'instant (aucun canal WhatsApp). Utilise niveau4_humain.";
-      }
-      return result.deduped
-        ? "Jacob a déjà été sollicité sur cette question (réponse attendue). Dis simplement au client que tu te renseignes et que tu reviens vers lui dès que tu as la réponse. Ne redemande pas."
-        : "Question envoyée à Jacob. Dis au client, en une ou deux phrases naturelles, que tu te renseignes et que tu reviens vers lui rapidement. Ne promets pas de délai précis.";
+      ctx.flags.escalationAckSent = true;
+      return out.deduped && !out.ackSent
+        ? "Jacob a déjà été sollicité (réponse attendue) et le client a déjà été prévenu. Ta réponse doit être VIDE : ne renvoie AUCUN message d'attente."
+        : "Demande transmise à Jacob (visible dans son espace) et le client a été prévenu par un message automatique unique. Ta réponse doit être VIDE : n'ajoute rien, ne donne aucun numéro.";
     }
 
     case "send_menu": {

@@ -148,10 +148,11 @@ describe("niveau 4 : échec d'envoi géré honnêtement", () => {
       state: core.state.get(WA_ID),
       log: silentLogger(),
       flags: { alertFired: false, niveau4Sent: false },
-      lastClientMessage: "demande spéciale",
+      lastClientMessage: "je veux payer par virement",
     };
 
-    const output = await executeTool("niveau4_humain", { motif: "info absente" }, ctx);
+    // Parcours de PAIEMENT : seul cas où niveau4_humain (et donc le contact) reste possible.
+    const output = await executeTool("niveau4_humain", { motif: "le client veut payer" }, ctx);
     expect(output).toContain("ÉCHEC");
     expect(ctx.flags.niveau4Sent).toBe(false);
     expect(ctx.flags.alertFired).toBe(true);

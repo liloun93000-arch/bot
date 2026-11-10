@@ -22,11 +22,13 @@ export interface TabItem {
 }
 
 export interface BellAlert {
-  id: number;
+  id: number | string;
   waId: string;
   nom: string;
   categorie: string;
   texte: string;
+  /** Destination du clic (par défaut : la conversation). */
+  href?: string;
 }
 
 function isActive(pathname: string, href: string): boolean {
@@ -214,10 +216,10 @@ export function NavShell({
               {bellOpen && (
                 <div className="aj-pop" role="dialog" aria-label="Notifications">
                   <div className="px-3.5 py-3 text-sm font-semibold" style={{ borderBottom: "1px solid var(--aj-line)" }}>
-                    {alertCount > 0 ? `${alertCount} conversation${alertCount > 1 ? "s" : ""} à traiter` : "Aucune notification"}
+                    {alertCount > 0 ? `${alertCount} demande${alertCount > 1 ? "s" : ""} en attente de Jacob` : "Aucune notification"}
                   </div>
                   {alerts.map((a) => (
-                    <Link key={a.id} href={`/admin/conversations/${a.waId}`} className="aj-pop-item">
+                    <Link key={a.id} href={a.href ?? `/admin/conversations/${a.waId}`} className="aj-pop-item">
                       <div className="flex items-center justify-between gap-2">
                         <span className="truncate font-semibold">{a.nom}</span>
                         <span className="badge badge-alerte shrink-0">{a.categorie}</span>
@@ -229,7 +231,7 @@ export function NavShell({
                   ))}
                   {alertCount > 0 && (
                     <Link
-                      href="/admin/conversations?statut=alerte"
+                      href="/admin/jacob"
                       className="aj-pop-item aj-link"
                       style={{ justifyContent: "center", textAlign: "center" }}
                     >

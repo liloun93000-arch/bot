@@ -4,7 +4,10 @@ export interface PeriodKpis {
   conversations: number;
   nouveauxContacts: number;
   parCategorie: Array<{ categorie: string; n: number }>;
+  /** Taux d'autonomie PAR QUESTION (null = aucune question mesurée). */
   tauxResolution: number | null;
+  questionsAutonomes: number;
+  questionsJacob: number;
 }
 
 export function computeKpis(core: Core, sinceMs: number): PeriodKpis {
@@ -24,16 +27,18 @@ export function computeKpis(core: Core, sinceMs: number): PeriodKpis {
       `SELECT categorie, COUNT(*) AS n FROM questions WHERE created_at >= ? GROUP BY categorie ORDER BY n DESC`,
     )
     .all(since) as Array<{ categorie: string; n: number }>;
-  const escalated = (
-    core.sqlite
-      .prepare(
-        `SELECT COUNT(DISTINCT wa_id) AS n FROM alerts WHERE created_at >= ?`,
-      )
-      .get(since) as { n: number }
-  ).n;
-  const tauxResolution =
-    conversations > 0 ? Math.round(((conversations - escalated) / conversations) * 100) : null;
-  return { conversations, nouveauxContacts, parCategorie, tauxResolution };
+  // Autonomie par question : une question est « autonome » seulement si le bot y a vraiment répondu ;
+  // « ne sait pas » / transmis à Jacob = intervention humaine.
+  const auto = core.questions.autonomy(since);
+  const tauxResolution = auto.taux;
+  return {
+    conversations,
+    nouveauxContacts,
+    parCategorie,
+    tauxResolution,
+    questionsAutonomes: auto.autonomes,
+    questionsJacob: auto.jacob,
+  };
 }
 
 export interface QuestionGroup {

@@ -156,6 +156,14 @@ CREATE TABLE IF NOT EXISTS escalation_links (
 CREATE INDEX IF NOT EXISTS idx_escalation_links_esc ON escalation_links (escalation_id);
 CREATE INDEX IF NOT EXISTS idx_escalation_links_wa ON escalation_links (wa_id);
 
+-- Verrou d'idempotence des messages système envoyés aux clients (ex. accusé
+-- « transmis à Jacob ») : une clé = un seul envoi, quoi qu'il arrive (retry,
+-- webhook rejoué, double traitement).
+CREATE TABLE IF NOT EXISTS outbound_dedupe (
+  key        TEXT PRIMARY KEY,
+  created_at INTEGER NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS escalation_messages (
   id            INTEGER PRIMARY KEY AUTOINCREMENT,
   escalation_id INTEGER NOT NULL,
@@ -189,6 +197,7 @@ CREATE TABLE IF NOT EXISTS questions (
   repondue   INTEGER NOT NULL DEFAULT 1,
   alerte_id  INTEGER,
   sujet      TEXT NOT NULL DEFAULT '',
+  issue      TEXT NOT NULL DEFAULT '',
   created_at INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_questions_norm ON questions (normalise);
@@ -377,6 +386,13 @@ export function migrate(db: BetterSqlite3.Database): void {
   const questionCols = tableColumns(db, "questions");
   if (questionCols.size > 0 && !questionCols.has("sujet")) {
     db.exec(`ALTER TABLE questions ADD COLUMN sujet TEXT NOT NULL DEFAULT ''`);
+  }
+  // v2.4 : issue de chaque question (statistiques par question) :
+  // 'autonome' (le bot a résolu seul), 'jacob' (intervention humaine requise),
+  // '' (historique non classé : jamais compté comme résolu).
+  const questionCols2 = tableColumns(db, "questions");
+  if (questionCols2.size > 0 && !questionCols2.has("issue")) {
+    db.exec(`ALTER TABLE questions ADD COLUMN issue TEXT NOT NULL DEFAULT ''`);
   }
   // Après l'ALTER, donc valable aussi bien pour une base neuve que migrée.
   db.exec(`CREATE INDEX IF NOT EXISTS idx_questions_sujet ON questions (sujet)`);

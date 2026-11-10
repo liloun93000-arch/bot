@@ -2,6 +2,7 @@
 
 import { knowledgeRejectReason, logDecision } from "@arbi/core";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { requireSession } from "./auth";
 import { getRuntime } from "./core";
 
@@ -29,6 +30,28 @@ export async function updateKnowledgeAction(id: number, formData: FormData): Pro
   core.knowledge.entries.update(id, patch, { action: "edition_admin", source: "admin", raison: "modification manuelle (back-office)" });
   logDecision(log, "knowledge_edited", { id });
   revalidatePath("/admin/manager-ia");
+}
+
+/** Ajout manuel d'une connaissance métier (carte « Connaissances » de l'accueil, bouton « + »). */
+export async function addKnowledgeAction(formData: FormData): Promise<void> {
+  await requireSession();
+  const { core, log } = getRuntime();
+  const input = {
+    sujet: clip(formData.get("sujet"), 80),
+    theme: clip(formData.get("theme"), 60),
+    intention: clip(formData.get("intention"), 300),
+    reponse: clip(formData.get("reponse"), 1200),
+    conditions: clip(formData.get("conditions"), 600),
+    exceptions: clip(formData.get("exceptions"), 600),
+  };
+  if (!input.intention || !input.reponse) return redirect("/admin/manager-ia?ajout=incomplet");
+  // Même filtre que l'apprentissage automatique (pas de données personnelles dans une règle partagée).
+  if (knowledgeRejectReason([input.reponse, input.conditions, input.exceptions])) return redirect("/admin/manager-ia?ajout=refuse");
+  const id = core.knowledge.entries.add({ ...input, source: "admin" }, "ajout manuel (back-office)");
+  logDecision(log, "knowledge_added", { id });
+  revalidatePath("/admin/manager-ia");
+  revalidatePath("/admin");
+  redirect("/admin/manager-ia?ajout=ok");
 }
 
 export async function deleteKnowledgeAction(id: number): Promise<void> {

@@ -32,7 +32,7 @@ export default function LoginPage() {
       >
         <div className="flex flex-col items-center text-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/api/brand/logo.webp" alt="ARBI JACOB" style={{ height: 96, width: "auto" }} />
+          <img src="/api/brand/logo.webp" alt="ARBI JACOB" style={{ height: 120, width: "auto", maxWidth: "100%", objectFit: "contain" }} />
           <p className="mt-1 text-sm text-neutral-500">Back-office de l&apos;agent WhatsApp</p>
         </div>
         <div>

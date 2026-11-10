@@ -1,0 +1,4 @@
+ARBI JACOB - projet complet v9 (refonte visuelle noir/rouge)
+- apps/dashboard : nouvelle interface (en-tete, menu gauche stable, accueil, page Medias, navigation basse mobile)
+- maquette-artefact/ : maquette interactive mise a jour
+- Rien d'autre n'a change (bot, base de donnees, textes metier).

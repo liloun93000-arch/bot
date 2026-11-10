@@ -26,7 +26,7 @@ describe("Manager IA — outil ask_director", () => {
     core.messages.insert(JACOB, "user", "ok"); // fenêtre 24 h admin ouverte → texte libre
     const wa = fakeWa();
     const out = await executeTool("ask_director", { question: "Paiement en plusieurs fois possible ?" }, ctxFor(core, wa));
-    expect(out).toContain("Question envoyée à Jacob");
+    expect(out).toContain("Demande transmise à Jacob");
     const sent = wa.sent.find((s) => s.waId === JACOB);
     expect(sent?.text).toContain("🤖 ARBI JACOB — QUESTION CLIENT");
     expect(core.knowledge.escalations.countOpen()).toBe(1);

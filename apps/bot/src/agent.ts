@@ -20,6 +20,7 @@ import {
 import type { Analysis } from "./brain";
 import { buildDynamicContext, buildStaticPrompt } from "./prompt";
 import { askDirectorTool, executeTool, toolDefinitions, type ToolContext } from "./tools";
+import { escalateAndAck, looksLikeNoAnswer, stripJacobNumbers } from "./escalation";
 
 interface HistoryRow {
   role: string;
@@ -79,6 +80,8 @@ export interface AgentResult {
   text: string | null;
   alertFired: boolean;
   niveau4Sent: boolean;
+  /** Une escalade vers Jacob a été créée et le client prévenu (un seul message) : rien d'autre à envoyer. */
+  escalated?: boolean;
   /**
    * Dernier message client couvert par cette réponse. Marqué en base une fois
    * la réponse réellement ENVOYÉE, pour qu'un message arrivé entre-temps
@@ -209,7 +212,7 @@ export class SalesAgent {
     const pending = core.knowledge.escalations.openFor(waId);
     if (pending) {
       parts.push(
-        `# Demande en attente chez Jacob\nTu as DÉJÀ posé à Jacob la question « ${pending.question.slice(0, 200)} » pour ce client. Ne la reposte pas : dis simplement que tu attends encore sa réponse et que tu reviens vers le client dès que tu l'as.`,
+        `# Demande en attente chez Jacob\nUne demande est DÉJÀ ouverte chez Jacob pour ce client (« ${pending.question.slice(0, 200)} ») et le client a déjà été prévenu automatiquement. Ne la reposte pas, n'appelle pas ask_director pour la même question, et N'ENVOIE AUCUN message d'attente ni de relance à ce sujet. Réponds uniquement aux AUTRES questions que tu maîtrises. Si le client te demande explicitement où ça en est, une seule phrase courte suffit (Jacob a été prévenu, tu reviens dès que tu as sa réponse) — sans numéro.`,
       );
     }
     return parts.join("\n\n");
@@ -278,6 +281,20 @@ export class SalesAgent {
       logDecision(log, "price_out_of_grid", { waId, foreign });
     }
 
+    // Le numéro de Jacob n'est JAMAIS donné hors parcours de paiement (celui-ci passe par le
+    // garde-fou ci-dessus ou par le message niveau 4) : toute phrase qui le contient est retirée.
+    const numbers = [
+      core.settings.get("contact_direct"),
+      ...((core.settings.get("admin_numbers") as Array<{ number: string; actif: boolean }>) ?? [])
+        .filter((a) => a.actif)
+        .map((a) => a.number),
+    ];
+    const cleaned = stripJacobNumbers(reply, numbers);
+    if (cleaned.stripped) {
+      logDecision(log, "jacob_number_stripped", { waId });
+      return { text: cleaned.text, blocked: false };
+    }
+
     return { text: reply, blocked: false };
   }
 
@@ -304,7 +321,7 @@ export class SalesAgent {
       } finally {
         if (this.inFlight.get(waId) === controller) this.inFlight.delete(waId);
       }
-      if (result.text === null) return result;
+      if (result.text === null && !result.escalated) return result;
       if (this.deps.core.messages.lastUserMessageId(waId) !== cursor) {
         // Message arrivé pendant la génération sans l'interrompre (fin de
         // requête déjà en vol) : on JETTE cette réponse, sans persister son
@@ -329,7 +346,7 @@ export class SalesAgent {
   ): Promise<AgentResult> {
     const { core, client, model, log } = this.deps;
     const state = core.state.get(waId);
-    const flags = { alertFired: false, niveau4Sent: false };
+    const flags = { alertFired: false, niveau4Sent: false, escalationAckSent: false };
     // 40 lignes, tous rôles confondus : un client qui écrit par rafales
     // consomme 3 à 4 lignes par tour, donc 20 ne couvrait que ~5 échanges.
     const history = core.messages.history(waId, 40);
@@ -435,7 +452,7 @@ export class SalesAgent {
             output = await executeTool(toolUse.name, toolUse.input, toolCtx);
           } catch (err) {
             log.error({ waId, tool: toolUse.name, err: String(err) }, "tool_error");
-            output = "Erreur interne de l'outil. Utilise niveau4_humain.";
+            output = "Erreur interne de l'outil. Utilise ask_director.";
             isError = true;
           }
           results.push({
@@ -456,10 +473,15 @@ export class SalesAgent {
         .trim();
 
       // Niveau 4 déjà envoyé par l'outil : la réponse texte doit rester vide.
-      if (flags.niveau4Sent) {
+      if (flags.niveau4Sent || flags.escalationAckSent) {
         this.persistTurn(state, "");
-        logDecision(log, "agent_reply", { waId, niveau4: true });
-        return { text: null, alertFired: flags.alertFired, niveau4Sent: true };
+        logDecision(log, "agent_reply", { waId, niveau4: flags.niveau4Sent, escalated: flags.escalationAckSent });
+        return {
+          text: null,
+          alertFired: flags.alertFired,
+          niveau4Sent: flags.niveau4Sent,
+          ...(flags.escalationAckSent ? { escalated: true } : {}),
+        };
       }
 
       if (!text) {
@@ -525,6 +547,19 @@ export class SalesAgent {
       const guarded = await this.guardReply(waId, text, analysis);
       if (guarded.blocked) flags.alertFired = true;
 
+      // Un « je n'ai pas l'information » n'est pas une réponse : vraie escalade interne, un seul
+      // message client, aucun numéro.
+      if (!guarded.blocked && (looksLikeNoAnswer(guarded.text) || guarded.text.length === 0)) {
+        logDecision(log, "no_answer_reply_converted_to_escalation", { waId });
+        await escalateAndAck(
+          { core, wa: this.deps.wa, llm: this.deps.alertDeps.llm, model: this.deps.alertDeps.model, log, readMedia: this.deps.readBotFile },
+          { waId, question: analysis.combinedText.slice(0, 500), categorie: analysis.categorie, intention: analysis.intent, state },
+        );
+        flags.alertFired = true;
+        this.persistTurn(state, "");
+        return { text: null, alertFired: true, niveau4Sent: false, escalated: true };
+      }
+
       logDecision(log, "agent_reply", {
         waId,
         iterations: iteration + 1,
@@ -542,7 +577,7 @@ export class SalesAgent {
     logDecision(log, "agent_max_iterations", { waId, toolsUsed });
     if (toolsUsed) {
       this.persistTurn(state, "");
-      return { text: null, alertFired: flags.alertFired, niveau4Sent: flags.niveau4Sent };
+      return { text: null, alertFired: flags.alertFired, niveau4Sent: flags.niveau4Sent, ...(flags.escalationAckSent ? { escalated: true } : {}) };
     }
     return this.safetyFallback(waId, analysis, "boucle sans réponse", flags);
   }
@@ -559,23 +594,17 @@ export class SalesAgent {
     waId: string,
     analysis: Analysis,
     motif: string,
-    flags: { alertFired: boolean; niveau4Sent: boolean },
+    flags: { alertFired: boolean; niveau4Sent: boolean; escalationAckSent?: boolean },
   ): Promise<AgentResult> {
-    await triggerAlert(this.deps.alertDeps, {
-      waId,
-      motif,
-      intention: analysis.intent,
-      categorie: analysis.categorie,
-      dernierMessage: analysis.combinedText.slice(0, 300),
-    });
-    const contact = this.deps.core.settings.get("contact_direct");
+    // Incident technique (refus, troncature, boucle) : la demande est transmise à Jacob en
+    // interne, le client reçoit UN message d'information — jamais un numéro.
     const state = this.deps.core.state.get(waId);
-    const text = `Je préfère ne pas te répondre à moitié : Jacob a été prévenu et revient vers toi rapidement. Si tu veux aller plus vite, écris-lui directement au ${contact}.`;
-    return {
-      text,
-      alertFired: true,
-      niveau4Sent: flags.niveau4Sent,
-      commit: () => this.persistTurn(state, text),
-    };
+    logDecision(this.deps.log, "safety_fallback_escalation", { waId, motif });
+    await escalateAndAck(
+      { core: this.deps.core, wa: this.deps.wa, llm: this.deps.alertDeps.llm, model: this.deps.alertDeps.model, log: this.deps.log, readMedia: this.deps.readBotFile },
+      { waId, question: analysis.combinedText.slice(0, 500) || motif, categorie: analysis.categorie, intention: analysis.intent, state },
+    );
+    this.persistTurn(state, "");
+    return { text: null, alertFired: true, niveau4Sent: flags.niveau4Sent, escalated: true };
   }
 }

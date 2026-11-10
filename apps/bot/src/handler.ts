@@ -16,6 +16,7 @@ import {
 import type { SalesAgent } from "./agent";
 import { analyzeInbound, type Analysis } from "./brain";
 import { sendNiveau4 } from "./tools";
+import { escalateAndAck } from "./escalation";
 import type { InboundItem } from "./queue";
 
 /**
@@ -252,8 +253,13 @@ export function createHandler(deps: HandlerDeps) {
       const ack = notified
         ? ALERT_ACK
         : "C'est noté, ta demande est bien enregistrée — Jacob la verra très vite.";
-      const ackResult = await wa.sendText(waId, ack);
-      if (ackResult.sent) core.messages.insert(waId, "assistant", ack);
+      // Un seul accusé par alerte (un double clic ou un webhook rejoué n'en renvoie pas).
+      const ackKey = `alert-ack:${alertResult.alertId}:${waId}`;
+      if (core.sends.claim(ackKey)) {
+        const ackResult = await wa.sendText(waId, ack);
+        if (ackResult.sent) core.messages.insert(waId, "assistant", ack);
+        else core.sends.release(ackKey);
+      }
       logDecision(log, "button_alert", { waId, notified });
       return;
     }
@@ -298,25 +304,39 @@ export function createHandler(deps: HandlerDeps) {
       state.sansProgression = 0;
       core.state.save(state);
       const ack = analysis.intent === "reclamation" ? RECLAMATION_ACK : ALERT_ACK;
-      const ackResult = await wa.sendText(waId, ack);
-      if (ackResult.sent) core.messages.insert(waId, "assistant", ack);
-      core.questions.record({ ...questionDraft, repondue: false, alerteId: result.alertId });
+      // Une seule notification client par alerte : tant que l'alerte reste ouverte, les messages
+      // suivants du client ne redéclenchent pas l'accusé (plus de boucle d'accusés).
+      const ackKey = `alert-ack:${result.alertId}:${waId}`;
+      if (core.sends.claim(ackKey)) {
+        const ackResult = await wa.sendText(waId, ack);
+        if (ackResult.sent) core.messages.insert(waId, "assistant", ack);
+        else core.sends.release(ackKey);
+      }
+      core.questions.record({ ...questionDraft, repondue: false, alerteId: result.alertId, issue: "jacob" });
       return;
     }
 
     if (analysis.route === "niveau4") {
-      const delivered = await sendNiveau4(core, wa, waId);
-      if (!delivered) {
+      // Le client demande un humain : validation interne de Jacob (demande visible dans son espace,
+      // un seul message d'information au client, AUCUN numéro). Le contact n'est donné que dans
+      // le parcours de paiement, géré par l'agent.
+      const out = await escalateAndAck(
+        { core, wa, llm: deps.alertDeps.llm, model: deps.alertDeps.model, log, readMedia: deps.readMedia },
+        { waId, question: analysis.combinedText.slice(0, 500), categorie: analysis.categorie, intention: analysis.intent, state },
+      );
+      if (!out.notified) {
         await triggerAlert(deps.alertDeps, {
           waId,
-          motif: "échec d'envoi du message niveau 4 (client injoignable)",
+          motif: "demande d'un humain : Jacob n'a pas pu être joint sur WhatsApp (la demande reste visible au back-office)",
           intention: analysis.intent,
           categorie: analysis.categorie,
           dernierMessage: lastText.slice(0, 300),
         });
-        logDecision(log, "niveau4_send_failed", { waId });
       }
-      core.questions.record({ ...questionDraft, repondue: false });
+      state.sansProgression = 0;
+      core.state.save(state);
+      logDecision(log, "human_request_escalated", { waId, escalationId: out.escalationId, ackSent: out.ackSent });
+      core.questions.record({ ...questionDraft, repondue: false, issue: "jacob" });
       return;
     }
 
@@ -332,13 +352,23 @@ export function createHandler(deps: HandlerDeps) {
       }
       logDecision(log, "reply_dispatched", { waId, sent: sendResult.sent, reason: sendResult.reason });
     } else {
-      logDecision(log, "no_reply", { waId, niveau4: result.niveau4Sent, alerte: result.alertFired });
+      // Escalade vers Jacob : le message d'information a déjà été envoyé (une seule fois) par
+      // escalateAndAck. Le message client est marqué couvert pour ne pas être retraité.
+      if (result.escalated && result.coveredMessageId) core.state.setReplied(waId, result.coveredMessageId);
+      logDecision(log, "no_reply", { waId, niveau4: result.niveau4Sent, alerte: result.alertFired, escalated: result.escalated });
     }
     // Une réponse jamais envoyée n'est pas une question traitée : sans ça, le
     // back-office comptait comme répondues des questions restées en plan.
     core.questions.record({
       ...questionDraft,
-      repondue: result.text !== null && !result.alertFired && !result.niveau4Sent,
+      repondue: result.text !== null && !result.alertFired && !result.niveau4Sent && !result.escalated,
+      // Par QUESTION : réponse envoyée sans aucune intervention = autonome ; escalade, alerte ou
+      // niveau 4 = intervention de Jacob, même si Jacob répond ensuite.
+      ...(result.escalated || result.alertFired || result.niveau4Sent
+        ? { issue: "jacob" as const }
+        : result.text !== null
+          ? { issue: "autonome" as const }
+          : {}),
     });
 
     // ── Mémoire client (§5) : tâche de fond, après l'envoi de la réponse ──

@@ -231,7 +231,7 @@ const STRUCTURE_SYSTEM = `Tu transformes la réponse du directeur (Jacob) en CON
 {"sujet":"","theme":"","categorie":"Digital|China|Formation|Société|Autre","offre_cle":"","intention":"","reponse":"","conditions":"","exceptions":"","nature":"nouvelle|correction|precision","memoriser":true}
 Règles :
 - intention : la question canonique, impersonnelle (« Le paiement en plusieurs fois est-il possible ? »), sans nom de client.
-- reponse : ce qui est vrai pour l'entreprise, reformulé clairement, sans copier mot pour mot.
+- reponse : la RÈGLE / l'information métier, formulée de façon impersonnelle et structurée (produit ou sujet, disponibilité, délai, prix, condition), JAMAIS la phrase de Jacob recopiée. Exemple : Jacob dit « Oui, celui-là on peut l'avoir mais faut compter deux semaines » à propos du produit X → reponse « Produit X : disponible sur commande, délai d'environ 2 semaines. », conditions « Délai : environ 2 semaines (sur commande) ».
 - conditions : TOUTES les conditions de Jacob, INTACTES (ex. « uniquement à partir de 500 € »). Ne jamais les simplifier ni les arrondir. Vide si aucune.
 - exceptions : cas particuliers cités par Jacob. Vide si aucune.
 - Aucune donnée personnelle (nom, téléphone, e-mail), aucun lien ou coordonnée de paiement.

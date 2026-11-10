@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireSession } from "@/lib/auth";
 import { getRuntime } from "@/lib/core";
+import { jacobPendingCount } from "@/lib/jacob";
 import { clientPhotos, homeStats, recentConversations, themeCounts, type Delta } from "@/lib/home";
 import { computeKpis, topQuestions } from "@/lib/stats";
 import { CountUp, PhotoGallery } from "./home-client";
@@ -79,8 +80,10 @@ export default async function OverviewPage() {
 
   // ── Accueil (présentation mobile) ──
   const stats = homeStats(core);
-  const enAttenteJacob = core.knowledge.escalations.countOpen();
-  const alertesOuvertes = core.alerts.countOpen();
+  // Un seul compteur « Jacob » partout (questions inconnues + alertes) : même nombre que le badge.
+  const enAttenteJacob = jacobPendingCount(core);
+  const alertesOuvertes = enAttenteJacob;
+  const nbConnaissances = core.knowledge.entries.count();
   const recentes = recentConversations(core, 3);
   const themes = themeCounts(core, 4);
   const photos = clientPhotos(core, 8);
@@ -127,7 +130,7 @@ export default async function OverviewPage() {
           <DeltaBadge delta={stats.conversationsActives.delta} />
         </Stat>
         <Stat
-          href="/admin/manager-ia"
+          href="/admin/jacob"
           icon="user-clock"
           label={
             <>
@@ -144,21 +147,22 @@ export default async function OverviewPage() {
             {enAttenteJacob > 0 ? "à traiter" : "à jour"}
           </span>
         </Stat>
-        <Stat
-          href="/admin/conversations?statut=bot"
-          icon="gear"
-          label={
-            <>
-              Réponses
-              <br />
-              automatiques
-            </>
-          }
-          value={stats.autoReplies.value}
-          index={3}
-        >
-          <DeltaBadge delta={stats.autoReplies.delta} />
-        </Stat>
+        <div className="aj-stat aj-rise is-know" style={idx(3)}>
+          <Link href="/admin/manager-ia" className="aj-stat-main" aria-label="Voir les connaissances">
+            <span className="aj-stat-ico">
+              <Icon name="brain" size={26} />
+            </span>
+            <span className="aj-stat-top">
+              <span className="aj-stat-label">Connaissances</span>
+              <span className="aj-stat-num">
+                <CountUp value={nbConnaissances} />
+              </span>
+            </span>
+          </Link>
+          <Link href="/admin/manager-ia?ajout=ouvrir#ajout" className="aj-stat-plus" aria-label="Ajouter une connaissance" title="Ajouter une connaissance">
+            +
+          </Link>
+        </div>
         <Stat
           href="/admin/medias"
           icon="image"
@@ -222,7 +226,7 @@ export default async function OverviewPage() {
         </section>
 
         <Link
-          href="/admin/conversations?statut=alerte"
+          href="/admin/jacob"
           className={`aj-validate aj-rise ${alertesOuvertes > 0 ? "is-live" : ""}`}
           style={idx(8)}
         >
@@ -231,7 +235,7 @@ export default async function OverviewPage() {
           </span>
           <span className="min-w-0">
             <span className="aj-validate-title block">Validation Jacob requise</span>
-            <span className="aj-validate-sub block">Conversations à traiter manuellement</span>
+            <span className="aj-validate-sub block">Demandes que le bot ne peut pas traiter seul</span>
           </span>
           <span className="aj-validate-count">{alertesOuvertes}</span>
           <Icon name="chevron" size={22} />
@@ -305,7 +309,7 @@ export default async function OverviewPage() {
               {openAlerts.length}
             </div>
             {openAlerts.length > 0 && (
-              <Link href="/admin/conversations?statut=alerte" className="text-sm text-red-600 underline">
+              <Link href="/admin/jacob" className="text-sm text-red-600 underline">
                 Voir les conversations en alerte →
               </Link>
             )}
@@ -328,9 +332,12 @@ export default async function OverviewPage() {
             <div className="text-3xl font-bold">{week.conversations}</div>
           </div>
           <div className="card">
-            <div className="label">Résolution sans humain (7 j)</div>
+            <div className="label">Questions traitées seul (7 j)</div>
             <div className="text-3xl font-bold">
               {week.tauxResolution === null ? "—" : `${week.tauxResolution} %`}
+            </div>
+            <div className="text-xs text-neutral-500">
+              {week.questionsAutonomes} par le bot · {week.questionsJacob} avec Jacob
             </div>
           </div>
         </div>
@@ -353,7 +360,7 @@ export default async function OverviewPage() {
                 values={[day.nouveauxContacts, week.nouveauxContacts, month.nouveauxContacts]}
               />
               <KpiRow
-                label="Résolution sans humain"
+                label="Questions traitées par le bot seul"
                 values={[day, week, month].map((p) =>
                   p.tauxResolution === null ? "—" : `${p.tauxResolution} %`,
                 )}

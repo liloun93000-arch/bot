@@ -1,6 +1,7 @@
 import type { EscalationRow, KnowledgeEntry } from "@arbi/core";
 import Link from "next/link";
 import {
+  addKnowledgeAction,
   cancelEscalationAction,
   deleteKnowledgeAction,
   saveManagerSettingsAction,
@@ -110,9 +111,9 @@ function Knowledge({ k }: { k: KnowledgeEntry }) {
   );
 }
 
-export default async function ManagerIaPage({ searchParams }: { searchParams: Promise<{ q?: string; vue?: string }> }) {
+export default async function ManagerIaPage({ searchParams }: { searchParams: Promise<{ q?: string; vue?: string; ajout?: string }> }) {
   await requireSession();
-  const { q = "", vue = "connaissances" } = await searchParams;
+  const { q = "", vue = "connaissances", ajout = "" } = await searchParams;
   const { core } = getRuntime();
   const waiting = core.knowledge.escalations.open();
   const resolved = core.knowledge.escalations.closed(30);
@@ -145,6 +146,21 @@ export default async function ManagerIaPage({ searchParams }: { searchParams: Pr
         <p className="text-xs text-neutral-500">Entre les deux seuils, le bot cherche davantage dans la base et le contexte avant de solliciter Jacob.</p>
         <button className="btn btn-primary" type="submit">Enregistrer</button>
       </form>
+
+      <details id="ajout" className="card" open={ajout !== "" && ajout !== "ok"}>
+        <summary className="cursor-pointer text-sm font-semibold">➕ Ajouter une connaissance</summary>
+        {ajout === "ok" && <p className="mt-2 text-sm text-green-700">Connaissance ajoutée : le bot l&apos;utilisera dès la prochaine question.</p>}
+        {ajout === "incomplet" && <p className="mt-2 text-sm text-red-600">Renseignez au moins la question type et la réponse.</p>}
+        {ajout === "refuse" && <p className="mt-2 text-sm text-red-600">Cette connaissance contient une donnée personnelle (téléphone, e-mail…) : reformulez-la sans.</p>}
+        <form action={addKnowledgeAction} className="mt-2 space-y-2">
+          <div><span className="label">Sujet / produit</span><input name="sujet" className="input" placeholder="ex. Neverfull" /></div>
+          <div><span className="label">Question type du client *</span><input name="intention" required className="input" placeholder="ex. Avez-vous ce produit en stock ?" /></div>
+          <div><span className="label">Réponse à donner *</span><textarea name="reponse" required rows={3} className="input" placeholder="ex. Disponible sur commande, délai d'environ 2 semaines." /></div>
+          <div><span className="label">Conditions (facultatif)</span><input name="conditions" className="input" /></div>
+          <div><span className="label">Exceptions (facultatif)</span><input name="exceptions" className="input" /></div>
+          <button className="btn btn-primary" type="submit">Ajouter</button>
+        </form>
+      </details>
 
       <div className="flex flex-wrap gap-2">
         {tab("connaissances", `Connaissances (${core.knowledge.entries.count()})`)}

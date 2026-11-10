@@ -169,7 +169,7 @@ export const CONCEPTS: Array<{ id: string; re: RegExp; implies?: string[] }> = [
   },
   { id: "remboursement", re: /\b(rembours\w*|annul\w*|retractation|renvoyer|retour)\b/ },
   { id: "garantie", re: /\b(garanti\w*|sav|apres[- ]?vente|defectueu\w*|panne)\b/ },
-  { id: "stock", re: /\b(stocks?|disponib\w*|en rayon|il vous reste|en magasin)\b/ },
+  { id: "stock", re: /\b(stocks?|disponib\w*|dispo|en rayon|il vous reste|en magasin)\b/ },
   { id: "contact", re: /\b(contact\w*|appeler|rappel\w*|numero|telephone|parler a|joindre)\b/ },
   {
     id: "formation",
@@ -229,7 +229,10 @@ function tokenSimilarity(a: string[], b: string[]): number {
     for (let j = 0; j < b.length; j++) {
       if (used.has(j)) continue;
       const tb = b[j] as string;
-      const close = ta === tb || (ta.length > 4 && tb.length > 4 && levenshtein(ta, tb) <= 1);
+      // Abréviations usuelles (« dispo » / « disponible », « tel » / « telephone ») : préfixe d'au moins 4 lettres.
+      const [short, long] = ta.length <= tb.length ? [ta, tb] : [tb, ta];
+      const prefix = short.length >= 4 && long.length > short.length && long.startsWith(short);
+      const close = ta === tb || prefix || (ta.length > 4 && tb.length > 4 && levenshtein(ta, tb) <= 1);
       if (close) {
         best = j;
         break;
@@ -297,6 +300,19 @@ export function scoreEntry(question: string, entry: KnowledgeEntry, ctx: MatchCo
   const hay = normalizeText(`${question} ${ctx.extraText ?? ""}`);
   const subject = normalizeText(entry.sujet);
   if (subject && subject.length > 2 && hay.includes(subject)) best = Math.min(1, best + 0.12);
+  // Le sujet (nom d'un produit, d'une offre) peut être cité dans un autre ordre ou en partie
+  // (« Neverfull Louis Vuitton » pour « Louis Vuitton Neverfull ») : on compte les mots du sujet
+  // retrouvés dans la question, quel que soit l'ordre.
+  const subjectTokens = contentTokens(entry.sujet);
+  if (subjectTokens.length > 0 && !(subject && subject.length > 2 && hay.includes(subject))) {
+    const qSet = contentTokens(question);
+    const present = (t: string) =>
+      qSet.some((q) => q === t || (Math.min(q.length, t.length) >= 4 && (q.startsWith(t) || t.startsWith(q))));
+    const hits = subjectTokens.filter(present);
+    // Un mot distinctif du sujet (nom de produit, ≥ 7 lettres) suffit ; sinon les 2/3 des mots.
+    const distinctive = hits.some((t) => t.length >= 7);
+    if (distinctive || hits.length / subjectTokens.length >= 0.66) best = Math.min(1, best + 0.25);
+  }
   if (entry.offreCle && ctx.serviceKey) {
     if (entry.offreCle === ctx.serviceKey) best = Math.min(1, best + 0.1);
     else best *= 0.75;

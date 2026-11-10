@@ -3,8 +3,6 @@ import {
   createGate,
   createLlmClient,
   createLogger,
-  ensureMonthlyDebits,
-  initBilling,
   ensureStripePaymentLink,
   pollStripePayments,
   processInboundMedia,
@@ -67,11 +65,8 @@ async function main(): Promise<void> {
     (usage) => recordUsage(core, usage),
   );
 
-  initBilling(core);
-  ensureMonthlyDebits(core);
-  const billingEnforced =
-    config.BILLING_ENFORCE === "1" ||
-    (config.BILLING_ENFORCE !== "0" && Boolean(config.STRIPE_SECRET_KEY));
+  // Plus aucune notion d'abonnement : le service n'est jamais suspendu et aucun débit n'est généré.
+  const billingEnforced = false;
 
   const alertDeps: AlertDeps = {
     core,
@@ -188,15 +183,6 @@ async function main(): Promise<void> {
     }
   }, 10 * 60 * 1000);
 
-  // Facturation : débit mensuel + encaissements Stripe.
-  const billingTimer = setInterval(() => {
-    try {
-      const inserted = ensureMonthlyDebits(core);
-      if (inserted > 0) log.info({ inserted }, "monthly_debit_posted");
-    } catch (err) {
-      log.error({ err: String(err) }, "monthly_debit_failed");
-    }
-  }, 60 * 60 * 1000);
   // Auto-amélioration (§6) : revue des exemples appris en_attente, au plus 10
   // par passe, FIFO (les plus anciens d'abord — évite qu'un exemple récent ne
   // double un ancien indéfiniment). Un échec technique (exception LLM) laisse
@@ -252,7 +238,6 @@ async function main(): Promise<void> {
   const shutdown = async (signal: string) => {
     log.info({ signal }, "Arrêt en cours");
     clearInterval(releaseTimer);
-    clearInterval(billingTimer);
     clearInterval(learningTimer);
     if (stripeTimer) clearInterval(stripeTimer);
     await app.close();

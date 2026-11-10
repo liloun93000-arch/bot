@@ -117,6 +117,8 @@ export const questions = sqliteTable("questions", {
   alerteId: integer("alerte_id"),
   /** Sujet général (« Tarifs et devis »…) attribué par le classement thématique. */
   sujet: text("sujet").notNull().default(""),
+  /** autonome (résolu par le bot) | jacob (intervention humaine) | "" (historique non classé). */
+  issue: text("issue").notNull().default(""),
   createdAt: integer("created_at").notNull(),
 });
 

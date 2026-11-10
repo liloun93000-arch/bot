@@ -12,7 +12,7 @@ export interface RawStatement {
 export interface RawDb {
   prepare(sql: string): RawStatement;
 }
-import { and, asc, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, ne, sql } from "drizzle-orm";
 import { drizzle, type BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname } from "node:path";
@@ -599,6 +599,15 @@ export function createCore(options: CreateCoreOptions) {
         .orderBy(desc(schema.alerts.createdAt))
         .all();
     },
+    closed(limit = 30) {
+      return db
+        .select()
+        .from(schema.alerts)
+        .where(ne(schema.alerts.statut, "ouverte"))
+        .orderBy(desc(schema.alerts.createdAt))
+        .limit(limit)
+        .all();
+    },
     countOpen(): number {
       const row = sqlite
         .prepare(`SELECT COUNT(*) AS n FROM alerts WHERE statut = 'ouverte'`)
@@ -746,6 +755,8 @@ export function createCore(options: CreateCoreOptions) {
       categorie: string;
       repondue: boolean;
       alerteId?: number | null;
+      /** Issue de CETTE question : résolue seule par le bot ou passée à Jacob. */
+      issue?: "autonome" | "jacob";
     }): void {
       db.insert(schema.questions)
         .values({
@@ -756,9 +767,25 @@ export function createCore(options: CreateCoreOptions) {
           categorie: input.categorie,
           repondue: input.repondue ? 1 : 0,
           alerteId: input.alerteId ?? null,
+          issue: input.issue ?? "",
           createdAt: now(),
         })
         .run();
+    },
+    /**
+     * Statistiques d'autonomie PAR QUESTION (pas par conversation) : une même
+     * conversation peut compter des réponses autonomes ET des interventions de
+     * Jacob. Les lignes historiques non classées (issue = '') sont ignorées :
+     * on ne devine pas qu'elles étaient résolues.
+     */
+    autonomy(sinceMs: number): { autonomes: number; jacob: number; total: number; taux: number | null } {
+      const rows = sqlite
+        .prepare(`SELECT issue, COUNT(*) AS n FROM questions WHERE created_at >= ? AND issue <> '' GROUP BY issue`)
+        .all(sinceMs) as Array<{ issue: string; n: number }>;
+      const autonomes = rows.find((r) => r.issue === "autonome")?.n ?? 0;
+      const jacob = rows.find((r) => r.issue === "jacob")?.n ?? 0;
+      const total = autonomes + jacob;
+      return { autonomes, jacob, total, taux: total > 0 ? Math.round((autonomes / total) * 100) : null };
     },
     all(limit = 500) {
       return db
@@ -1296,6 +1323,22 @@ export function createCore(options: CreateCoreOptions) {
     facts: factsRepo,
     examples: examplesRepo,
     knowledge: createKnowledge(sqlite as RawDb, now),
+    /**
+     * Verrou d'idempotence des messages système envoyés aux clients.
+     * `claim` renvoie true UNE SEULE FOIS par clé ; `release` annule le verrou
+     * quand l'envoi a échoué (pour qu'une nouvelle tentative reste possible).
+     */
+    sends: {
+      claim(key: string): boolean {
+        const res = sqlite
+          .prepare(`INSERT OR IGNORE INTO outbound_dedupe (key, created_at) VALUES (?, ?)`)
+          .run(key, now());
+        return Number((res as { changes?: number }).changes ?? 0) === 1;
+      },
+      release(key: string): void {
+        sqlite.prepare(`DELETE FROM outbound_dedupe WHERE key = ?`).run(key);
+      },
+    },
     conversationOverview,
     close(): void {
       sqlite.close();

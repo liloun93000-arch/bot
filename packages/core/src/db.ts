@@ -648,6 +648,10 @@ export function createCore(options: CreateCoreOptions) {
         .set({ statut: "traitee", treatedAt: now() })
         .where(eq(schema.alerts.id, id))
         .run();
+      // Alerte traitée = les questions de ce client ne sont plus « sans réponse ».
+      sqlite
+        .prepare(`UPDATE questions SET repondue = 1 WHERE repondue = 0 AND wa_id = (SELECT wa_id FROM alerts WHERE id = ?)`)
+        .run(id);
     },
     listFor(waId: string) {
       return db
@@ -818,14 +822,40 @@ export function createCore(options: CreateCoreOptions) {
         .limit(limit)
         .all();
     },
+    /**
+     * Questions VRAIMENT sans réponse : pas encore répondues, et rien de traité depuis pour ce client
+     * (alerte marquée traitée, demande Jacob résolue / classée, ou message de Jacob envoyé au client
+     * après la question). Couvre aussi les anciennes questions, sans migration.
+     */
     unanswered(limit = 200) {
-      return db
-        .select()
-        .from(schema.questions)
-        .where(eq(schema.questions.repondue, 0))
-        .orderBy(desc(schema.questions.id))
-        .limit(limit)
-        .all();
+      return sqlite
+        .prepare(
+          `SELECT q.id, q.wa_id AS waId, q.texte, q.normalise, q.intention, q.categorie, q.repondue,
+                  q.alerte_id AS alerteId, q.sujet, q.issue, q.created_at AS createdAt
+           FROM questions q
+           WHERE q.repondue = 0
+             AND NOT EXISTS (SELECT 1 FROM alerts a WHERE a.wa_id = q.wa_id AND a.statut <> 'ouverte'
+                             AND COALESCE(a.treated_at, a.created_at) >= q.created_at)
+             AND NOT EXISTS (SELECT 1 FROM escalations e WHERE e.wa_id = q.wa_id AND e.statut <> 'en_attente'
+                             AND COALESCE(e.resolved_at, e.created_at) >= q.created_at)
+             AND NOT EXISTS (SELECT 1 FROM messages m WHERE m.wa_id = q.wa_id AND m.role = 'human'
+                             AND m.ts >= q.created_at AND m.contenu NOT LIKE '[Relance%' AND m.contenu NOT LIKE '[Template%')
+           ORDER BY q.id DESC
+           LIMIT ?`,
+        )
+        .all(limit) as Array<{
+        id: number;
+        waId: string;
+        texte: string;
+        normalise: string;
+        intention: string;
+        categorie: string;
+        repondue: number;
+        alerteId: number | null;
+        sujet: string;
+        issue: string;
+        createdAt: number;
+      }>;
     },
     /** Toutes les questions en attente de ce client sont considérées traitées (réponse de Jacob). */
     markAnsweredFor(waId: string): void {

@@ -1060,9 +1060,11 @@ export function createKnowledge(db: KnowledgeDb, now: () => number = Date.now) {
       db.prepare(
         `UPDATE escalations SET statut = 'resolue', reponse_jacob = ?, entry_id = ?, resolved_at = ? WHERE id = ?`,
       ).run(input.reponseJacob.slice(0, 2000), input.entryId, now(), id);
+      db.prepare(`UPDATE questions SET repondue = 1 WHERE repondue = 0 AND wa_id = (SELECT wa_id FROM escalations WHERE id = ?)`).run(id);
     },
     cancel(id: number): void {
       db.prepare(`UPDATE escalations SET statut = 'annulee', resolved_at = ? WHERE id = ?`).run(now(), id);
+      db.prepare(`UPDATE questions SET repondue = 1 WHERE repondue = 0 AND wa_id = (SELECT wa_id FROM escalations WHERE id = ?)`).run(id);
     },
     markDelivery(linkId: number, delivery: LinkDelivery, replyText = ""): void {
       db.prepare(`UPDATE escalation_links SET delivery = ?, reply_text = ?, delivered_at = ? WHERE id = ?`).run(

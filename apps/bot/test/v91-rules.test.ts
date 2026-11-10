@@ -326,3 +326,33 @@ describe("Catégories précises, questions sans réponse, vitesse", () => {
     env.core.close();
   });
 });
+
+describe("Question marquée TRAITÉE : plus jamais dans « sans réponse »", () => {
+  it("alerte marquée traitée → ses questions disparaissent, y compris les anciennes", () => {
+    const core = testCore();
+    core.contacts.upsert(CLIENT);
+    core.questions.record({ waId: CLIENT, texte: "Vous livrez au Maroc ?", normalise: "", intention: "", categorie: "Livraison / délais", repondue: false });
+    const id = core.alerts.create({ waId: CLIENT, categorie: "Autre", intention: "", motif: "x", resume: "", dernierMessage: "" });
+    expect(core.questions.unanswered()).toHaveLength(1);
+    core.alerts.markTreated(id);
+    expect(core.questions.unanswered()).toHaveLength(0);
+    // Ancienne ligne restée à 0 en base (avant ce correctif) : masquée quand même.
+    core.sqlite.prepare("UPDATE questions SET repondue = 0").run();
+    expect(core.questions.unanswered()).toHaveLength(0);
+    // Une NOUVELLE question après le traitement réapparaît bien.
+    core.questions.record({ waId: CLIENT, texte: "Et en Belgique ?", normalise: "", intention: "", categorie: "Livraison / délais", repondue: false });
+    core.sqlite.prepare("UPDATE questions SET created_at = created_at + 60000 WHERE texte = 'Et en Belgique ?'").run();
+    const u = core.questions.unanswered();
+    expect(u.map((q) => q.texte)).toEqual(["Et en Belgique ?"]);
+    core.close();
+  });
+
+  it("demande Jacob classée → ses questions disparaissent", () => {
+    const core = testCore();
+    core.questions.record({ waId: CLIENT, texte: "Starlink ?", normalise: "", intention: "", categorie: "Starlink", repondue: false });
+    const e = core.knowledge.escalations.create({ waId: CLIENT, question: "Starlink ?", mediaFile: "", mediaMime: "", contexte: "" });
+    core.knowledge.escalations.cancel(e);
+    expect(core.questions.unanswered()).toHaveLength(0);
+    core.close();
+  });
+});

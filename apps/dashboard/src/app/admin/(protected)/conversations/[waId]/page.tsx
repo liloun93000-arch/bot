@@ -25,6 +25,7 @@ import { requireSession } from "@/lib/auth";
 import { getRuntime } from "@/lib/core";
 import { formatDuration } from "@/lib/time";
 import { ChatMedia } from "./chat-media";
+import { ChatScroll } from "./chat-scroll";
 import { MediaPicker } from "./media-picker";
 import { SummaryAutoRefresh } from "./summary-refresh";
 
@@ -196,7 +197,7 @@ export default async function ConversationDetailPage({
             </p>
           </div>
 
-          <div className="card max-h-140 space-y-2 overflow-y-auto">
+          <ChatScroll className="card max-h-140 space-y-2 overflow-y-auto">
             {transcript.map((message) => {
               const style = ROLE_STYLE[message.role] ?? ROLE_STYLE.user!;
               // §1 : ce que le back-office affiche n'est jamais le texte brut
@@ -276,7 +277,7 @@ export default async function ConversationDetailPage({
             {transcript.length === 0 && (
               <p className="py-8 text-center text-sm text-neutral-400">Aucun message.</p>
             )}
-          </div>
+          </ChatScroll>
 
           <div className="card space-y-2">
             <form action={sendHumanMessageAction.bind(null, waId)} className="flex gap-2">

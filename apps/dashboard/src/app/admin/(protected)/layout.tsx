@@ -12,7 +12,11 @@ export const dynamic = "force-dynamic";
 export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const user = await requireSession();
   const { core } = getRuntime();
-  const openAlerts = core.alerts.countOpen();
+  // Pastille « Conversations » : UNIQUEMENT les clients repris en main par Jacob (bot pas rendu)
+  // qui ont écrit en dernier et attendent une réponse. Les alertes ont déjà leur propre compteur.
+  const aRepondre = core
+    .conversationOverview()
+    .filter((r) => r.modeHumain === 1 && r.dernierRole === "user" && !r.optOut).length;
   const nouveauxLeads = core.leads.countNouveaux();
   const enAttenteJacob = core.knowledge.escalations.countOpen();
   const botActif = Boolean(core.settings.get("bot_actif"));
@@ -22,7 +26,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
   // Tout le back-office vit sous /admin ; la racine du domaine est le site public.
   const nav: NavItem[] = [
     { href: "/admin", label: "Vue d'ensemble", icon: "home" },
-    { href: "/admin/conversations", label: "Conversations", icon: "chat", badge: openAlerts, tone: "red" },
+    { href: "/admin/conversations", label: "Conversations", icon: "chat", badge: aRepondre, tone: "red" },
     { href: "/admin/leads", label: "Demandes / Leads", icon: "target", badge: nouveauxLeads, tone: "amber" },
     { href: "/admin/questions", label: "Questions", icon: "help" },
     { href: "/admin/apprentissage", label: "Apprentissage", icon: "cap" },
@@ -36,7 +40,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
 
   const tabs: TabItem[] = [
     { href: "/admin", label: "Accueil", icon: "home" },
-    { href: "/admin/conversations", label: "Conversations", icon: "chat", badge: openAlerts },
+    { href: "/admin/conversations", label: "Conversations", icon: "chat", badge: aRepondre },
     { href: "/admin/jacob", label: "Jacob", icon: "headset", badge: jacobCount },
     { href: "/admin/medias", label: "Médias", icon: "image" },
     { href: "/admin/reglages", label: "Paramètres", icon: "gear" },

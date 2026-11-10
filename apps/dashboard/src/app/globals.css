@@ -1519,3 +1519,28 @@ td {
   backdrop-filter: blur(4px);
 }
 .aj-introvid-skip:hover { color: #fff; border-color: rgba(255, 255, 255, 0.5); }
+.aj-introvid-play {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  background: rgba(225, 29, 46, 0.85);
+  color: #fff;
+  font-size: 2rem;
+  padding-left: 6px;
+  box-shadow: 0 0 30px rgba(225, 29, 46, 0.6);
+}
+.aj-introvid-sound {
+  position: absolute;
+  left: max(14px, env(safe-area-inset-left, 0px));
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 18px);
+  min-width: 36px;
+  min-height: 32px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(0, 0, 0, 0.35);
+  font-size: 0.9rem;
+}

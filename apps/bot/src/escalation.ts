@@ -204,3 +204,14 @@ export function stripJacobNumbers(text: string, numbers: string[]): { text: stri
   });
   return { text: kept.join("").replace(/\s{2,}/g, " ").trim(), stripped };
 }
+
+/**
+ * La réponse du bot annonce une transmission à Jacob (« je transmets ta demande à Jacob »,
+ * « je fais remonter à Jacob », « Jacob revient vers toi »…). Dans ce cas une alerte DOIT exister.
+ */
+const HANDOFF_RE =
+  /\b(?:je\s+(?:transmets|transmet|fais\s+remonter|remonte|signale|pr[ée]viens|pr[ée]vient|vais\s+(?:transmettre|faire\s+remonter|pr[ée]venir|demander\s+[àa]))|j'?ai\s+(?:transmis|fait\s+remonter|pr[ée]venu|signal[ée])|(?:demande|question)\s+(?:est\s+)?transmise)\b[^.!?\n]{0,80}\bjacob\b|\bjacob\b[^.!?\n]{0,60}\b(?:revient|reviendra|va\s+revenir|te\s+r[ée]pond|vous\s+r[ée]pond|va\s+(?:te|vous)\s+r[ée]pondre|reprend|va\s+reprendre|est\s+pr[ée]venu)/i;
+
+export function claimsHandoffToJacob(text: string): boolean {
+  return HANDOFF_RE.test(text.normalize("NFC"));
+}

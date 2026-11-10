@@ -20,7 +20,7 @@ import {
 import type { Analysis } from "./brain";
 import { buildDynamicContext, buildStaticPrompt } from "./prompt";
 import { executeTool, exposedTools, type ToolContext } from "./tools";
-import { escalateAndAck, isPaymentStage, looksLikeNoAnswer, stripJacobNumbers } from "./escalation";
+import { claimsHandoffToJacob, escalateAndAck, isPaymentStage, looksLikeNoAnswer, stripJacobNumbers } from "./escalation";
 
 interface HistoryRow {
   role: string;
@@ -569,6 +569,18 @@ export class SalesAgent {
 
       const guarded = await this.guardReply(waId, text, analysis);
       if (guarded.blocked) flags.alertFired = true;
+
+      // Le bot ANNONCE qu'il transmet à Jacob (« je transmets ta demande à Jacob », « je fais remonter »…)
+      // sans avoir appelé l'outil d'alerte : on crée l'alerte nous-mêmes. Aucune annonce ne doit rester
+      // sans demande visible dans l'onglet Jacob.
+      if (!guarded.blocked && !flags.alertFired && claimsHandoffToJacob(guarded.text) && !core.alerts.hasOpenFor(waId)) {
+        logDecision(log, "handoff_claim_without_alert", { waId });
+        await escalateAndAck(
+          { core, wa: this.deps.wa, llm: this.deps.alertDeps.llm, model: this.deps.alertDeps.model, log, readMedia: this.deps.readBotFile, alertDeps: this.deps.alertDeps },
+          { waId, question: analysis.combinedText.slice(0, 500), categorie: analysis.categorie, intention: analysis.intent, state, ack: false },
+        );
+        flags.alertFired = true;
+      }
 
       // Un « je n'ai pas l'information » n'est pas une réponse : vraie escalade interne, un seul
       // message client, aucun numéro.

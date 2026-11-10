@@ -11,6 +11,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   // Empêche le zoom automatique (iPhone) quand on touche un champ de saisie : l'écran reste ajusté à l'appareil.
   maximumScale: 1,
+  userScalable: false,
+  interactiveWidget: "resizes-content",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

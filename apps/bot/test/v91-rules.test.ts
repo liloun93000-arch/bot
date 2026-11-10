@@ -252,3 +252,27 @@ describe("Telegram : seulement @OGFactoryBot pour les produits à l'unité", () 
     env.core.close();
   });
 });
+
+describe("Bug réel : « je transmets à Jacob » sans alerte, puis « ok merci bien »", () => {
+  it("l'annonce crée l'alerte (onglet Jacob), le « ok merci bien » n'efface rien et n'appelle pas de réponse", async () => {
+    const env = setup([{ text: "Je transmets ta demande à Jacob, il revient vers toi ici même." }, { text: "Avec plaisir, bonne journée !" }]);
+    await clientSays(env, "J'ai un souci avec ma commande, le lien ne marche pas");
+    expect(env.core.alerts.countOpen()).toBe(1);
+    await clientSays(env, "OK MERCI BIEN");
+    expect(toClient(env)).toHaveLength(1);
+    expect(env.core.alerts.countOpen()).toBe(1);
+    env.core.close();
+  });
+
+  it("détection des annonces de transmission", async () => {
+    const { claimsHandoffToJacob } = await import("../src/escalation");
+    for (const t of [
+      "Je transmets ta demande à Jacob.",
+      "Je fais remonter à Jacob, il revient vers toi ici même.",
+      "J'ai transmis ta question à Jacob.",
+      "Jacob va revenir vers vous rapidement.",
+      "Je vais prévenir Jacob.",
+    ]) expect(claimsHandoffToJacob(t)).toBe(true);
+    for (const t of ["Le 18 Pro Max : 1 204 à 1 388 €.", "Jacob est le formateur de China Access."]) expect(claimsHandoffToJacob(t)).toBe(false);
+  });
+});

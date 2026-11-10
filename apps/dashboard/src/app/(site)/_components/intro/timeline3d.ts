@@ -108,7 +108,7 @@ const HANDLERS3: Record<IntroState, (c: Scene3DCtx) => Promise<void>> = {
     jacob.setPose("rest", true);
     await sleep3(c, TIMING3.startDelay);
     const walk = jacob.walkTo(sp.jx, WALK.jacob);
-    stage.moveTo(mk(sp.jx * 0.7, hW * 0.93, 0.1, wFor(c) * 0.9, -2, 1), 2400, ease.io);
+    stage.moveTo(mk(sp.jx * 0.7, hW * 0.93, 0.1, wFor(c) * 0.9, -2, 1), 1700, ease.io);
     await walk;
   },
 
@@ -118,8 +118,8 @@ const HANDLERS3: Record<IntroState, (c: Scene3DCtx) => Promise<void>> = {
     const sp = spots(c);
     jacob.look(0, 1);
     jacob.faceTo(0);
-    stage.moveTo(mk(sp.jx * 0.85, stage.hFor(fracWide(c) * 1.12), 0.09, 1.7, 0, 1), 1100, ease.io);
-    await sleep3(c, 800);
+    stage.moveTo(mk(sp.jx * 0.85, stage.hFor(fracWide(c) * 1.12), 0.09, 1.7, 0, 1), 800, ease.io);
+    await sleep3(c, 450);
   },
 
   // Gestes calés sur les mots : mains en avant sur « n'oublie pas de dire », paumes ouvertes sur « la meilleure ».
@@ -141,7 +141,7 @@ const HANDLERS3: Record<IntroState, (c: Scene3DCtx) => Promise<void>> = {
     const { stage, jacob } = c;
     const sp = spots(c);
     jacob.setPose("point");
-    stage.moveTo(mk(sp.jx * 0.9, stage.hFor(fracWide(c) * 1.2), 0.08, 1.6, 4, 1), 1300, ease.io);
+    stage.moveTo(mk(sp.jx * 0.9, stage.hFor(fracWide(c) * 1.2), 0.08, 1.6, 4, 1), 950, ease.io);
     await say3(c, DIALOGUE.message2, TIMING3.typeMsShort, { hold: TIMING3.holdAfterShort });
     jacob.setPose("rest");
   },
@@ -152,8 +152,8 @@ const HANDLERS3: Record<IntroState, (c: Scene3DCtx) => Promise<void>> = {
     const sp = spots(c);
     jacob.look(30, 1);
     jacob.faceTo(58);
-    stage.moveTo(mk(0, stage.hFor(fracWide(c)) * 0.97, 0.1, wFor(c), 0, 1), 1200, ease.io);
-    await sleep3(c, 380);
+    stage.moveTo(mk(0, stage.hFor(fracWide(c)) * 0.97, 0.1, wFor(c), 0, 1), 850, ease.io);
+    await sleep3(c, 220);
     await say3(c, DIALOGUE.call, TIMING3.typeMsCall, {
       shout: true,
       hold: TIMING3.holdAfterCall,
@@ -178,8 +178,8 @@ const HANDLERS3: Record<IntroState, (c: Scene3DCtx) => Promise<void>> = {
     lilou.setPose("rest", true);
     lilou.group.visible = true;
     const walk = lilou.walkTo(sp.lx, WALK.lilou);
-    stage.moveTo(mk(0, stage.hFor(fracWide(c)), 0.1, wFor(c), 2, 1), 2300, ease.io);
-    await sleep3(c, 700);
+    stage.moveTo(mk(0, stage.hFor(fracWide(c)), 0.1, wFor(c), 2, 1), 1600, ease.io);
+    await sleep3(c, 450);
     jacob.look(26, 0);
     await walk;
     // Elle s'arrête, se tourne vers Jacob ; lui se tourne vers elle : ils se regardent, pas la caméra.
@@ -193,7 +193,7 @@ const HANDLERS3: Record<IntroState, (c: Scene3DCtx) => Promise<void>> = {
   // Face à face : Jacob sort la phrase pendant que Lilou l'écoute (regard, hochement, appui) ; réaction à la fin.
   async JACOB_TALKS_TO_LILOU(c) {
     const { stage, jacob, lilou } = c;
-    stage.moveTo(mk(0, stage.hFor(fracWide(c) * 1.04), 0.09, wFor(c), 0, 1), 3000, ease.io);
+    stage.moveTo(mk(0, stage.hFor(fracWide(c) * 1.04), 0.09, wFor(c), 0, 1), 2200, ease.io);
     const a = DIALOGUE.final.indexOf("je sais pas");
     const b = DIALOGUE.final.indexOf("sans toi");
     lilou.look(-6, 0);
@@ -233,13 +233,13 @@ const HANDLERS3: Record<IntroState, (c: Scene3DCtx) => Promise<void>> = {
     lilou.faceTo(0);
     jacob.look(0, 0);
     jacob.react(1);
-    await sleep3(c, 1600);
+    await sleep3(c, 1000);
     lilou.setPose("rest");
     const sh = stage.currentShot;
     const half = Math.max(sh.h * stage.aspect, sh.w) / 2;
     const wj = jacob.walkTo(sh.cx - half - 1.2, WALK.jacob, true);
     const wl = lilou.walkTo(sh.cx + half + 1.2, WALK.lilou, true);
-    await sleep3(c, 550);
+    await sleep3(c, 350);
     const rv = c.reveal();
     await Promise.all([wj, wl, rv]);
   },

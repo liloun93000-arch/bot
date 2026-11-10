@@ -142,8 +142,8 @@ export async function mountIntro3D(opts: Mount3DOptions): Promise<Intro3DHandle>
     bubble.place();
     fpsAvg += (1 / Math.max(dt, 1e-3) - fpsAvg) * 0.05;
     if (t > 1.5) {
-      slow = fpsAvg < 40 ? slow + 1 : Math.max(0, slow - 2);
-      if (slow > 90 && stage.tier < QUALITY.length - 1) {
+      slow = fpsAvg < 50 ? slow + 1 : Math.max(0, slow - 2);
+      if (slow > 30 && stage.tier < QUALITY.length - 1) {
         stage.setTier(stage.tier + 1);
         slow = 0;
       }

@@ -7,6 +7,7 @@ export class IntroCancelled extends Error {
 }
 
 type Tick = (dt: number, t: number) => void;
+
 interface Timer {
   at: number;
   res: () => void;
@@ -14,6 +15,7 @@ interface Timer {
 }
 
 export class Clock {
+  private smooth = 0;
   t = 0;
   cancelled = false;
   rendering = true;
@@ -54,7 +56,10 @@ export class Clock {
         return;
       }
       // Onglet en arrière-plan : on plafonne dt, l'animation se met simplement en pause.
-      const dt = Math.min(0.034, Math.max(0, (now - this.last) / 1000));
+      // dt lissé : une image en retard ne provoque plus d'à-coup (le mouvement garde sa vitesse).
+      const raw = Math.min(0.05, Math.max(0, (now - this.last) / 1000));
+      this.smooth = this.smooth ? this.smooth + (raw - this.smooth) * 0.35 : raw;
+      const dt = raw > 0.045 ? raw : this.smooth;
       this.last = now;
       this.rendering = true;
       step(dt);

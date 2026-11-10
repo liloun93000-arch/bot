@@ -44,7 +44,7 @@ function ChatImage({ src, alt }: { src: string; alt: string }) {
         <span>🖼️ Photo indisponible (fichier introuvable ou en cours de chargement).</span>
         <button
           type="button"
-          className="rounded border border-neutral-300 bg-white px-2 py-1 text-neutral-700"
+          className="rounded border border-neutral-300 bg-neutral-100 px-2 py-1 text-neutral-700"
           onClick={() => {
             setState("loading");
             setAttempt((n) => n + 1);

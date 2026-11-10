@@ -40,14 +40,14 @@ export function BillingBanner({
       href={paymentLink}
       target="_blank"
       rel="noopener noreferrer"
-      className="shrink-0 rounded-lg bg-neutral-900 px-4 py-2 text-center text-sm font-semibold text-white hover:bg-neutral-700"
+      className="shrink-0 rounded-lg bg-red-600 px-4 py-2 text-center text-sm font-semibold text-white hover:bg-red-500"
     >
       💳 Payer {euros(SUBSCRIPTION_CENTS)}
     </a>
   ) : (
     <Link
       href="/admin/facturation"
-      className="shrink-0 rounded-lg bg-neutral-900 px-4 py-2 text-center text-sm font-semibold text-white hover:bg-neutral-700"
+      className="shrink-0 rounded-lg bg-red-600 px-4 py-2 text-center text-sm font-semibold text-white hover:bg-red-500"
     >
       Voir mon abonnement →
     </Link>

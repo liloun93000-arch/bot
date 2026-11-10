@@ -17,10 +17,10 @@ export default function LoginPage() {
   }, []);
 
   return (
-    <main className="flex min-h-screen items-center justify-center p-4">
+    <main className="aj-login">
       <form
         action={formAction}
-        className="card w-full max-w-sm space-y-4"
+        className="aj-login-card aj-rise space-y-4"
         onSubmit={() => {
           // L'intro se jouera par-dessus le dashboard dès qu'il est chargé (voir admin-intro.tsx).
           try {
@@ -30,9 +30,10 @@ export default function LoginPage() {
           }
         }}
       >
-        <div>
-          <h1 className="text-xl font-bold">ARBI JACOB</h1>
-          <p className="text-sm text-neutral-500">Back-office de l&apos;agent WhatsApp</p>
+        <div className="flex flex-col items-center text-center">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/api/brand/logo.webp" alt="ARBI JACOB" style={{ height: 96, width: "auto" }} />
+          <p className="mt-1 text-sm text-neutral-500">Back-office de l&apos;agent WhatsApp</p>
         </div>
         <div>
           <label className="label" htmlFor="username">
@@ -54,7 +55,7 @@ export default function LoginPage() {
           />
         </div>
         {state?.error && <p className="text-sm font-medium text-red-600">{state.error}</p>}
-        <button type="submit" className="btn btn-primary w-full" disabled={pending}>
+        <button type="submit" className="btn btn-primary w-full" style={{ padding: "0.7rem 1rem" }} disabled={pending}>
           {pending ? "Connexion…" : "Se connecter"}
         </button>
       </form>

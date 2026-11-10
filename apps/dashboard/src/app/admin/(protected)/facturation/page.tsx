@@ -166,7 +166,7 @@ export default async function FacturationPage({
                   href={paymentLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="rounded-lg bg-neutral-900 px-4 py-2 text-center text-sm font-semibold text-white hover:bg-neutral-700"
+                  className="rounded-lg bg-red-600 px-4 py-2 text-center text-sm font-semibold text-white hover:bg-red-500"
                 >
                   💳 Payer mon abonnement
                 </a>
@@ -183,7 +183,7 @@ export default async function FacturationPage({
             <form action={checkStripePaymentsAction}>
               <button
                 type="submit"
-                className="w-full rounded-lg border border-neutral-300 px-4 py-2 text-sm hover:bg-neutral-50"
+                className="w-full rounded-lg border border-neutral-300 px-4 py-2 text-sm hover:bg-neutral-100"
               >
                 🔄 Vérifier mes paiements
               </button>
@@ -216,7 +216,7 @@ export default async function FacturationPage({
                 </div>
                 <button
                   type="submit"
-                  className="w-full rounded-lg border border-neutral-300 px-4 py-2 text-sm hover:bg-neutral-50"
+                  className="w-full rounded-lg border border-neutral-300 px-4 py-2 text-sm hover:bg-neutral-100"
                 >
                   ➕ Enregistrer ce paiement
                 </button>
@@ -242,7 +242,7 @@ export default async function FacturationPage({
                 </span>
                 <div className="h-4 flex-1 overflow-hidden rounded bg-neutral-100">
                   <div
-                    className="h-full rounded bg-neutral-800"
+                    className="h-full rounded bg-red-600"
                     style={{ width: `${Math.max(2, (day.billedCentimes / maxDayCents) * 100)}%` }}
                   />
                 </div>

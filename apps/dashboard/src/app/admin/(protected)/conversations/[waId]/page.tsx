@@ -31,7 +31,7 @@ import { SummaryAutoRefresh } from "./summary-refresh";
 export const dynamic = "force-dynamic";
 
 const ROLE_STYLE: Record<string, { wrap: string; bubble: string; label: string }> = {
-  user: { wrap: "justify-start", bubble: "bg-white border border-neutral-200", label: "Client" },
+  user: { wrap: "justify-start", bubble: "bg-neutral-100 border border-neutral-200", label: "Client" },
   assistant: { wrap: "justify-end", bubble: "bg-emerald-50 border border-emerald-200", label: "Bot" },
   human: { wrap: "justify-end", bubble: "bg-amber-50 border border-amber-300", label: "Jacob" },
 };
@@ -342,7 +342,7 @@ export default async function ConversationDetailPage({
                     {relanceMessages.map((message, i) => (
                       <form key={i} action={sendQuickRelanceAction.bind(null, waId, i)}>
                         <button
-                          className="rounded-full border border-neutral-300 bg-white px-3 py-1.5 text-left text-xs text-neutral-700 hover:border-neutral-900 hover:bg-neutral-900 hover:text-white"
+                          className="rounded-full border border-neutral-300 bg-neutral-100 px-3 py-1.5 text-left text-xs text-neutral-700 hover:border-red-600 hover:bg-red-600 hover:text-white"
                           type="submit"
                           title="Envoyer cette relance"
                         >

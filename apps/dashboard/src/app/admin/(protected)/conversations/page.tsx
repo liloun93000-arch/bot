@@ -122,7 +122,7 @@ export default async function ConversationsPage({
                 key={row.waId}
                 href={`/admin/conversations/${row.waId}`}
                 aria-label={`Ouvrir la conversation avec ${label}`}
-                className={`grid grid-cols-1 gap-1 px-4 py-3 text-sm outline-none hover:bg-neutral-50 focus-visible:relative focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-neutral-900 md:items-center md:gap-4 ${ROW_GRID}`}
+                className={`grid grid-cols-1 gap-1 px-4 py-3 text-sm outline-none hover:bg-neutral-100 focus-visible:relative focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-red-500 md:items-center md:gap-4 ${ROW_GRID}`}
               >
                 <div>
                   <div className="font-medium text-neutral-900">{label}</div>

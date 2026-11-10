@@ -5,7 +5,8 @@ import { redirect } from "next/navigation";
 import { getRuntime } from "./core";
 
 const COOKIE_NAME = "aj_session";
-const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+// Session courte, et cookie de session (sans date d'expiration) : fermer le navigateur déconnecte.
+const SESSION_TTL_MS = 12 * 60 * 60 * 1000;
 
 function sessionSecret(): string {
   const secret = process.env.DASHBOARD_SESSION_SECRET;
@@ -65,7 +66,6 @@ export async function setSessionCookie(username: string): Promise<void> {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production" && process.env.DASHBOARD_INSECURE_COOKIE !== "1",
-    maxAge: SESSION_TTL_MS / 1000,
     path: "/",
   });
 }

@@ -1,6 +1,7 @@
 import { logoutAction } from "@/lib/actions";
 import { requireSession } from "@/lib/auth";
 import { getRuntime } from "@/lib/core";
+import { TabGuard } from "./tab-guard";
 import { jacobPending, jacobPendingCount } from "@/lib/jacob";
 import { AdminIntro } from "./admin-intro";
 import { Icon } from "./icons";
@@ -64,6 +65,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
 
   return (
     <div className="aj-shell">
+      <TabGuard />
       <AdminIntro />
       <NavShell
         nav={nav}

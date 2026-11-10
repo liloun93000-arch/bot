@@ -24,6 +24,7 @@ export default function LoginPage() {
         onSubmit={() => {
           // L'intro se jouera par-dessus le dashboard dès qu'il est chargé (voir admin-intro.tsx).
           try {
+            sessionStorage.setItem("aj-tab-ok", "1"); // cet onglet est autorisé (voir TabGuard)
             sessionStorage.setItem("aj-intro-pending", "1");
           } catch {
             /* ignoré */

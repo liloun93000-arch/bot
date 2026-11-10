@@ -6,9 +6,6 @@ import { loginAction } from "@/lib/actions";
 export default function LoginPage() {
   const [state, formAction, pending] = useActionState(loginAction, null);
 
-  return () => clearTimeout(t);
-  }, []);
-
   return (
     <main className="aj-login">
       <form

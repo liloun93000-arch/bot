@@ -912,6 +912,9 @@ export function createCore(options: CreateCoreOptions) {
     create(username: string, passwordHash: string): void {
       db.insert(schema.users).values({ username, passwordHash, createdAt: now() }).run();
     },
+    setPassword(username: string, passwordHash: string): void {
+      sqlite.prepare(`UPDATE users SET password_hash = ? WHERE username = ?`).run(passwordHash, username);
+    },
   };
 
   const synonymsRepo = {

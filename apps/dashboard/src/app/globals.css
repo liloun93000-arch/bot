@@ -1206,12 +1206,12 @@ a {
 .aj-stat-plus:active {
   transform: scale(0.92);
 }
-.aj-tabs {
+.aj-jtabs {
   display: flex;
   gap: 8px;
   margin: 0 0 12px;
 }
-.aj-tab {
+.aj-jtab {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -1222,7 +1222,7 @@ a {
   font-weight: 600;
   min-height: 40px;
 }
-.aj-tab.is-on {
+.aj-jtab.is-on {
   background: linear-gradient(180deg, #ff2d3d, #b3121f);
   border-color: transparent;
   color: #fff;

@@ -63,11 +63,11 @@ export default async function JacobPage({ searchParams }: { searchParams: Promis
         </p>
       </div>
 
-      <div className="aj-tabs" role="tablist">
-        <Link href="/admin/jacob" className={`aj-tab ${vue !== "historique" ? "is-on" : ""}`} role="tab">
+      <div className="aj-jtabs" role="tablist">
+        <Link href="/admin/jacob" className={`aj-jtab ${vue !== "historique" ? "is-on" : ""}`} role="tab">
           En attente <b>{pending.length}</b>
         </Link>
-        <Link href="/admin/jacob?vue=historique" className={`aj-tab ${vue === "historique" ? "is-on" : ""}`} role="tab">
+        <Link href="/admin/jacob?vue=historique" className={`aj-jtab ${vue === "historique" ? "is-on" : ""}`} role="tab">
           Historique
         </Link>
       </div>

@@ -108,8 +108,17 @@ export async function verifyCredentials(username: string, password: string): Pro
   const user = core.users.byUsername(username);
   if (!user) return false;
   try {
-    return await argon2.verify(user.passwordHash, password);
+    if (await argon2.verify(user.passwordHash, password)) return true;
   } catch {
-    return false;
+    /* hash illisible : on tente le mot de passe de l'environnement ci-dessous */
   }
+  // Changement de mot de passe : si DASHBOARD_PASSWORD (Railway) a été modifié, le nouveau
+  // mot de passe est accepté pour l'identifiant principal et remplace l'ancien.
+  const envUser = process.env.DASHBOARD_USER || "jacob";
+  const envPassword = process.env.DASHBOARD_PASSWORD || "";
+  if (envPassword && username === envUser && password === envPassword) {
+    core.users.setPassword(username, await argon2.hash(password));
+    return true;
+  }
+  return false;
 }

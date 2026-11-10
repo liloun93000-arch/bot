@@ -32,7 +32,7 @@ export async function installCatalogues(core: Core, seedDir: string, mediaDir: s
   }
   // Message niveau 4 : l'ancien texte (« je n'ai pas les connaissances… écris à Jacob ») est remplacé
   // par le message de secours paiement, sauf s'il a été personnalisé dans le tableau de bord.
-  if (core.settings.get("niveau4_message") === NIVEAU4_MESSAGE_V8) core.settings.set("niveau4_message", NIVEAU4_MESSAGE);
+  if (String(core.settings.get("niveau4_message")) === NIVEAU4_MESSAGE_V8) core.settings.set("niveau4_message", NIVEAU4_MESSAGE);
 
   // Une seule fois : les anciens PDF « ARBI JACOB » (drones, volants, motos) sont périmés → désactivés (pas supprimés).
   if (core.sends.claim("seed:old-catalogues-off:v9.1")) {

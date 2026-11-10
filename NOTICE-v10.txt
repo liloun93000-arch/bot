@@ -1,0 +1,5 @@
+ARBI JACOB — projet complet v10
+Nouveautés : onglet « Demandes en attente de Jacob » (barre du bas + badge réel), carte Connaissances (+),
+suppression de tout l'abonnement, une seule escalade par question inconnue (jamais le numéro de Jacob),
+stats d'autonomie par question, photos dans les demandes, apprentissage des réponses de Jacob.
+Maquette : dossier maquette-artefact/. Tests : apps/bot/test/jacob-*.test.ts.

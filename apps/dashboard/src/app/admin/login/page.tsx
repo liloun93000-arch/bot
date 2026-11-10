@@ -1,19 +1,12 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
-import { canRun3D } from "@/app/(site)/_components/intro/can3d";
+import { useActionState } from "react";
 import { loginAction } from "@/lib/actions";
 
 export default function LoginPage() {
   const [state, formAction, pending] = useActionState(loginAction, null);
 
-  // Préchargement de l'intro Jacob & Lilou pendant que l'on saisit les identifiants (rien n'est affiché).
-  useEffect(() => {
-    if (!canRun3D()) return;
-    const t = setTimeout(() => {
-      void import("@/app/(site)/_components/intro/engine3d").then((m) => m.preloadIntro3D()).catch(() => undefined);
-    }, 800);
-    return () => clearTimeout(t);
+  return () => clearTimeout(t);
   }, []);
 
   return (
@@ -22,10 +15,8 @@ export default function LoginPage() {
         action={formAction}
         className="aj-login-card aj-rise space-y-4"
         onSubmit={() => {
-          // L'intro se jouera par-dessus le dashboard dès qu'il est chargé (voir admin-intro.tsx).
           try {
             sessionStorage.setItem("aj-tab-ok", "1"); // cet onglet est autorisé (voir TabGuard)
-            sessionStorage.setItem("aj-intro-pending", "1");
           } catch {
             /* ignoré */
           }

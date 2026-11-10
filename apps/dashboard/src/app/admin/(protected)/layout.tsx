@@ -3,7 +3,6 @@ import { requireSession } from "@/lib/auth";
 import { getRuntime } from "@/lib/core";
 import { TabGuard } from "./tab-guard";
 import { jacobPending, jacobPendingCount } from "@/lib/jacob";
-import { AdminIntro } from "./admin-intro";
 import { Icon } from "./icons";
 import { NavShell, type BellAlert, type NavItem, type TabItem } from "./nav-shell";
 
@@ -31,7 +30,6 @@ export default async function ProtectedLayout({ children }: { children: React.Re
     { href: "/admin/medias", label: "Photos clients", icon: "image" },
     { href: "/admin/catalogue", label: "Catalogue & tarifs", icon: "layers" },
     { href: "/admin/fichiers", label: "Fichiers du bot", icon: "clip" },
-    { href: "/admin/site", label: "Site vitrine", icon: "globe" },
     { href: "/admin/reglages", label: "Réglages", icon: "gear" },
   ];
 
@@ -66,7 +64,6 @@ export default async function ProtectedLayout({ children }: { children: React.Re
   return (
     <div className="aj-shell">
       <TabGuard />
-      <AdminIntro />
       <NavShell
         nav={nav}
         tabs={tabs}

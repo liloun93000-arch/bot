@@ -30,9 +30,33 @@ function statusBadge(row: { modeHumain: number; alertesOuvertes: number; optOut:
   return <span className="badge badge-bot">bot</span>;
 }
 
-// Grille commune à l'en-tête et à chaque ligne : mêmes proportions de colonnes
-// (Contact / Dernier message / Service / Statut / Score / Date).
-const ROW_GRID = "md:grid-cols-[1.4fr_2.2fr_0.9fr_0.8fr_0.5fr_0.9fr]";
+/** Couleur de la conversation (bande à gauche) : rouge = alerte, orange = Jacob a la main, vert = bot. */
+function convKind(row: { modeHumain: number; alertesOuvertes: number; optOut: number; statut: string }): string {
+  if (row.optOut || row.statut === "cloturee") return "off";
+  if (row.alertesOuvertes > 0) return "alerte";
+  if (row.modeHumain) return "humain";
+  return "bot";
+}
+
+/** Couleur d'avatar stable par client : chaque conversation se reconnaît d'un coup d'œil. */
+function avatarColor(waId: string): string {
+  let h = 0;
+  for (const c of waId) h = (h * 31 + c.charCodeAt(0)) % 360;
+  return `hsl(${h} 55% 38%)`;
+}
+
+function initial(label: string): string {
+  return (label.replace(/^\+/, "").trim()[0] ?? "?").toUpperCase();
+}
+
+function when(ts: number): string {
+  const d = new Date(ts);
+  const now = new Date();
+  const sameDay = d.toDateString() === now.toDateString();
+  return d.toLocaleString("fr-FR", sameDay
+    ? { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris" }
+    : { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris" });
+}
 
 export default async function ConversationsPage({
   searchParams,
@@ -63,6 +87,11 @@ export default async function ConversationsPage({
   if (statut === "alerte") rows = rows.filter((r) => r.alertesOuvertes > 0);
   if (statut === "humain") rows = rows.filter((r) => r.modeHumain === 1);
   if (statut === "bot") rows = rows.filter((r) => r.modeHumain === 0 && r.alertesOuvertes === 0);
+  if (statut === "repondre") rows = rows.filter((r) => r.dernierRole === "user" && !r.optOut);
+  const all = core.conversationOverview();
+  const nbAlerte = all.filter((r) => r.alertesOuvertes > 0).length;
+  const nbHumain = all.filter((r) => r.modeHumain === 1 && r.alertesOuvertes === 0).length;
+  const nbClient = all.filter((r) => r.dernierRole === "user" && !r.optOut).length;
 
   return (
     <div className="space-y-4">
@@ -75,13 +104,14 @@ export default async function ConversationsPage({
               name="q"
               defaultValue={q}
               placeholder="Rechercher contact ou message…"
-              className="input w-64"
+              className="input w-full sm:w-64"
             />
-            <select name="statut" defaultValue={statut} className="input w-32">
+            <select name="statut" defaultValue={statut} className="input w-full sm:w-44">
               <option value="">Tous</option>
               <option value="alerte">Alerte</option>
               <option value="humain">Humain</option>
               <option value="bot">Bot</option>
+              <option value="repondre">Client en dernier</option>
             </select>
             <button className="btn btn-secondary" type="submit">
               Filtrer
@@ -105,53 +135,51 @@ export default async function ConversationsPage({
         aucun JavaScript. L'apparence tableau est conservée par les mêmes
         proportions de colonnes sur l'en-tête et les lignes.
       */}
-      <div className="card overflow-hidden p-0">
-        <div className={`hidden bg-neutral-50 px-4 py-2 text-left text-xs uppercase text-neutral-400 md:grid md:items-center md:gap-4 ${ROW_GRID}`}>
-          <div className="font-medium">Contact</div>
-          <div className="font-medium">Dernier message</div>
-          <div className="font-medium">Service</div>
-          <div className="font-medium">Statut</div>
-          <div className="font-medium">Score</div>
-          <div className="font-medium">Date</div>
-        </div>
-        <div className="divide-y divide-neutral-100">
-          {rows.map((row) => {
-            const label = row.nom || `+${row.waId}`;
-            return (
-              <Link
-                key={row.waId}
-                href={`/admin/conversations/${row.waId}`}
-                aria-label={`Ouvrir la conversation avec ${label}`}
-                className={`grid grid-cols-1 gap-1 px-4 py-3 text-sm outline-none hover:bg-neutral-100 focus-visible:relative focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-red-500 md:items-center md:gap-4 ${ROW_GRID}`}
-              >
-                <div>
-                  <div className="font-medium text-neutral-900">{label}</div>
-                  <div className="text-xs text-neutral-400">+{row.waId}</div>
-                </div>
-                <div className="truncate text-neutral-600">
-                  <span className="text-neutral-400">
-                    {row.dernierRole === "user" ? "→ " : "← "}
-                  </span>
-                  {row.dernierMessage}
-                </div>
-                <div className="text-neutral-600">{row.serviceEnCours ?? "—"}</div>
-                <div>{statusBadge(row)}</div>
-                <div className="text-neutral-600">{row.score ?? "—"}</div>
-                <div className="whitespace-nowrap text-neutral-500">
-                  {new Date(row.dernierTs).toLocaleString("fr-FR", {
-                    day: "2-digit",
-                    month: "2-digit",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </div>
-              </Link>
-            );
-          })}
-          {rows.length === 0 && (
-            <div className="px-4 py-8 text-center text-neutral-400">Aucune conversation.</div>
-          )}
-        </div>
+      <div className="aj-cv-legend">
+        <Link href="/admin/conversations?statut=" className="aj-cv-chip">Toutes <b>{all.length}</b></Link>
+        <Link href="/admin/conversations?statut=alerte" className="aj-cv-chip is-alerte">Alerte <b>{nbAlerte}</b></Link>
+        <Link href="/admin/conversations?statut=humain" className="aj-cv-chip is-humain">Jacob a la main <b>{nbHumain}</b></Link>
+        <Link href="/admin/conversations?statut=repondre" className="aj-cv-chip is-unread">Client en dernier <b>{nbClient}</b></Link>
+      </div>
+
+      <div className="aj-cv-list" role="list">
+        {rows.map((row) => {
+          const label = row.nom || `+${row.waId}`;
+          const kind = convKind(row);
+          const aRepondre = row.dernierRole === "user" && !row.optOut;
+          return (
+            <Link
+              key={row.waId}
+              role="listitem"
+              href={`/admin/conversations/${row.waId}`}
+              aria-label={`Ouvrir la conversation avec ${label}`}
+              className={`aj-cv is-${kind}${aRepondre ? " is-unread" : ""}`}
+            >
+              <span className="aj-cv-avatar" style={{ background: avatarColor(row.waId) }} aria-hidden>
+                {initial(label)}
+              </span>
+              <span className="aj-cv-body">
+                <span className="aj-cv-top">
+                  <span className="aj-cv-name">{label}</span>
+                  <span className="aj-cv-time">{when(row.dernierTs)}</span>
+                </span>
+                <span className="aj-cv-phone">
+                  {[row.nom ? `+${row.waId}` : "", row.serviceEnCours ?? ""].filter(Boolean).join(" · ") || "Nouveau contact"}
+                </span>
+                <span className="aj-cv-last">
+                  <b>{row.dernierRole === "user" ? "Client : " : "Bot / Jacob : "}</b>
+                  {row.dernierMessage || "—"}
+                </span>
+                <span className="aj-cv-tags">
+                  {statusBadge(row)}
+                  {aRepondre && <span className="aj-cv-flag">● Dernier message du client</span>}
+                  {row.score != null && <span className="aj-cv-score">Score {row.score}</span>}
+                </span>
+              </span>
+            </Link>
+          );
+        })}
+        {rows.length === 0 && <div className="aj-empty">Aucune conversation.</div>}
       </div>
     </div>
   );

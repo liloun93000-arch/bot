@@ -1314,3 +1314,18 @@ a {
   letter-spacing: 0.04em;
   color: var(--aj-gray);
 }
+
+/* ───── Jamais de zoom automatique en écrivant (iOS zoome si un champ fait moins de 16 px) ───── */
+input,
+textarea,
+select,
+[contenteditable="true"] {
+  font-size: max(16px, 1em) !important;
+}
+html,
+body {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}

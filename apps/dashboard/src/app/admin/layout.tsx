@@ -12,6 +12,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  // Empêche le zoom automatique (iPhone) quand on touche un champ de saisie : l'écran reste ajusté à l'appareil.
+  maximumScale: 1,
   viewportFit: "cover",
   themeColor: "#09090b",
   colorScheme: "dark",

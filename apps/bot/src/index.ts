@@ -15,7 +15,8 @@ import {
   type AlertDeps,
 } from "@arbi/core";
 import { readFile } from "node:fs/promises";
-import { join } from "node:path";
+import { installCatalogues } from "./catalog-seed";
+import { dirname, join } from "node:path";
 import { SalesAgent } from "./agent";
 import { loadConfig } from "./config";
 import { createHandler } from "./handler";
@@ -32,6 +33,9 @@ async function main(): Promise<void> {
     adminWhatsappNumber: config.ADMIN_WHATSAPP_NUMBER,
     dashboardUrl: config.DASHBOARD_URL,
   });
+
+  // Catalogues PDF China Access : installés automatiquement dans « Fichiers du bot ».
+  await installCatalogues(core, join(dirname(config.CATALOGUE_PATH), "catalogues"), config.MEDIA_DIR, log);
 
   const gate = createGate({
     getContact: (waId) => {

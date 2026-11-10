@@ -561,6 +561,7 @@ export async function markAlertTreatedAction(alertId: number, waId: string): Pro
   const { core } = getRuntime();
   core.alerts.markTreated(alertId);
   core.contacts.setStatut(waId, "en_cours");
+  revalidatePath("/admin/jacob");
   revalidatePath(`/admin/conversations/${waId}`);
   revalidatePath("/admin/conversations");
   revalidatePath("/admin");

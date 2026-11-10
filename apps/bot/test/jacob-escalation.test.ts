@@ -44,6 +44,7 @@ function scripted(steps: Step[]) {
 
 function setup(steps: Step[], opts: { withPhoto?: boolean } = {}) {
   const core = testCore(`+${JACOB}`);
+  core.settings.set("escalation_mode", "question"); // mode « Jacob répond, le bot relaie » (désormais secondaire)
   core.contacts.upsert(CLIENT, "Karim");
   const wa = fakeWa();
   const llm = scripted(steps);
@@ -246,6 +247,7 @@ describe("TEST 16/17/18 — statistiques par QUESTION", () => {
 
   it("l'historique non classé est ignoré (jamais compté comme résolu)", () => {
     const core = testCore();
+    core.settings.set("escalation_mode", "question"); // mode « Jacob répond, le bot relaie » (désormais secondaire)
     core.questions.record({ waId: CLIENT, texte: "a", normalise: "a", intention: "", categorie: "Autre", repondue: true });
     expect(core.questions.autonomy(0).total).toBe(0);
     expect(core.questions.autonomy(0).taux).toBeNull();
@@ -306,6 +308,7 @@ describe("TEST 19/20 — Jacob répond, le bot apprend", () => {
 
   it("apprentissage du TON (exemples) et connaissances métier restent séparés : un exemple ne devient jamais un tarif autorisé", async () => {
     const core = testCore();
+    core.settings.set("escalation_mode", "question"); // mode « Jacob répond, le bot relaie » (désormais secondaire)
     const before = core.knowledge.entries.count();
     core.examples.add?.({ question: "Combien pour un site ?", reponse: "Pour un site c'est 9999 € tout compris." } as never);
     expect(core.knowledge.entries.count()).toBe(before); // les exemples n'alimentent pas la base de connaissances

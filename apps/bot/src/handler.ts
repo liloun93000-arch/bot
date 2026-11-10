@@ -220,6 +220,13 @@ export function createHandler(deps: HandlerDeps) {
       return;
     }
 
+    // ── Alerte ouverte (mode « alerte ») : Jacob reprend lui-même la conversation, le bot ne
+    //    répond plus à ce client (ni « ok merci », ni relance) tant que l'alerte n'est pas traitée. ──
+    if (core.settings.get("escalation_mode") !== "question" && core.alerts.hasOpenFor(waId)) {
+      logDecision(log, "silent_alert_open", { waId });
+      return;
+    }
+
     // ── Bot désactivé globalement (réglage dashboard) ──
     if (!core.settings.get("bot_actif")) {
       logDecision(log, "bot_disabled", { waId });
@@ -321,7 +328,7 @@ export function createHandler(deps: HandlerDeps) {
       // un seul message d'information au client, AUCUN numéro). Le contact n'est donné que dans
       // le parcours de paiement, géré par l'agent.
       const out = await escalateAndAck(
-        { core, wa, llm: deps.alertDeps.llm, model: deps.alertDeps.model, log, readMedia: deps.readMedia },
+        { core, wa, llm: deps.alertDeps.llm, model: deps.alertDeps.model, log, readMedia: deps.readMedia, alertDeps: deps.alertDeps },
         { waId, question: analysis.combinedText.slice(0, 500), categorie: analysis.categorie, intention: analysis.intent, state },
       );
       if (!out.notified) {

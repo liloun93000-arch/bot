@@ -259,7 +259,7 @@ export async function executeTool(
       // de Jacob : une demande, un seul message client, aucun numéro.
       if (!isPaymentStage(motif, ctx.lastClientMessage)) {
         const out = await escalateAndAck(
-          { core, wa, llm: ctx.alertDeps.llm, model: ctx.alertDeps.model, log, readMedia: ctx.readBotFile },
+          { core, wa, llm: ctx.alertDeps.llm, model: ctx.alertDeps.model, log, readMedia: ctx.readBotFile, alertDeps: ctx.alertDeps },
           { waId, question: ctx.lastClientMessage || motif, categorie: parsed.success ? parsed.data.categorie : undefined, state: ctx.state },
         );
         ctx.flags.alertFired = true;
@@ -312,7 +312,7 @@ export async function executeTool(
       // La photo éventuelle, le contexte et le message d'information (UN SEUL, sans numéro)
       // sont gérés par escalateAndAck.
       const out = await escalateAndAck(
-        { core, wa, llm: ctx.alertDeps.llm, model: ctx.alertDeps.model, log, readMedia: ctx.readBotFile },
+        { core, wa, llm: ctx.alertDeps.llm, model: ctx.alertDeps.model, log, readMedia: ctx.readBotFile, alertDeps: ctx.alertDeps },
         { waId, question: parsed.data.question, categorie: parsed.data.categorie, state: ctx.state },
       );
       // La question reste « non répondue » côté statistiques tant que Jacob n'a pas répondu.

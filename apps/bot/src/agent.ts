@@ -552,7 +552,7 @@ export class SalesAgent {
       if (!guarded.blocked && (looksLikeNoAnswer(guarded.text) || guarded.text.length === 0)) {
         logDecision(log, "no_answer_reply_converted_to_escalation", { waId });
         await escalateAndAck(
-          { core, wa: this.deps.wa, llm: this.deps.alertDeps.llm, model: this.deps.alertDeps.model, log, readMedia: this.deps.readBotFile },
+          { core, wa: this.deps.wa, llm: this.deps.alertDeps.llm, model: this.deps.alertDeps.model, log, readMedia: this.deps.readBotFile, alertDeps: this.deps.alertDeps },
           { waId, question: analysis.combinedText.slice(0, 500), categorie: analysis.categorie, intention: analysis.intent, state },
         );
         flags.alertFired = true;
@@ -601,7 +601,7 @@ export class SalesAgent {
     const state = this.deps.core.state.get(waId);
     logDecision(this.deps.log, "safety_fallback_escalation", { waId, motif });
     await escalateAndAck(
-      { core: this.deps.core, wa: this.deps.wa, llm: this.deps.alertDeps.llm, model: this.deps.alertDeps.model, log: this.deps.log, readMedia: this.deps.readBotFile },
+      { core: this.deps.core, wa: this.deps.wa, llm: this.deps.alertDeps.llm, model: this.deps.alertDeps.model, log: this.deps.log, readMedia: this.deps.readBotFile, alertDeps: this.deps.alertDeps },
       { waId, question: analysis.combinedText.slice(0, 500) || motif, categorie: analysis.categorie, intention: analysis.intent, state },
     );
     this.persistTurn(state, "");

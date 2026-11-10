@@ -1,0 +1,47 @@
+import { copyFile, mkdir, stat } from "node:fs/promises";
+import { join } from "node:path";
+import { NIVEAU4_MESSAGE, NIVEAU4_MESSAGE_V8, type Core, type Logger } from "@arbi/core";
+
+/**
+ * Les 4 catalogues PDF China Access (V9.1) sont installés automatiquement dans
+ * « Fichiers du bot » : aucun bouton à presser. Une clé déjà présente n'est pas
+ * réécrite (Jacob garde la main sur la description / l'activation).
+ */
+export const CHINA_ACCESS_CATALOGUES = [
+  { cle: "catalogue_apple", fichier: "CATALOGUE_APPLE_TECH_CHINA_ACCESS.pdf", nom: "Catalogue Apple & Tech — China Access", description: "Grille Apple (iPhone, iPad, Mac…), consoles et reconditionné. À envoyer quand le client veut toute la grille Apple ou le catalogue Apple." },
+  { cle: "catalogue_vehicules", fichier: "CATALOGUE_VEHICULES_CHINA_ACCESS.pdf", nom: "Catalogue Véhicules électriques — China Access", description: "31 véhicules électriques (Surron, Talaria…), deux prix par modèle. À envoyer quand le client veut le catalogue motos / véhicules." },
+  { cle: "catalogue_drones", fichier: "CATALOGUE_DRONES_CHINA_ACCESS.pdf", nom: "Catalogue Drones DJI — China Access", description: "38 références DJI. À envoyer quand le client demande le catalogue drones." },
+  { cle: "catalogue_volants", fichier: "CATALOGUE_VOLANTS_CHINA_ACCESS.pdf", nom: "Catalogue Volants — China Access", description: "46 familles de volants sur mesure (cuir, carbone, LED) par marque. À envoyer quand le client demande le catalogue volants." },
+] as const;
+
+const NEW_KEYS = new Set<string>(CHINA_ACCESS_CATALOGUES.map((c) => c.cle));
+
+export async function installCatalogues(core: Core, seedDir: string, mediaDir: string, log: Logger): Promise<void> {
+  await mkdir(mediaDir, { recursive: true }).catch(() => undefined);
+  for (const c of CHINA_ACCESS_CATALOGUES) {
+    if (core.botFiles.byCle(c.cle)) continue;
+    const src = join(seedDir, c.fichier);
+    try {
+      const info = await stat(src);
+      await copyFile(src, join(mediaDir, c.fichier));
+      core.botFiles.create({ cle: c.cle, nom: c.nom, description: c.description, fichier: c.fichier, mime: "application/pdf", kind: "document", taille: info.size });
+      log.info({ cle: c.cle }, "catalogue_pdf_installed");
+    } catch (err) {
+      log.error({ err: String(err), cle: c.cle }, "catalogue_pdf_install_failed");
+    }
+  }
+  // Message niveau 4 : l'ancien texte (« je n'ai pas les connaissances… écris à Jacob ») est remplacé
+  // par le message de secours paiement, sauf s'il a été personnalisé dans le tableau de bord.
+  if (core.settings.get("niveau4_message") === NIVEAU4_MESSAGE_V8) core.settings.set("niveau4_message", NIVEAU4_MESSAGE);
+
+  // Une seule fois : les anciens PDF « ARBI JACOB » (drones, volants, motos) sont périmés → désactivés (pas supprimés).
+  if (core.sends.claim("seed:old-catalogues-off:v9.1")) {
+    for (const f of core.botFiles.list()) {
+      if (NEW_KEYS.has(f.cle) || f.actif !== 1) continue;
+      if (/drone|volant|moto|surron|talaria|v[ée]hicule/i.test(`${f.cle} ${f.nom}`)) {
+        core.botFiles.toggle(f.id);
+        log.info({ cle: f.cle }, "old_catalogue_disabled");
+      }
+    }
+  }
+}

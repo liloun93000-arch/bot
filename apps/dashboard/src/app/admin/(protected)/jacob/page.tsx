@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireSession } from "@/lib/auth";
 import { getRuntime } from "@/lib/core";
 import { jacobHistory, jacobPending, waitingLabel, type JacobItem } from "@/lib/jacob";
+import { markAlertTreatedAction } from "@/lib/actions";
 import { cancelEscalationAction } from "@/lib/manager-actions";
 import { Icon, idx } from "../icons";
 import { JacobPhoto } from "./jacob-photo";
@@ -32,6 +33,13 @@ function Request({ r, i }: { r: JacobItem; i: number }) {
         <Link href={`/admin/conversations/${r.waId}`} className="btn btn-secondary">
           Voir la conversation
         </Link>
+        {!r.resolu && r.kind === "alerte" && (
+          <form action={markAlertTreatedAction.bind(null, r.id, r.waId)}>
+            <button type="submit" className="btn btn-primary">
+              Traité — le bot reprend
+            </button>
+          </form>
+        )}
         {!r.resolu && r.kind === "question" && (
           <form action={cancelEscalationAction.bind(null, r.id)}>
             <button type="submit" className="btn btn-secondary">

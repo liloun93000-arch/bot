@@ -30,6 +30,7 @@ COPY --from=build /app/apps/dashboard/.next/standalone ./dashboard
 COPY --from=build /app/apps/dashboard/.next/static ./dashboard/apps/dashboard/.next/static
 # Seed du catalogue HORS de /app/data : le volume Railway masque ce chemin
 COPY data/catalogue.md ./seed/catalogue.md
+COPY data/catalogues ./seed/catalogues
 COPY scripts/start-all.mjs ./start-all.mjs
 # Le volume Railway est monté root : on reste root dans ce conteneur isolé
 RUN mkdir -p /app/data

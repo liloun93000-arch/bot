@@ -22,6 +22,7 @@ function ctxFor(core: ReturnType<typeof testCore>, wa: ReturnType<typeof fakeWa>
 describe("Manager IA — outil ask_director", () => {
   it("envoie la question à Jacob au format demandé et crée une demande en attente", async () => {
     const core = testCore(`+${JACOB}`);
+  core.settings.set("escalation_mode", "question"); // mode « Jacob répond, le bot relaie » (désormais secondaire)
     core.contacts.upsert(CLIENT, "Karim");
     core.messages.insert(JACOB, "user", "ok"); // fenêtre 24 h admin ouverte → texte libre
     const wa = fakeWa();
@@ -35,6 +36,7 @@ describe("Manager IA — outil ask_director", () => {
 
   it("Jacob répond → la connaissance est créée et le client reçoit la réponse", async () => {
     const core = testCore(`+${JACOB}`);
+  core.settings.set("escalation_mode", "question"); // mode « Jacob répond, le bot relaie » (désormais secondaire)
     core.contacts.upsert(CLIENT, "Karim");
     core.messages.insert(CLIENT, "user", "Paiement en plusieurs fois ?");
     core.messages.insert(JACOB, "user", "ok");

@@ -88,8 +88,12 @@ export interface ExampleRow {
   updatedAt: number;
 }
 
-export const NIVEAU4_MESSAGE =
+/** Ancien message niveau 4 (avant V9.1) : remplacé automatiquement s'il n'a pas été personnalisé. */
+export const NIVEAU4_MESSAGE_V8 =
   "Je n'ai pas les connaissances nécessaires pour pouvoir te répondre précisément. Si tu souhaites une réponse plus rapide, écris directement à Jacob au {contact}. Sinon, laisse-moi une alerte et il pourra intervenir directement dans la conversation.";
+/** Niveau 4 = UNIQUEMENT le secours quand le paiement sur la boutique est impossible. */
+export const NIVEAU4_MESSAGE =
+  "Pas de souci : si le paiement sur la boutique ne passe pas pour toi, écris directement à Jacob sur WhatsApp au {contact}, il te propose une autre solution pour finaliser.";
 
 export const SETTINGS_DEFAULTS = {
   admin_numbers: [] as AdminNumber[],
@@ -115,6 +119,8 @@ export const SETTINGS_DEFAULTS = {
    * dès qu'il n'est pas sûr · prudent : au moindre doute.
    */
   bot_autonomie: "autonome" as "autonome" | "equilibre" | "prudent",
+  /** Besoin de Jacob : « alerte » = alerte + Jacob reprend la conversation (prioritaire) ; « question » = le bot lui pose la question sur WhatsApp et relaie. */
+  escalation_mode: "alerte" as "alerte" | "question",
   dashboard_url: "",
   niveau4_message: NIVEAU4_MESSAGE,
   objections: OBJECTIONS_SEED,

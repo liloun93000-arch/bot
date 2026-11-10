@@ -1,6 +1,8 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import {
   escalateToDirector,
+  triggerAlert,
+  type AlertDeps,
   logDecision,
   normalizeText,
   type ConversationStateData,
@@ -57,6 +59,8 @@ export interface EscalationEnv {
   model: string;
   log: Logger;
   readMedia?: (file: string) => Promise<Buffer | null>;
+  /** Dépendances complètes d'alerte (repli e-mail) ; reconstruites sinon. */
+  alertDeps?: AlertDeps;
 }
 
 export interface EscalationOutcome {
@@ -87,23 +91,44 @@ export async function escalateAndAck(
     input.state?.besoin ? `Besoin exprimé : ${input.state.besoin}` : "",
   ].filter(Boolean);
 
-  const result = await escalateToDirector(
-    { core, wa, llm: env.llm, model: env.model, log, readMedia: env.readMedia },
-    {
+  // Mode prioritaire (décision de Jacob) : ALERTE → Jacob reprend lui-même la conversation.
+  // Le mode « question » (Jacob répond sur WhatsApp, le bot relaie et apprend) reste disponible.
+  const mode = core.settings.get("escalation_mode");
+  let result: { escalationId: number; deduped: boolean; notified: boolean };
+  let ackPrefix = "esc-ack";
+  if (mode !== "question") {
+    const alert = await triggerAlert(env.alertDeps ?? { core, wa, llm: env.llm, model: env.model, log }, {
       waId: input.waId,
-      question: input.question,
-      categorie: input.categorie ?? "Autre",
+      motif: [`Jacob doit reprendre la conversation : ${input.question}`, ...contexteParts].join(" — ").slice(0, 400),
       intention: input.intention ?? input.state?.lastIntent ?? "",
-      media,
-      contexte: contexteParts.join("\n"),
-    },
-  );
+      categorie: input.categorie ?? "Autre",
+      dernierMessage: input.question.slice(0, 300),
+    });
+    result = {
+      escalationId: alert.alertId,
+      deduped: alert.deduped,
+      notified: alert.notifiedVia !== "" && alert.notifiedVia !== "aucune",
+    };
+    ackPrefix = "alert-ack"; // même verrou que les autres alertes : jamais deux accusés pour une alerte
+  } else {
+    result = await escalateToDirector(
+      { core, wa, llm: env.llm, model: env.model, log, readMedia: env.readMedia },
+      {
+        waId: input.waId,
+        question: input.question,
+        categorie: input.categorie ?? "Autre",
+        intention: input.intention ?? input.state?.lastIntent ?? "",
+        media,
+        contexte: contexteParts.join("\n"),
+      },
+    );
+  }
 
   // Un seul accusé par (demande, client) — verrou posé AVANT l'envoi.
   let ackSent = false;
   const contact = core.contacts.get(input.waId);
   if (!contact?.modeHumain && !contact?.optOut) {
-    const key = `esc-ack:${result.escalationId}:${input.waId}`;
+    const key = `${ackPrefix}:${result.escalationId}:${input.waId}`;
     if (core.sends.claim(key)) {
       const text = escalationAckText(input.state?.toneRegister);
       const sent = await wa.sendText(input.waId, text);
@@ -143,7 +168,7 @@ export function looksLikeNoAnswer(reply: string): boolean {
 
 /** Parcours de paiement / engagement ferme : le SEUL cas où le contact de Jacob peut être donné. */
 const PAYMENT_STAGE_RE =
-  /\b(paiement|payer|paye|regler|reglement|virement|rib|iban|crypto|acompte|facture|encaiss|commande ferme|devis ferme|bon de commande|engagement|signer)/;
+  /\b(paiement|payer|paye|regler|reglement|virement|rib|iban|crypto|acompte|facture|encaiss|commande ferme|devis ferme|bon de commande|engagement|signer|paypal|pcs|cash|especes|lydia|western union|pas de carte|sans carte|carte bancaire|cb)/;
 
 export function isPaymentStage(...texts: Array<string | undefined>): boolean {
   return PAYMENT_STAGE_RE.test(normalizeText(texts.filter(Boolean).join(" ")));

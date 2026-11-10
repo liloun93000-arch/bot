@@ -37,7 +37,7 @@ describe("autonomie du bot — fréquence du passage à Jacob", () => {
 
   it("le closing ne passe plus la main automatiquement", () => {
     const p = prompt();
-    expect(p).toContain("UNIQUEMENT si le client veut engager concrètement");
+    expect(p).toContain("niveau4_humain UNIQUEMENT si le paiement sur la boutique est impossible");
     // Non-régression de l'ancienne consigne, qui transmettait à chaque closing.
     expect(p).not.toContain("puis niveau4_humain pour le passage à Jacob");
   });

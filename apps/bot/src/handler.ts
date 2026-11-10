@@ -413,9 +413,22 @@ export function createHandler(deps: HandlerDeps) {
     }
     // Une réponse jamais envoyée n'est pas une question traitée : sans ça, le
     // back-office comptait comme répondues des questions restées en plan.
+    const repondue = result.text !== null && !result.alertFired && !result.niveau4Sent && !result.escalated;
+    // Une question restée sans réponse ne doit JAMAIS rester invisible : alerte ouverte → le client est
+    // « en alerte » et la conversation reste dans celles que Jacob doit traiter.
+    if (!repondue && !core.alerts.hasOpenFor(waId) && !core.knowledge.escalations.openFor(waId)) {
+      await triggerAlert(deps.alertDeps, {
+        waId,
+        motif: "question restée sans réponse du bot",
+        intention: analysis.intent,
+        categorie: analysis.categorie,
+        dernierMessage: lastText.slice(0, 300),
+      });
+      logDecision(log, "unanswered_question_alert", { waId });
+    }
     core.questions.record({
       ...questionDraft,
-      repondue: result.text !== null && !result.alertFired && !result.niveau4Sent && !result.escalated,
+      repondue,
       // Par QUESTION : réponse envoyée sans aucune intervention = autonome ; escalade, alerte ou
       // niveau 4 = intervention de Jacob, même si Jacob répond ensuite.
       ...(result.escalated || result.alertFired || result.niveau4Sent

@@ -189,11 +189,11 @@ describe("V9.1 — catalogues PDF installés automatiquement", () => {
 });
 
 describe("V9.1 — rythme des réponses (bloc 1)", () => {
-  it("délai proportionnel : 2 s minimum, 12 s maximum, ~1 s par 17 mots", async () => {
+  it("délai proportionnel : 1 s minimum, 4 s maximum", async () => {
     const { replyDelayMs } = await import("../src/pacing");
-    expect(replyDelayMs("250 €, à vie.")).toBe(2000);
-    expect(replyDelayMs(Array(85).fill("mot").join(" "))).toBeGreaterThanOrEqual(4500);
-    expect(replyDelayMs(Array(1000).fill("mot").join(" "))).toBe(12000);
+    expect(replyDelayMs("250 €, à vie.")).toBe(1000);
+    expect(replyDelayMs(Array(85).fill("mot").join(" "))).toBeGreaterThanOrEqual(2500);
+    expect(replyDelayMs(Array(1000).fill("mot").join(" "))).toBe(4000);
   });
 
   it("une grille longue part en 2 ou 3 messages, une réponse courte en un seul", async () => {
@@ -299,5 +299,30 @@ describe("Bug réel : « je transmets à Jacob » sans alerte, puis « OK MERCI 
     for (const t of ["Le 18 Pro Max 256 Go est à 1 204 €.", "Avec plaisir, bonne journée !", "Jacob est le formateur de China Access."]) {
       expect(promisesJacob(t)).toBe(false);
     }
+  });
+});
+
+describe("Catégories précises, questions sans réponse, vitesse", () => {
+  it("catégories précises des demandes", async () => {
+    const { fineCategory } = await import("@arbi/core");
+    expect(fineCategory("Combien le 18 Pro Max ?")).toBe("FRS iPhone / Apple");
+    expect(fineCategory("Un volant carbone pour BMW F30")).toBe("Volants");
+    expect(fineCategory("Vous avez des Surron ?")).toBe("Surron / véhicules électriques");
+    expect(fineCategory("Combien le Mavic 4 Pro ?")).toBe("Drones DJI");
+    expect(fineCategory("La formation China Access c'est quoi ?")).toBe("Formation China Access");
+    expect(fineCategory("Et pour Vinted ?")).toBe("Vinted");
+    expect(fineCategory("27K snap c'est combien ?")).toBe("Snapchat (comptes)");
+  });
+
+  it("question restée sans réponse → alerte ; Jacob répond → elle sort de la liste", async () => {
+    const env = setup([{ text: "" }, { text: "" }]);
+    // Le modèle ne produit rien et l'escalade est refusée : la question ne doit pas rester invisible.
+    await clientSays(env, "Vous livrez au Maroc ?");
+    expect(env.core.questions.unanswered().length).toBeGreaterThanOrEqual(1);
+    expect(env.core.alerts.countOpen() + env.core.knowledge.escalations.countOpen()).toBeGreaterThanOrEqual(1);
+    // Jacob répond lui-même depuis le tableau de bord
+    env.core.messages.insert(CLIENT, "human", "Oui on livre au Maroc, 10 jours.");
+    expect(env.core.questions.unanswered()).toHaveLength(0);
+    env.core.close();
   });
 });

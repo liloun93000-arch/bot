@@ -41,6 +41,8 @@ export async function describeImage(
       // Modèle à raisonnement : le plafond DOIT inclure la marge de réflexion.
       max_tokens: REASONING_HEADROOM + 400,
       system: VISION_SYSTEM,
+      // Décrire une photo ne demande pas de réflexion longue : effort bas = réponse en quelques secondes.
+      ...({ output_config: { effort: process.env.VISION_EFFORT || "low" } } as Record<string, unknown>),
       messages: [
         {
           role: "user",

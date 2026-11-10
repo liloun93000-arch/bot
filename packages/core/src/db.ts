@@ -359,6 +359,16 @@ export function createCore(options: CreateCoreOptions) {
           mediaMime: media?.mime ?? "",
         })
         .run();
+      // Jacob a répondu lui-même au client : ses questions en attente sortent de
+      // « Questions restées sans réponse » (les relances automatiques « [ … ] » ne comptent pas).
+      if (role === "human" && !contenu.startsWith("[Relance") && !contenu.startsWith("[Template")) {
+        sqlite
+          .prepare(
+            `UPDATE questions SET repondue = 1, issue = CASE WHEN issue = '' THEN 'jacob' ELSE issue END
+             WHERE wa_id = ? AND repondue = 0`,
+          )
+          .run(waId);
+      }
       return Number(result.lastInsertRowid);
     },
     /**
@@ -816,6 +826,10 @@ export function createCore(options: CreateCoreOptions) {
         .orderBy(desc(schema.questions.id))
         .limit(limit)
         .all();
+    },
+    /** Toutes les questions en attente de ce client sont considérées traitées (réponse de Jacob). */
+    markAnsweredFor(waId: string): void {
+      sqlite.prepare(`UPDATE questions SET repondue = 1 WHERE wa_id = ? AND repondue = 0`).run(waId);
     },
     markAnswered(id: number): void {
       db.update(schema.questions).set({ repondue: 1 }).where(eq(schema.questions.id, id)).run();

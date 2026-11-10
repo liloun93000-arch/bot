@@ -14,7 +14,7 @@ describe("mémoire contextuelle — cas obligatoire « agent → casquettes → 
     // « Je cherche un agent. »
     const a1 = analyzeInbound(core, state, ["Je cherche un agent."], 3);
     expect(state.serviceEnCours).toBe("china_acces_agents");
-    expect(a1.categorie).toBe("China");
+    expect(a1.categorie).toBe("Agents");
     core.state.save(state);
 
     // « Des casquettes. » — précision produit, le service reste China Accès.

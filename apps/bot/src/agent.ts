@@ -424,6 +424,9 @@ export class SalesAgent {
           // Prix justes sur un long script : température basse à modérée (notice V9.1, §5).
           temperature: 0.4,
           messages,
+          // Kimi raisonne au maximum par défaut (« max »), ce qui rend chaque réponse très lente.
+          // Effort réglable (LLM_EFFORT, défaut « low ») : le script contient déjà les réponses.
+          ...({ output_config: { effort: process.env.LLM_EFFORT || "low" } } as Record<string, unknown>),
         },
         // Coupe l'appel dès qu'un nouveau message client arrive : inutile de
         // finir (et de payer) une réponse qui sera de toute façon jetée.

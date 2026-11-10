@@ -43,7 +43,7 @@ describe("services et pôles éditables depuis le dashboard", () => {
     const state = core.state.get("336000000");
     const analysis = analyzeInbound(core, state, ["je veux me former à la crypto"], 3);
     expect(analysis.serviceKey).toBe("formation_crypto");
-    expect(analysis.categorie).toBe("Crypto Académie");
+    expect(analysis.categorie).toBe("Formation China Access") // catégorie précise prioritaire (demande de Jacob);
   });
 
   it("les mots-clés d'un service se remplacent sans toucher aux autres services", () => {

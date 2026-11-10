@@ -2,12 +2,16 @@ import {
   categoryForService,
   classifyIntent,
   detectTone,
+  FINE_CATEGORIES,
+  fineCategory,
   normalizeText,
   resolveService,
   type ConversationStateData,
   type Core,
   type Intent,
 } from "@arbi/core";
+
+const FINE_LABELS = new Set(FINE_CATEGORIES.map((c) => c.label));
 
 export type Route = "agent" | "niveau4" | "alerte_directe";
 
@@ -102,9 +106,20 @@ export function analyzeInbound(
 
   // La grille tarifaire fait autorité (catégories éditables/ajoutables depuis
   // le dashboard) ; le préfixe de clé ne sert que de repli.
-  const categorie = state.serviceEnCours
-    ? (core.pricing.byKey(state.serviceEnCours)?.categorie ?? categoryForService(state.serviceEnCours))
-    : categoryForService(state.serviceEnCours);
+  // Catégorie PRÉCISE (FRS iPhone, Volants, Surron, Formation China Access, Vinted…) tirée du
+  // message ; à défaut, la dernière catégorie précise de ce client (« ok et le prix ? » reste sur le
+  // même sujet) ; en dernier recours, l'ancienne catégorie large.
+  const previous = (
+    core.sqlite
+      .prepare(`SELECT categorie FROM questions WHERE wa_id = ? ORDER BY id DESC LIMIT 1`)
+      .get(state.waId) as { categorie: string } | undefined
+  )?.categorie;
+  const categorie =
+    fineCategory(combinedText) ??
+    (previous && FINE_LABELS.has(previous) ? previous : null) ??
+    (state.serviceEnCours
+      ? (core.pricing.byKey(state.serviceEnCours)?.categorie ?? categoryForService(state.serviceEnCours))
+      : categoryForService(state.serviceEnCours));
 
   // 6) Route.
   let route: Route = "agent";

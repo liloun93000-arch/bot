@@ -306,6 +306,8 @@ async function deliverToClient(deps: DirectorDeps, waId: string, text: string): 
   const result = await wa.sendText(waId, text);
   if (result.sent) {
     core.messages.insert(waId, "assistant", text, result.messageId ?? null);
+    // La réponse de Jacob est arrivée au client : sa question n'est plus « sans réponse ».
+    core.questions.markAnsweredFor(waId);
     return "envoyee";
   }
   if (result.reason === "outside_24h_window") {

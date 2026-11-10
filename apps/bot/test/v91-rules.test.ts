@@ -238,3 +238,17 @@ describe("V9.1 — script installé en entier, en tête du prompt", () => {
     expect(txt).toMatch(/^63\. /m);
   });
 });
+
+describe("Telegram : seulement @OGFactoryBot pour les produits à l'unité", () => {
+  it("un lien t.me ou une mention de Telegram est retiré ; la redirection @OGFactoryBot reste", async () => {
+    const env = setup([
+      { text: "Pour un exemplaire, vois le revendeur de confiance : @OGFactoryBot sur Telegram.\nRejoins aussi le groupe : https://t.me/+abc\nOn en parle aussi sur Telegram." },
+    ]);
+    await clientSays(env, "je veux juste une paire pour moi");
+    const out = toClient(env).map((m) => m.text).join("\n");
+    expect(out).toContain("@OGFactoryBot");
+    expect(out).not.toContain("t.me");
+    expect(out).not.toContain("On en parle aussi sur Telegram");
+    env.core.close();
+  });
+});

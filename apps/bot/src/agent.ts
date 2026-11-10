@@ -531,6 +531,22 @@ export class SalesAgent {
         logDecision(log, "from_price_not_qualified", { waId, amounts: fromViolations });
       }
 
+      // Telegram (décision de Jacob) : aucun lien t.me / telegram.me, aucune mention de Telegram, SAUF la
+      // redirection des produits à l'unité vers le revendeur @OGFactoryBot (script, section 8).
+      {
+        const before = text;
+        text = text
+          .split("\n")
+          .filter((line) => {
+            if (/\b(?:t|telegram)\.me\//i.test(line)) return false;
+            if (/telegram/i.test(line) && !/@OGFactoryBot/i.test(line)) return false;
+            return true;
+          })
+          .join("\n")
+          .trim();
+        if (text !== before) logDecision(log, "telegram_stripped", { waId });
+      }
+
       // Lien du groupe privé : jamais deux fois dans une conversation.
       const groupLink = core.settings.get("group_link");
       if (groupLink && text.includes(groupLink)) {

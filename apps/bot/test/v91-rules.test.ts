@@ -276,3 +276,28 @@ describe("Bug réel : « je transmets à Jacob » sans alerte, puis « ok merci 
     for (const t of ["Le 18 Pro Max : 1 204 à 1 388 €.", "Jacob est le formateur de China Access."]) expect(claimsHandoffToJacob(t)).toBe(false);
   });
 });
+
+describe("Bug réel : « je transmets à Jacob » sans alerte, puis « OK MERCI BIEN »", () => {
+  it("l'annonce crée l'alerte (onglet Jacob), et « OK MERCI BIEN » ne reçoit aucune réponse", async () => {
+    const env = setup([
+      { text: "Je comprends le souci, je transmets ta demande à Jacob, il revient vers toi ici même." },
+      { text: "Avec plaisir, bonne journée !" },
+    ]);
+    await clientSays(env, "J'ai un problème avec ma commande, rien reçu");
+    expect(env.core.alerts.countOpen()).toBe(1);
+    await clientSays(env, "OK MERCI BIEN");
+    expect(toClient(env)).toHaveLength(1);
+    expect(env.core.alerts.countOpen()).toBe(1); // reste dans l'onglet Jacob tant que Jacob n'a pas traité
+    env.core.close();
+  });
+
+  it("les formulations d'annonce sont reconnues, une réponse normale non", async () => {
+    const { claimsHandoffToJacob: promisesJacob } = await import("../src/escalation");
+    for (const t of ["Je fais remonter à Jacob.", "Jacob va te revenir rapidement.", "Ta demande est transmise.", "Je vois avec Jacob et je reviens vers toi.", "Il vous recontacte ici."]) {
+      expect(promisesJacob(t)).toBe(true);
+    }
+    for (const t of ["Le 18 Pro Max 256 Go est à 1 204 €.", "Avec plaisir, bonne journée !", "Jacob est le formateur de China Access."]) {
+      expect(promisesJacob(t)).toBe(false);
+    }
+  });
+});

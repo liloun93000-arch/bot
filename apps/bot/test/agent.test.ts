@@ -68,12 +68,13 @@ describe("garde anti double réponse", () => {
 });
 
 describe("régénération après nouveau message (commit différé)", () => {
-  it("jette la réponse du 1er passage sans polluer l'état (lien de groupe conservé)", async () => {
+  it("jette la réponse du 1er passage sans polluer l'état", async () => {
     const core = testCore();
     core.contacts.upsert(WA_ID);
     core.messages.insert(WA_ID, "user", "montre-moi des exemples");
-    const groupLink = core.settings.get("group_link");
-    const replyWithLink = `Regarde le groupe privé : ${groupLink}`;
+    // (Le lien du groupe Telegram n'est plus jamais envoyé : on vérifie le mécanisme avec un lien boutique.)
+    const groupLink = "https://chinacces.com/products/fournisseur-apple";
+    const replyWithLink = `Regarde ici : ${groupLink}`;
 
     const llm = fakeLlmSeq([replyWithLink, replyWithLink], (call) => {
       // Pendant la 1re génération, un nouveau message client arrive.
@@ -86,7 +87,6 @@ describe("régénération après nouveau message (commit différé)", () => {
     // passage jeté n'a pas marqué groupLinkSent.
     expect(llm.calls).toBe(2);
     expect(result.text).toContain(groupLink);
-    expect(core.state.get(WA_ID).groupLinkSent).toBe(true);
     expect(core.state.get(WA_ID).replyCount).toBe(1);
     core.close();
   });

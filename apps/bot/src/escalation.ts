@@ -212,6 +212,11 @@ export function stripJacobNumbers(text: string, numbers: string[]): { text: stri
 const HANDOFF_RE =
   /\b(?:je\s+(?:transmets|transmet|fais\s+remonter|remonte|signale|pr[ée]viens|pr[ée]vient|vais\s+(?:transmettre|faire\s+remonter|pr[ée]venir|demander\s+[àa]))|j'?ai\s+(?:transmis|fait\s+remonter|pr[ée]venu|signal[ée])|(?:demande|question)\s+(?:est\s+)?transmise)\b[^.!?\n]{0,80}\bjacob\b|\bjacob\b[^.!?\n]{0,60}\b(?:revient|reviendra|va\s+revenir|te\s+r[ée]pond|vous\s+r[ée]pond|va\s+(?:te|vous)\s+r[ée]pondre|reprend|va\s+reprendre|est\s+pr[ée]venu)/i;
 
+/** Annonces sans le mot « Jacob » (« je transmets ta demande », « il revient vers toi »…). */
+const HANDOFF_NO_NAME_RE =
+  /\b(?:je\s+(?:te\s+|vous\s+)?(?:transmets|transmet|fais\s+remonter)\s+(?:ta|votre|la|ta\s+question|ta\s+demande|votre\s+demande)|(?:ta|votre)\s+(?:demande|question)\s+(?:est|a\s+[ée]t[ée])\s+transmise|je\s+vois\s+avec\s+(?:lui|jacob)|il\s+(?:te|vous)\s+(?:r[ée]pond|recontacte|rappelle|revient)|il\s+(?:va\s+)?(?:revenir|revient|reviendra)\s+vers\s+(?:toi|vous)|jacob\s+va\s+(?:te|vous)\s+(?:revenir|r[ée]pondre|recontacter|rappeler))/i;
+
 export function claimsHandoffToJacob(text: string): boolean {
-  return HANDOFF_RE.test(text.normalize("NFC"));
+  const t = text.normalize("NFC").replace(/[’‘]/g, "'");
+  return HANDOFF_RE.test(t) || HANDOFF_NO_NAME_RE.test(t);
 }

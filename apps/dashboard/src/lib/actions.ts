@@ -61,9 +61,9 @@ import { poleSlug, slugify as urlSlug } from "./site/format";
 // ── Auth ──
 
 export async function loginAction(
-  _prev: { error: string } | null,
+  _prev: { error?: string; ok?: boolean } | null,
   formData: FormData,
-): Promise<{ error: string } | null> {
+): Promise<{ error?: string; ok?: boolean } | null> {
   const headerStore = await headers();
   // X-Forwarded-For est forgeable par le client : on ne s'y fie que derrière
   // un reverse proxy de confiance (DASHBOARD_TRUST_PROXY=1). Sinon, compteur
@@ -81,7 +81,9 @@ export async function loginAction(
   const ok = await verifyCredentials(username, password);
   if (!ok) return { error: "Identifiants incorrects." };
   await setSessionCookie(username);
-  redirect("/admin");
+  // Pas de redirection ici : la page de connexion joue la vidéo d'accueil (avec le son, grâce au clic
+  // sur « Se connecter ») puis ouvre l'accueil elle-même.
+  return { ok: true };
 }
 
 export async function logoutAction(): Promise<void> {

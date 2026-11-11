@@ -22,6 +22,7 @@ import { migrate } from "./migrations";
 import { amountsIn } from "./pricing";
 import { OBJECTIONS_SEED, PRICING_SEED, SYNONYMS_SEED } from "./pricing-data";
 import type { PricingRow } from "./pricing";
+import { isRealQuestion } from "./categories";
 import * as schema from "./schema";
 import { MENU_ROWS, type MenuRow } from "./whatsapp";
 
@@ -785,6 +786,8 @@ export function createCore(options: CreateCoreOptions) {
       /** Issue de CETTE question : résolue seule par le bot ou passée à Jacob. */
       issue?: "autonome" | "jacob";
     }): void {
+      // « salam », « ??? », « ok merci »… ne sont pas des questions : jamais enregistrés.
+      if (!isRealQuestion(input.texte)) return;
       db.insert(schema.questions)
         .values({
           waId: input.waId,

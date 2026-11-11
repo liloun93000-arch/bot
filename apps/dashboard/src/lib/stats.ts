@@ -1,4 +1,4 @@
-import { levenshtein, type Core } from "@arbi/core";
+import { isRealQuestion, levenshtein, type Core } from "@arbi/core";
 
 export interface PeriodKpis {
   conversations: number;
@@ -53,7 +53,7 @@ export interface QuestionGroup {
  * Approximation lexicale de la « similarité sémantique » — sans dépendance
  * à un service d'embeddings.
  */
-export function groupQuestions(core: Core, limit = 300): QuestionGroup[] {
+export function groupQuestions(core: Core, limit = 1000): QuestionGroup[] {
   const rows = core.sqlite
     .prepare(
       `SELECT normalise, MAX(texte) AS texte, COUNT(*) AS n,
@@ -73,6 +73,8 @@ export function groupQuestions(core: Core, limit = 300): QuestionGroup[] {
 
   const groups: Array<QuestionGroup & { key: string }> = [];
   for (const row of rows) {
+    // Anciennes lignes « salam », « ??? »… : jamais dans le top des questions.
+    if (!isRealQuestion(row.texte)) continue;
     const tolerance = Math.max(2, Math.floor(row.normalise.length / 5));
     const existing = groups.find(
       (g) =>
@@ -152,7 +154,7 @@ export function groupQuestionsByTopic(core: Core): TopicGroup[] {
       parSujet.set(forme.sujet, entry);
     }
     // `formes` est déjà trié par fréquence : les 3 premières vues sont le top 3.
-    if (entry.exemples.length < 3) entry.exemples.push({ texte: forme.texte, count: forme.n });
+    if (entry.exemples.length < 3 && isRealQuestion(forme.texte)) entry.exemples.push({ texte: forme.texte, count: forme.n });
     entry.categories.set(forme.categorie, (entry.categories.get(forme.categorie) ?? 0) + forme.n);
   }
 

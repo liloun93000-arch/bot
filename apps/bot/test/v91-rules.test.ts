@@ -356,3 +356,24 @@ describe("Question marquée TRAITÉE : plus jamais dans « sans réponse »", ()
     core.close();
   });
 });
+
+describe("Top 10 : seulement les vraies questions", () => {
+  it("salam, ???, ok merci, émojis ne sont pas des questions ; les vraies le sont", async () => {
+    const { isRealQuestion } = await import("@arbi/core");
+    for (const t of ["salam", "Salam aleykoum", "???", "…", "ok merci", "Ok merci frère 🙏", "👍", "wesh", "bonjour", "slt cv"]) {
+      expect(isRealQuestion(t), t).toBe(false);
+    }
+    for (const t of ["Combien le 18 Pro Max ?", "prix ?", "dispo ?", "salam, t'as des Surron ?", "Vous livrez en Belgique", "Je veux la formation Vinted"]) {
+      expect(isRealQuestion(t), t).toBe(true);
+    }
+  });
+
+  it("un « salam » n'est jamais enregistré comme question", () => {
+    const core = testCore();
+    core.questions.record({ waId: CLIENT, texte: "salam", normalise: "salam", intention: "", categorie: "Autre", repondue: true });
+    core.questions.record({ waId: CLIENT, texte: "Combien le Mavic 4 Pro ?", normalise: "combien le mavic 4 pro", intention: "", categorie: "Drones DJI", repondue: true });
+    const n = (core.sqlite.prepare("SELECT COUNT(*) AS n FROM questions").get() as { n: number }).n;
+    expect(n).toBe(1);
+    core.close();
+  });
+});

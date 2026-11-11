@@ -75,7 +75,7 @@ describe("groupQuestionsByTopic — vue thématique des questions", () => {
   });
 
   it("knownTopics classe les sujets du plus fréquent au plus rare", () => {
-    const ids = [record("q1"), record("q2"), record("q3")];
+    const ids = [record("Combien pour un logo ?"), record("Prix du site vitrine ?"), record("Délai de livraison ?")];
     core.questions.setTopic(ids[0]!, "Délais de livraison");
     core.questions.setTopic(ids[1]!, "Tarifs et devis");
     core.questions.setTopic(ids[2]!, "Tarifs et devis");

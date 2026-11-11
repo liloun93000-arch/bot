@@ -28,3 +28,34 @@ export function fineCategory(text: string): string | null {
   for (const c of FINE_CATEGORIES) if (c.re.test(t)) return c.label;
   return null;
 }
+
+/** Mots qui ne font pas une question : salutations, politesse, accusés de réception. */
+const FILLER = new Set(
+  (
+    "salam salamalekoum salamalikoum salem slm wesh wsh bonjour bonsoir bjr bsr slt salut hello hi hey yo coucou cc " +
+    "ok okay oki okk dac daccord d accord merci mrc thanks thank you top parfait super nickel cool vu recu bien " +
+    "frere frerot khouya akhi gros mon ma le la les de du un une et a au svp stp please oui non ouais yes no ah oh " +
+    "hein bah ben euh mdr ptdr lol re alors donc voila bisous bonne journee soiree nuit aleykoum alaykoum wa alaykoum"
+  ).split(" "),
+);
+
+/** Mots qui signalent une vraie demande, même en un seul mot (« prix ? », « dispo ? »). */
+const INTENT_WORD = /\b(prix|combien|tarif|dispo|disponible|stock|livraison|delai|catalogue|acheter|commander|payer|paiement|comment|pourquoi|quand|ou|quel|quelle|quels|quelles|est-ce|c'est quoi|info|infos|formation|fournisseur)\b/;
+
+/**
+ * Vraie question / demande client, ou simple message de politesse (« salam », « ??? », « ok merci »,
+ * émojis…) ? Sert à ne garder que les vraies questions dans les statistiques et le top 10.
+ */
+export function isRealQuestion(text: string): boolean {
+  const t = text
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/^\[[^\]]*\]\s*/g, "") // marqueurs « [Image reçue] » etc.
+    .replace(/[’']/g, " ");
+  const words = t.match(/[a-z0-9]+/g) ?? [];
+  const meaningful = words.filter((w) => !FILLER.has(w) && w.length > 1);
+  if (meaningful.length === 0) return false;
+  if (meaningful.length >= 2) return true;
+  return INTENT_WORD.test(t) || (t.includes("?") && (meaningful[0]?.length ?? 0) >= 3);
+}

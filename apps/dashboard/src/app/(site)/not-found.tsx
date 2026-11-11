@@ -1,16 +1,15 @@
 import Link from "next/link";
 
-/** 404 du site public (slug de pôle ou de service inconnu). */
 export default function SiteNotFound() {
   return (
-    <main className="aj-page">
-      <section className="aj-notfound">
-        <h1 className="aj-ph1">Page introuvable</h1>
-        <p>Cette offre n&apos;existe pas ou n&apos;est plus proposée.</p>
-        <Link href="/" className="aj-back">
-          ← Tous les business
+    <section className="cv-pagehead">
+      <div className="cv-wrap">
+        <h1 className="cv-h1">Page introuvable</h1>
+        <p className="cv-lead">Cette page n&apos;existe pas.</p>
+        <Link href="/" className="cv-btn cv-btn-red">
+          ← Retour à l&apos;accueil
         </Link>
-      </section>
-    </main>
+      </div>
+    </section>
   );
 }

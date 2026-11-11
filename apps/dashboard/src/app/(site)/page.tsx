@@ -1,91 +1,53 @@
-import { getSiteData } from "@/lib/site/server";
-import { CtaBand } from "./_components/CtaBand";
-import { Featured } from "./_components/Featured";
-import { HeroIllustration } from "./_components/HeroIllustration";
-import { PoleCard } from "./_components/PoleCard";
-import { Steps } from "./_components/Steps";
-import { Ticker } from "./_components/Ticker";
-import { WaLink } from "./_components/WaLink";
+import Link from "next/link";
+import { Faq, WaButton } from "./_v/ui";
 
-export const dynamic = "force-dynamic";
+const CARTES = [
+  { href: "/formations", titre: "Formations", texte: "Des méthodes appliquées, pas de la théorie.", ico: "🎓" },
+  { href: "/creation-llc-ltd", titre: "Création de LLC / LTD", texte: "Ta société américaine ou hongkongaise, dès 545 €.", ico: "🏛️" },
+  { href: "/comptes-snapchat", titre: "Comptes Snapchat", texte: "Une audience déjà prête, sans repartir de zéro.", ico: "👻" },
+  { href: "/graphisme-digital", titre: "Graphisme & digital", texte: "Site, logo, bot, automatisations.", ico: "✨" },
+];
 
-export default function HomePage() {
-  const site = getSiteData();
-  const { hero, ticker, cardsTitleA, cardsTitleB, cardsHint, stepsTitle, steps } = site.content;
-
+export default function Accueil() {
   return (
-    <main className="aj-main">
-      <section className="aj-hero">
-        <div className="aj-hero-copy">
-          <div className="aj-hero-row">
-            <div className="aj-rail" aria-hidden="true">
-              <span className="aj-rail-arrow">↑</span>
-              {site.hero.rail.map((num) => (
-                <span key={num}>{num}</span>
-              ))}
-              <span className="aj-rail-arrow">↓</span>
-            </div>
-            <div>
-              <div className="aj-hero-title-row">
-                <span className="aj-hero-num" aria-hidden="true">
-                  {site.hero.bigNum}
-                </span>
-                <h1 className="aj-h1">
-                  {hero.titleA}
-                  <br />
-                  {hero.titleB}
-                </h1>
-              </div>
-              <p className="aj-hero-claim">{hero.claim}</p>
-              <p className="aj-hero-sub">{hero.sub}</p>
-              <div className="aj-hero-ctas">
-                <WaLink href={site.whatsapp.href} className="aj-btn-orange">
-                  {hero.ctaPrimary}
-                </WaLink>
-              </div>
-              <div className="aj-stats">
-                <div className="aj-stat aj-stat--orange">
-                  <div className="aj-stat-label">PÔLES</div>
-                  <div className="aj-stat-value">{site.hero.bigNum}</div>
-                  <div className="aj-stat-bar" />
-                </div>
-                <div className="aj-stat aj-stat--dark">
-                  <div className="aj-stat-label">TARIFS DÈS</div>
-                  <div className="aj-stat-value">{site.stats.minPrice}</div>
-                  <div className="aj-stat-bar" />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="aj-hero-art">
-          <HeroIllustration />
+    <>
+      <section className="cv-hero">
+        <div className="cv-wrap">
+          <h1 className="cv-hero-title">
+            Lance ton business. <span>On s&apos;occupe du reste.</span>
+          </h1>
+          <p className="cv-lead">
+            Formations, création de société, comptes Snapchat et services digitaux. Une seule personne à contacter,
+            une réponse rapide sur WhatsApp.
+          </p>
+          <WaButton big message="Bonjour Jacob, je viens de ton site.">
+            Me contacter sur WhatsApp
+          </WaButton>
         </div>
       </section>
 
-      <Ticker items={ticker} />
-
-      <section id="business" className="aj-section aj-sec-cards">
-        <div data-reveal="1" className="aj-cards-head">
-          <h2 className="aj-h2">
-            {cardsTitleA}
-            <br />
-            {cardsTitleB}
-          </h2>
-          <p className="aj-cards-hint">{cardsHint}</p>
-        </div>
-        <div data-reveal="2" className="aj-cards">
-          {site.poles.map((pole) => (
-            <PoleCard key={pole.id} pole={pole} />
+      <section className="cv-section">
+        <div className="cv-wrap cv-grid-cards">
+          {CARTES.map((c) => (
+            <Link key={c.href} href={c.href} className="cv-card cv-tile">
+              <span className="cv-tile-ico" aria-hidden>
+                {c.ico}
+              </span>
+              <span className="cv-tile-t">{c.titre}</span>
+              <span className="cv-tile-d">{c.texte}</span>
+              <span className="cv-tile-go" aria-hidden>
+                →
+              </span>
+            </Link>
           ))}
         </div>
       </section>
 
-      {site.featured && <Featured featured={site.featured} />}
+      <div className="cv-trust">
+        <div className="cv-wrap">Réponse rapide sur WhatsApp • Accès à vie aux formations • Tout se fait à distance</div>
+      </div>
 
-      <Steps title={stepsTitle} steps={steps} />
-
-      <CtaBand site={site} />
-    </main>
+      <Faq />
+    </>
   );
 }

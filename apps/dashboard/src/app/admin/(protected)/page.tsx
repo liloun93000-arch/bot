@@ -99,17 +99,15 @@ export default async function OverviewPage() {
   return (
     <div className="aj-home">
       {/* ───── Hero ───── */}
-      <section className="aj-hero aj-rise">
-        <div className="aj-hero-eyebrow">Dashboard Bot</div>
-        <h1>
-          <span className="aj-arbi">ARBI</span> <span className="aj-jacob">Jacob</span>
-        </h1>
-        <p className="aj-hero-sub">
-          <Icon name="whatsapp" size={30} />
-          <span>Gestion et suivi de votre bot WhatsApp</span>
-        </p>
+      {/* Bannière d'accueil fournie par Jacob (image complète, à l'échelle de l'écran). */}
+      <section className="aj-banner aj-rise">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/api/brand/mascot.webp" alt="" className="aj-mascot" />
+        <img
+          src="/banniere-accueil.webp"
+          alt="Dashboard Bot ARBI Jacob — Gestion et suivi de votre bot WhatsApp"
+          width={1735}
+          height={776}
+        />
       </section>
 
       {/* ───── 4 chiffres clés (2 × 2 sur mobile) ───── */}

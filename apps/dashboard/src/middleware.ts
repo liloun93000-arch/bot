@@ -7,5 +7,5 @@ export function middleware(req: NextRequest) {
 
 export const config = {
   // Tout sauf /admin, /api, les fichiers Next et l'icône.
-  matcher: ["/((?!admin|api|_next|icon|apple-icon|favicon|intro-connexion).*)"],
+  matcher: ["/((?!admin|api|_next|icon|apple-icon|favicon|intro-connexion|banniere-accueil).*)"],
 };

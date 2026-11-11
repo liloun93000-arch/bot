@@ -14,8 +14,7 @@ import {
   regenerateSummaryAction,
   releaseToBotAction,
   removeFactAction,
-  sendHumanMediaAction,
-  sendHumanMessageAction,
+  sendHumanReplyAction,
   sendQuickRelanceAction,
   takeOverAction,
   toggleFactAction,
@@ -278,41 +277,21 @@ export default async function ConversationDetailPage({
           </ChatScroll>
 
           <div className="card space-y-2">
-            <form action={sendHumanMessageAction.bind(null, waId)} className="flex gap-2">
-              <input
-                name="message"
-                className="input flex-1"
-                placeholder="Répondre en tant que Jacob (passe la conversation en mode humain)…"
-                autoComplete="off"
-                required
-                disabled={sendDisabled}
-                defaultValue={draft ?? ""}
-              />
-              <button className="btn btn-primary" type="submit" disabled={sendDisabled}>
-                Envoyer
-              </button>
-            </form>
-            {/* Formulaire distinct : un envoi de média a son propre corps
-                multipart, et un <form> ne peut pas en contenir un autre. */}
-            <form
-              action={sendHumanMediaAction.bind(null, waId)}
-              className="flex flex-wrap items-center gap-2 border-t border-neutral-100 pt-2"
-            >
-              <FilePicker accept={OUTBOUND_MEDIA_ACCEPT} disabled={sendDisabled} />
-              <input
-                name="legende"
-                className="input w-full md:w-56"
-                placeholder="Légende (facultative)…"
-                autoComplete="off"
-                disabled={sendDisabled}
-              />
-              <SendButton className="btn btn-secondary" disabled={sendDisabled}>
-                📎 Envoyer les fichiers
-              </SendButton>
-              <span className="w-full text-xs text-neutral-400">
-                Photos (converties automatiquement), vidéos MP4, PDF, Excel, Word, PowerPoint, texte — 10 fichiers max.
-                La légende accompagne le premier fichier.
-              </span>
+            {/* UN seul formulaire, UN seul bouton « Envoyer » : texte, fichiers, ou les deux. */}
+            <form action={sendHumanReplyAction.bind(null, waId)} className="aj-reply">
+              <div className="aj-reply-row">
+                <textarea
+                  name="message"
+                  rows={1}
+                  className="input flex-1"
+                  placeholder="Répondre en tant que Jacob…"
+                  autoComplete="off"
+                  disabled={sendDisabled}
+                  defaultValue={draft ?? ""}
+                />
+                <SendButton disabled={sendDisabled}>Envoyer</SendButton>
+              </div>
+              <FilePicker accept={OUTBOUND_MEDIA_ACCEPT} disabled={sendDisabled} required={false} label="📎 Joindre photo / PDF / Excel…" />
             </form>
             {/* En dehors du <form> ci-dessus : un <form> ne peut pas en contenir un autre (HTML). */}
             {contact.optOut === 1 && (

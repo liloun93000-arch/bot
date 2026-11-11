@@ -372,6 +372,35 @@ export async function sendHumanMediaAction(waId: string, formData: FormData): Pr
   );
 }
 
+/**
+ * Réponse depuis une conversation avec UN SEUL bouton « Envoyer » : texte seul, fichiers seuls,
+ * ou texte + fichiers (le texte part d'abord, puis les fichiers dans l'ordre).
+ */
+export async function sendHumanReplyAction(waId: string, formData: FormData): Promise<void> {
+  const text = String(formData.get("message") ?? "").trim();
+  const fichiers = filesFrom(formData);
+  if (fichiers.length === 0) return sendHumanMessageAction(waId, formData);
+  if (!text) return sendHumanMediaAction(waId, formData);
+
+  await requireSession();
+  const { core, wa, log } = getRuntime();
+  if (fichiers.length > MEDIA_BATCH_MAX) mediaRedirect(waId, `⚠️ ${MEDIA_BATCH_MAX} fichiers maximum en une fois.`);
+  const result = await wa.sendText(waId, text, { manual: true });
+  if (!result.sent) {
+    logDecision(log, "human_send_blocked", { waId, reason: result.reason, metaCode: result.metaCode });
+    const draft = encodeURIComponent(text.slice(0, DRAFT_MAX_CHARS));
+    const msg = encodeURIComponent(`⚠️ Rien n'est parti (message et fichiers) : ${blockedSendMessage(result.reason)}`);
+    redirect(`/admin/conversations/${waId}?msg=${msg}&draft=${draft}`);
+  }
+  recordHumanMessage(core, waId, text);
+  const { envoyes, echecs } = await sendFilesToClient(waId, fichiers, "");
+  revalidatePath(`/admin/conversations/${waId}`);
+  if (echecs.length === 0) {
+    redirect(`/admin/conversations/${waId}?msg=${encodeURIComponent(`✅ Message et ${envoyes.length} fichier(s) envoyés au client.`)}`);
+  }
+  mediaRedirect(waId, `⚠️ Message envoyé, ${envoyes.length} fichier(s) sur ${fichiers.length}. Échec : ${echecs.join(" · ")}`);
+}
+
 function mediaRedirect(waId: string, message: string): never {
   redirect(`/admin/conversations/${waId}?msg=${encodeURIComponent(message)}`);
 }

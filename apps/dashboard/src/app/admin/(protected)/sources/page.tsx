@@ -1,6 +1,6 @@
 import { requireSession } from "@/lib/auth";
 import { getRuntime } from "@/lib/core";
-import { siteBaseUrl } from "@/lib/site/server";
+import { headers } from "next/headers";
 import { addSourceAction, toggleSourceAction } from "@/lib/tracking-actions";
 import { WA_DESTINATION, clicksBySource, listSources, totalClicks } from "@/lib/tracking";
 import { CopyLink } from "./copy-link";
@@ -11,7 +11,11 @@ export default async function SourcesPage({ searchParams }: { searchParams: Prom
   await requireSession();
   const { msg } = await searchParams;
   const { core } = getRuntime();
-  const base = siteBaseUrl().origin;
+  // Adresse RÉELLE du site (celle que tu utilises en ce moment), pas un ancien réglage.
+  const h = await headers();
+  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "arbi-jacob-2-production.up.railway.app";
+  const proto = host.startsWith("localhost") ? "http" : "https";
+  const base = `${proto}://${host.split(",")[0]!.trim()}`;
   const sources = listSources(core);
   const week = clicksBySource(core, Date.now() - 7 * 86_400_000, Date.now() + 1);
 

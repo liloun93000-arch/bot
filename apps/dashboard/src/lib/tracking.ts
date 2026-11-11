@@ -31,21 +31,23 @@ export interface TrackingSource {
 let ready = false;
 export function ensureTracking(core: Core): void {
   if (ready) return;
-  core.sqlite.exec(`
-    CREATE TABLE IF NOT EXISTS tracking_sources (
+  for (const sql of [
+    `CREATE TABLE IF NOT EXISTS tracking_sources (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       slug TEXT NOT NULL UNIQUE,
       nom TEXT NOT NULL,
       actif INTEGER NOT NULL DEFAULT 1,
       created_at INTEGER NOT NULL
-    );
-    CREATE TABLE IF NOT EXISTS tracking_clicks (
+    )`,
+    `CREATE TABLE IF NOT EXISTS tracking_clicks (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       source_id INTEGER NOT NULL,
       ts INTEGER NOT NULL
-    );
-    CREATE INDEX IF NOT EXISTS idx_tracking_clicks ON tracking_clicks(source_id, ts);
-  `);
+    )`,
+    `CREATE INDEX IF NOT EXISTS idx_tracking_clicks ON tracking_clicks(source_id, ts)`,
+  ]) {
+    core.sqlite.prepare(sql).run();
+  }
   const ins = core.sqlite.prepare(`INSERT OR IGNORE INTO tracking_sources (slug, nom, actif, created_at) VALUES (?, ?, 1, ?)`);
   for (const s of DEFAULT_SOURCES) ins.run(s.slug, s.nom, Date.now());
   ready = true;

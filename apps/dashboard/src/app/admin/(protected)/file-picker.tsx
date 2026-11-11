@@ -109,7 +109,7 @@ export function FilePicker({
     } catch {
       /* navigateur ancien : on envoie les originaux */
     }
-    previews.forEach((p) => p.url && URL.revokeObjectURL(p.url));
+    for (const p of previews) if (p.url) URL.revokeObjectURL(p.url);
     setPreviews(
       ready.map((f) => ({
         name: f.name,

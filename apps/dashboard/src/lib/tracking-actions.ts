@@ -15,7 +15,7 @@ export async function addSourceAction(formData: FormData): Promise<void> {
   ensureTracking(core);
   const r = core.sqlite
     .prepare(`INSERT OR IGNORE INTO tracking_sources (slug, nom, actif, created_at) VALUES (?, ?, 1, ?)`)
-    .run(slug, nom, Date.now());
+    .run(slug, nom, Date.now()) as { changes: number };
   revalidatePath("/admin/sources");
   redirect(
     "/admin/sources?msg=" +

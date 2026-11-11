@@ -8,7 +8,8 @@ export const WA_DISPLAY = "+33 7 56 97 56 87";
  * SANS message prérempli — le client écrit ce qu'il veut. Le paramètre est gardé pour mémoire
  * de l'offre concernée mais n'est plus envoyé.
  */
-export function wa(_offre?: string): string {
+export function wa(offre?: string): string {
+  void offre;
   return "/go/site";
 }
 

@@ -95,6 +95,7 @@ export function cleanupSmallTalkAlerts(core: Core, log: Logger): string[] {
         .get(a.waId, a.createdAt + 60_000) as { contenu: string } | undefined
     )?.contenu.replace(/^\[[^\]]*\]\s*/, "");
     const txt = fromMotif || lastBefore || a.dernierMessage || "";
+    log.info(`cleanup_check alerte ${a.id} : « ${txt.slice(0, 80)} » → ${isRealQuestion(txt) ? "vraie demande" : "politesse"}`);
     if (txt && !isRealQuestion(txt)) {
       core.alerts.markTreated(a.id);
       if (!core.alerts.hasOpenFor(a.waId)) core.contacts.setStatut(a.waId, "en_cours");

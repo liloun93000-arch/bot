@@ -428,3 +428,29 @@ describe("Pièces jointes envoyables", () => {
     expect(checkOutboundMedia({ name: "x.jpg", size: 6 * 1024 * 1024, type: "image/jpeg" }).ok).toBe(false);
   });
 });
+
+describe("Nettoyage des alertes « salut ça va »", () => {
+  it("ferme les alertes/demandes de politesse, garde les vraies", async () => {
+    const { cleanupSmallTalkAlerts } = await import("../src/catalog-seed");
+    const core = testCore();
+    core.contacts.upsert("331"); core.contacts.upsert("332"); core.contacts.upsert("333");
+    core.alerts.create({ waId: "331", categorie: "Autre", intention: "", motif: "question restée sans réponse du bot", resume: "", dernierMessage: "salut ça va" });
+    core.alerts.create({ waId: "332", categorie: "Autre", intention: "", motif: "x", resume: "", dernierMessage: "Combien le Starlink ?" });
+    core.knowledge.escalations.create({ waId: "333", question: "ça va et toi", mediaFile: "", mediaMime: "", contexte: "" });
+    const closed = cleanupSmallTalkAlerts(core, silentLogger());
+    expect(closed).toHaveLength(2);
+    expect(core.alerts.open().map((a) => a.waId)).toEqual(["332"]);
+    expect(core.knowledge.escalations.countOpen()).toBe(0);
+    core.close();
+  });
+});
+
+describe("Formules « salut ça va » reconnues", () => {
+  it("variantes courantes", async () => {
+    const { isRealQuestion } = await import("@arbi/core");
+    for (const t of ["salut ça va", "Salut ça va ?", "ça va et toi", "Comment ça va ?", "tu vas bien ?", "bien et toi", "tranquille et toi", "oui ça va hmdl", "salam cv ?", "bien ou quoi", "et la famille ?", "Bonjour, comment allez-vous ?"]) {
+      expect(isRealQuestion(t), t).toBe(false);
+    }
+    for (const t of ["ça va, et le prix du 18 Pro Max ?", "comment je paie ?", "salut, vous livrez en Belgique ?"]) expect(isRealQuestion(t), t).toBe(true);
+  });
+});

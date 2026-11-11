@@ -15,7 +15,7 @@ import {
   type AlertDeps,
 } from "@arbi/core";
 import { readFile } from "node:fs/promises";
-import { installCatalogues, installScript } from "./catalog-seed";
+import { cleanupSmallTalkAlerts, installCatalogues, installScript } from "./catalog-seed";
 import { dirname, join } from "node:path";
 import { SalesAgent } from "./agent";
 import { loadConfig } from "./config";
@@ -36,6 +36,7 @@ async function main(): Promise<void> {
 
   // Catalogues PDF China Access : installés automatiquement dans « Fichiers du bot ».
   await installScript(core, config.CATALOGUE_PATH, log);
+  cleanupSmallTalkAlerts(core, log);
   await installCatalogues(core, join(dirname(config.CATALOGUE_PATH), "catalogues"), config.MEDIA_DIR, log);
 
   const gate = createGate({

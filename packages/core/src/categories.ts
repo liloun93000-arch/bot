@@ -57,7 +57,9 @@ export function isRealQuestion(text: string): boolean {
     .replace(/[̀-ͯ]/g, "")
     .toLowerCase()
     .replace(/^\[[^\]]*\]\s*/g, "") // marqueurs « [Image reçue] » etc.
-    .replace(/[’']/g, " ");
+    .replace(/[’']/g, " ")
+    // Formules de conversation entières : « comment ça va », « tu vas bien », « et la famille »…
+    .replace(/\b(comment (ca|tu|vous) (va|vas|allez)|comment (allez|vas)[- ](vous|tu)|tu vas bien|vous allez bien|ca (va|roule|dit quoi)|quoi de neuf|et (la|ta) famille|bien ou quoi|bien ou bien|la forme)\b/g, " ");
   const words = t.match(/[a-z0-9]+/g) ?? [];
   const meaningful = words.filter((w) => !FILLER.has(w) && w.length > 1);
   if (meaningful.length === 0) return false;

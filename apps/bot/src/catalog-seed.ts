@@ -1,6 +1,6 @@
 import { copyFile, mkdir, readFile, stat } from "node:fs/promises";
 import { join } from "node:path";
-import { NIVEAU4_MESSAGE, NIVEAU4_MESSAGE_V8, type Core, type Logger } from "@arbi/core";
+import { NIVEAU4_MESSAGE, NIVEAU4_MESSAGE_V8, isRealQuestion, type Core, type Logger } from "@arbi/core";
 
 /**
  * Les 4 catalogues PDF China Access (V9.1) sont installés automatiquement dans
@@ -70,4 +70,32 @@ export async function installScript(core: Core, path: string, log: Logger): Prom
   core.catalogue.save(content, "Script China Access V9.1 — remplace entièrement l'ancien catalogue");
   log.info({ chars: content.length }, "script_v91_installed");
   return true;
+}
+
+/**
+ * Nettoyage : alertes / demandes Jacob ouvertes à cause d'une simple formule de conversation
+ * (« salut ça va », « ça va et toi », « hmdl »…). Elles sont closes, le client n'est plus « en alerte »
+ * et ses questions de ce type sortent de « sans réponse ». Idempotent (rejoué à chaque démarrage).
+ */
+export function cleanupSmallTalkAlerts(core: Core, log: Logger): string[] {
+  const closed: string[] = [];
+  for (const a of core.alerts.open()) {
+    const txt = a.dernierMessage || "";
+    if (txt && !isRealQuestion(txt)) {
+      core.alerts.markTreated(a.id);
+      if (!core.alerts.hasOpenFor(a.waId)) core.contacts.setStatut(a.waId, "en_cours");
+      closed.push(`alerte ${a.id} (+${a.waId}) « ${txt.slice(0, 60)} »`);
+    }
+  }
+  for (const e of core.knowledge.escalations.open()) {
+    if (!isRealQuestion(e.question)) {
+      core.knowledge.escalations.cancel(e.id);
+      closed.push(`demande ${e.id} (+${e.waId}) « ${e.question.slice(0, 60)} »`);
+    }
+  }
+  for (const q of core.questions.unanswered(500)) {
+    if (!isRealQuestion(q.texte)) core.sqlite.prepare(`UPDATE questions SET repondue = 1 WHERE id = ?`).run(q.id);
+  }
+  log.info(`cleanup_small_talk: ${closed.length} fermée(s)${closed.length ? " — " + closed.join(" | ") : ""}`);
+  return closed;
 }

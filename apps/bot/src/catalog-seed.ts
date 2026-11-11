@@ -86,7 +86,15 @@ export function cleanupSmallTalkAlerts(core: Core, log: Logger): string[] {
   }
   const closed: string[] = [];
   for (const a of core.alerts.open()) {
-    const txt = a.dernierMessage || "";
+    // Ce que le client a VRAIMENT écrit : le motif (« Jacob doit reprendre la conversation : … »),
+    // sinon le dernier message reçu avant l'alerte, sinon le texte enregistré dans l'alerte.
+    const fromMotif = /^Jacob doit reprendre la conversation : (.*?)(?: — |$)/.exec(a.motif)?.[1] ?? "";
+    const lastBefore = (
+      core.sqlite
+        .prepare(`SELECT contenu FROM messages WHERE wa_id = ? AND role = 'user' AND ts <= ? ORDER BY id DESC LIMIT 1`)
+        .get(a.waId, a.createdAt + 60_000) as { contenu: string } | undefined
+    )?.contenu.replace(/^\[[^\]]*\]\s*/, "");
+    const txt = fromMotif || lastBefore || a.dernierMessage || "";
     if (txt && !isRealQuestion(txt)) {
       core.alerts.markTreated(a.id);
       if (!core.alerts.hasOpenFor(a.waId)) core.contacts.setStatut(a.waId, "en_cours");

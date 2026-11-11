@@ -377,3 +377,22 @@ describe("Top 10 : seulement les vraies questions", () => {
     core.close();
   });
 });
+
+describe("Pas d'étoiles dans les réponses", () => {
+  it("retire *gras*, **titres**, # et puces *, garde liens, prix et émojis", async () => {
+    const { stripMarkdown } = await import("../src/format");
+    const out = stripMarkdown("**iPhone 18 Pro Max** 👌\n* 256 Go : *1 204 – 1 388 €*\n# Lien\nhttps://chinacces.com/products/fournisseur-apple\n***Neuf*** jamais activé*");
+    expect(out).not.toContain("*");
+    expect(out).not.toContain("#");
+    expect(out).toContain("iPhone 18 Pro Max 👌");
+    expect(out).toContain("- 256 Go : 1 204 – 1 388 €");
+    expect(out).toContain("https://chinacces.com/products/fournisseur-apple");
+  });
+
+  it("une réponse du bot avec des étoiles part sans étoiles", async () => {
+    const env = setup([{ text: "Le *Mavic 4 Pro* est à **1 536 €** 👍" }]);
+    await clientSays(env, "Combien le Mavic 4 Pro ?");
+    expect(toClient(env)[0]?.text).toBe("Le Mavic 4 Pro est à 1 536 € 👍");
+    env.core.close();
+  });
+});

@@ -20,6 +20,7 @@ import {
 import type { Analysis } from "./brain";
 import { buildDynamicContext, buildStaticPrompt } from "./prompt";
 import { executeTool, exposedTools, type ToolContext } from "./tools";
+import { stripMarkdown } from "./format";
 import { claimsHandoffToJacob, escalateAndAck, isPaymentStage, looksLikeNoAnswer, stripJacobNumbers } from "./escalation";
 
 interface HistoryRow {
@@ -533,6 +534,10 @@ export class SalesAgent {
       if (fromViolations.length > 0) {
         logDecision(log, "from_price_not_qualified", { waId, amounts: fromViolations });
       }
+
+      // Pas d'étoiles ni de mise en forme Markdown (« *gras* », « **titre** », « # », « - ») :
+      // jugé moche et pas naturel par Jacob. Le texte reste lisible, juste sans symboles.
+      text = stripMarkdown(text);
 
       // Telegram (décision de Jacob) : aucun lien t.me / telegram.me, aucune mention de Telegram, SAUF la
       // redirection des produits à l'unité vers le revendeur @OGFactoryBot (script, section 8).

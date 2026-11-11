@@ -3,9 +3,13 @@
 export const WA_NUMBER = "33756975687";
 export const WA_DISPLAY = "+33 7 56 97 56 87";
 
-/** Lien WhatsApp avec message prérempli selon l'offre. */
-export function wa(message = "Bonjour Jacob, j'ai une question."): string {
-  return `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(message)}`;
+/**
+ * Lien WhatsApp du site : passe par le lien de suivi « site » (clic compté) puis ouvre WhatsApp
+ * SANS message prérempli — le client écrit ce qu'il veut. Le paramètre est gardé pour mémoire
+ * de l'offre concernée mais n'est plus envoyé.
+ */
+export function wa(_offre?: string): string {
+  return "/go/site";
 }
 
 export const NAV = [

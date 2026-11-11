@@ -2,6 +2,9 @@ import Link from "next/link";
 import { requireSession } from "@/lib/auth";
 import { getRuntime } from "@/lib/core";
 import { jacobPendingCount } from "@/lib/jacob";
+import { parsePeriod, previousPeriod } from "@/lib/period";
+import { clicksBySource, listSources } from "@/lib/tracking";
+import { PeriodFilter } from "./period-filter";
 import { clientPhotos, homeStats, recentConversations, themeCounts, type Delta } from "@/lib/home";
 import { computeKpis, topQuestions } from "@/lib/stats";
 import { CountUp, PhotoGallery } from "./home-client";
@@ -74,7 +77,11 @@ function KpiRow({ label, values }: { label: string; values: Array<number | strin
   );
 }
 
-export default async function OverviewPage() {
+export default async function OverviewPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ periode?: string; du?: string; au?: string }>;
+}) {
   await requireSession();
   const { core } = getRuntime();
 
@@ -94,7 +101,22 @@ export default async function OverviewPage() {
   const nouveauxLeads = core.leads.countNouveaux();
   const top = topQuestions(core, 10);
   const unanswered = core.questions.unanswered(10);
-  const maxCat = Math.max(1, ...month.parCategorie.map((c) => c.n));
+  // ── Période choisie (catégories + origine des contacts) ──
+  const period = parsePeriod(await searchParams);
+  const prev = previousPeriod(period);
+  const parCategorie = core.sqlite
+    .prepare(
+      `SELECT categorie, COUNT(*) AS n FROM questions WHERE created_at >= ? AND created_at < ? GROUP BY categorie ORDER BY n DESC`,
+    )
+    .all(period.from, period.to) as Array<{ categorie: string; n: number }>;
+  const maxCat = Math.max(1, ...parCategorie.map((c) => c.n));
+  const sources = listSources(core);
+  const clicks = clicksBySource(core, period.from, period.to);
+  const clicksPrev = clicksBySource(core, prev.from, prev.to);
+  const totalClics = [...clicks.values()].reduce((a, b) => a + b, 0);
+  const nouveauxContacts = (
+    core.sqlite.prepare(`SELECT COUNT(*) AS n FROM contacts WHERE created_at >= ? AND created_at < ?`).get(period.from, period.to) as { n: number }
+  ).n;
 
   return (
     <div className="aj-home">
@@ -368,15 +390,16 @@ export default async function OverviewPage() {
         </div>
 
         <div className="grid gap-4 lg:grid-cols-2">
-          <div className="card">
-            <h2 className="mb-3 font-semibold">Demandes par catégorie (30 j)</h2>
-            {month.parCategorie.length === 0 && (
-              <p className="text-sm text-neutral-500">Aucune demande enregistrée.</p>
+          <div className="card" id="periode">
+            <h2 className="mb-2 font-semibold">Demandes par catégorie</h2>
+            <PeriodFilter period={period} />
+            {parCategorie.length === 0 && (
+              <p className="mt-3 text-sm text-neutral-500">Aucune demande sur cette période.</p>
             )}
-            <div className="space-y-2">
-              {month.parCategorie.map((c) => (
+            <div className="mt-3 space-y-2">
+              {parCategorie.map((c) => (
                 <div key={c.categorie} className="flex items-center gap-2">
-                  <span className="w-24 shrink-0 text-sm">{c.categorie}</span>
+                  <span className="w-36 shrink-0 text-sm">{c.categorie}</span>
                   <div className="h-4 flex-1 overflow-hidden rounded bg-neutral-100">
                     <div
                       className="h-full rounded"
@@ -390,6 +413,39 @@ export default async function OverviewPage() {
                 </div>
               ))}
             </div>
+          </div>
+
+          <div className="card">
+            <h2 className="mb-2 font-semibold">Origine des contacts — clics par source</h2>
+            <PeriodFilter period={period} />
+            <div className="mt-3 space-y-2">
+              {sources.map((src) => {
+                const n = clicks.get(src.id) ?? 0;
+                const before = clicksPrev.get(src.id) ?? 0;
+                const pct = totalClics ? Math.round((n / totalClics) * 100) : 0;
+                const evo = before ? Math.round(((n - before) / before) * 100) : null;
+                return (
+                  <div key={src.id} className="flex items-center gap-2">
+                    <span className="w-28 shrink-0 text-sm">{src.nom}</span>
+                    <div className="h-4 flex-1 overflow-hidden rounded bg-neutral-100">
+                      <div className="h-full rounded" style={{ width: `${pct}%`, background: "linear-gradient(90deg, #b3121f, #ff2d3d)" }} />
+                    </div>
+                    <span className="w-24 text-right text-sm">
+                      <b>{n}</b> · {pct} %
+                      {evo !== null && <span className={evo >= 0 ? "text-green-500" : "text-red-500"}> {evo >= 0 ? "▲" : "▼"}{Math.abs(evo)} %</span>}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+            <p className="mt-3 text-xs text-neutral-500">
+              {totalClics} clic(s) sur les liens de suivi · {nouveauxContacts} nouveau(x) contact(s) WhatsApp sur la période, toutes
+              origines confondues. Les clics ne sont pas des contacts : WhatsApp ne permet pas de savoir de façon fiable d&apos;où
+              vient chaque client, donc aucune source n&apos;est attribuée individuellement.{" "}
+              <Link href="/admin/sources" className="underline">
+                Gérer les liens
+              </Link>
+            </p>
           </div>
 
           <div className="card">

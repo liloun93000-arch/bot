@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ScrollMemory } from "../back-nav";
 import { cookies } from "next/headers";
 import { filterConversationsAction } from "@/lib/actions";
 import { CONV_FILTER_COOKIE } from "@/lib/constants";
@@ -66,6 +67,10 @@ export default async function ConversationsPage({
 }) {
   await requireSession();
   const params = await searchParams;
+  // Contexte à retrouver au retour d'une conversation (filtre + recherche).
+  const fromHere = `/admin/conversations${new URLSearchParams(
+    Object.entries({ q: params.q ?? "", statut: params.statut ?? "" }).filter(([, v]) => v),
+  ).toString().replace(/^(?=.)/, "?")}`;
   // Aucun paramètre dans l'URL = on revient sur la liste (lien « ← Conversations »,
   // menu, retour navigateur) : on restaure le dernier filtre utilisé. Un
   // paramètre présent, même vide, reste prioritaire — c'est un choix explicite.
@@ -136,6 +141,7 @@ export default async function ConversationsPage({
         aucun JavaScript. L'apparence tableau est conservée par les mêmes
         proportions de colonnes sur l'en-tête et les lignes.
       */}
+      <ScrollMemory id={fromHere} />
       <div className="aj-cv-legend">
         <Link href="/admin/conversations?statut=" className="aj-cv-chip">Toutes <b>{all.length}</b></Link>
         <Link href="/admin/conversations?statut=alerte" className="aj-cv-chip is-alerte">Alerte <b>{nbAlerte}</b></Link>
@@ -152,7 +158,7 @@ export default async function ConversationsPage({
             <Link
               key={row.waId}
               role="listitem"
-              href={`/admin/conversations/${row.waId}`}
+              href={`/admin/conversations/${row.waId}?from=${encodeURIComponent(fromHere)}`}
               aria-label={`Ouvrir la conversation avec ${label}`}
               className={`aj-cv is-${kind}${aRepondre ? " is-unread" : ""}`}
             >

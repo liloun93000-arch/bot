@@ -1571,3 +1571,48 @@ td {
   width: 100%;
   height: auto;
 }
+
+/* ───── Pièces jointes (conversation + réponse rapide Jacob) ───── */
+.aj-files { display: flex; flex-direction: column; gap: 6px; min-width: 0; flex: 1 1 220px; }
+.aj-files-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  min-height: 40px;
+  padding: 8px 14px;
+  border-radius: 12px;
+  border: 1px dashed rgba(255, 255, 255, 0.3);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.aj-files-btn.is-off { opacity: 0.5; cursor: not-allowed; }
+.aj-files-btn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
+.aj-files-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.aj-files-list li { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 0.8rem; }
+.aj-files-list img { width: 44px; height: 44px; object-fit: cover; border-radius: 8px; flex: none; }
+.aj-files-ico { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 8px; background: rgba(255, 255, 255, 0.06); flex: none; }
+.aj-files-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.aj-files-size { color: var(--aj-gray); flex: none; }
+.aj-files-note { font-size: 0.75rem; color: var(--aj-gray); }
+.aj-files-err { font-size: 0.78rem; color: #fbbf24; }
+.aj-req-files { grid-column: 1 / -1; }
+
+/* ───── Liens de suivi & période ───── */
+.aj-src-list { display: grid; gap: 10px; }
+@media (min-width: 900px) { .aj-src-list { grid-template-columns: 1fr 1fr; } }
+.aj-src { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.aj-src.is-off { opacity: 0.6; }
+.aj-src-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.aj-src-top h2 { margin: 0; font-weight: 800; font-size: 1.05rem; }
+.aj-src-link { display: grid; grid-template-columns: 1fr auto; gap: 8px; min-width: 0; }
+.aj-src-link input { min-width: 0; }
+.aj-src-meta { margin: 0; font-size: 0.8rem; color: var(--aj-gray); }
+.aj-period { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.aj-period a { min-height: 36px; display: inline-flex; align-items: center; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--aj-line-strong); font-size: 0.8rem; font-weight: 600; }
+.aj-period a.is-on { background: linear-gradient(180deg, #ff2d3d, #b3121f); border-color: transparent; color: #fff; }
+.aj-period-custom { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; width: 100%; }
+.aj-period-custom input { width: auto; flex: 1 1 130px; min-width: 0; }
+.aj-period-label { width: 100%; font-size: 0.8rem; color: var(--aj-gray); }

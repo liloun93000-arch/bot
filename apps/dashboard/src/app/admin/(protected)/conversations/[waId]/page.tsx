@@ -1,7 +1,6 @@
 import {
   displayMediaText,
   OUTBOUND_MEDIA_ACCEPT,
-  OUTBOUND_MEDIA_MAX_BYTES,
   serviceWindow,
 } from "@arbi/core";
 import Link from "next/link";
@@ -26,7 +25,8 @@ import { getRuntime } from "@/lib/core";
 import { formatDuration } from "@/lib/time";
 import { ChatMedia } from "./chat-media";
 import { ChatScroll } from "./chat-scroll";
-import { MediaPicker } from "./media-picker";
+import { BackLink } from "../../back-nav";
+import { FilePicker, SendButton } from "../../file-picker";
 import { SummaryAutoRefresh } from "./summary-refresh";
 
 export const dynamic = "force-dynamic";
@@ -42,11 +42,11 @@ export default async function ConversationDetailPage({
   searchParams,
 }: {
   params: Promise<{ waId: string }>;
-  searchParams: Promise<{ msg?: string; draft?: string; confirmDelete?: string }>;
+  searchParams: Promise<{ msg?: string; draft?: string; confirmDelete?: string; from?: string }>;
 }) {
   await requireSession();
   const { waId } = await params;
-  const { msg, draft, confirmDelete } = await searchParams;
+  const { msg, draft, confirmDelete, from } = await searchParams;
   const { core } = getRuntime();
   const pendingEscalation = core.knowledge.escalations.openFor(waId);
   const resolvedEscalation = core.knowledge.escalations.latestResolvedFor(waId);
@@ -82,9 +82,7 @@ export default async function ConversationDetailPage({
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <Link href="/admin/conversations" className="text-sm text-neutral-500 hover:underline">
-            ← Conversations
-          </Link>
+          <BackLink waId={waId} from={from} />
           <h1 className="flex flex-wrap items-center gap-2 text-2xl font-bold">
             {contact.nom || `+${waId}`}
             {contact.modeHumain ? (
@@ -300,15 +298,7 @@ export default async function ConversationDetailPage({
               action={sendHumanMediaAction.bind(null, waId)}
               className="flex flex-wrap items-center gap-2 border-t border-neutral-100 pt-2"
             >
-              <MediaPicker
-                disabled={sendDisabled}
-                accept={OUTBOUND_MEDIA_ACCEPT}
-                maxImageBytes={OUTBOUND_MEDIA_MAX_BYTES.image}
-                maxVideoBytes={OUTBOUND_MEDIA_MAX_BYTES.video}
-                maxDocumentBytes={OUTBOUND_MEDIA_MAX_BYTES.document}
-                maxTotalBytes={45 * 1024 * 1024}
-                maxFiles={10}
-              />
+              <FilePicker accept={OUTBOUND_MEDIA_ACCEPT} disabled={sendDisabled} />
               <input
                 name="legende"
                 className="input w-full md:w-56"
@@ -316,12 +306,12 @@ export default async function ConversationDetailPage({
                 autoComplete="off"
                 disabled={sendDisabled}
               />
-              <button className="btn btn-secondary" type="submit" disabled={sendDisabled}>
-                📎 Envoyer
-              </button>
+              <SendButton className="btn btn-secondary" disabled={sendDisabled}>
+                📎 Envoyer les fichiers
+              </SendButton>
               <span className="w-full text-xs text-neutral-400">
-                Plusieurs fichiers à la fois (10 max) : photo JPEG/PNG ≤ 5 Mo, vidéo MP4 ≤ 16 Mo,
-                PDF et tableurs (xlsx, xls, csv) ≤ 45 Mo. La légende accompagne le premier fichier.
+                Photos (converties automatiquement), vidéos MP4, PDF, Excel, Word, PowerPoint, texte — 10 fichiers max.
+                La légende accompagne le premier fichier.
               </span>
             </form>
             {/* En dehors du <form> ci-dessus : un <form> ne peut pas en contenir un autre (HTML). */}

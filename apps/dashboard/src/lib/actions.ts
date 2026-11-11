@@ -245,21 +245,19 @@ function documentFilename(original: string): string {
  * l'ordre de sélection. Un échec sur un fichier n'empêche pas les suivants :
  * le bilan est rendu à la fin.
  */
-export async function sendHumanMediaAction(waId: string, formData: FormData): Promise<void> {
-  await requireSession();
+interface FilesOutcome {
+  envoyes: string[];
+  echecs: string[];
+  horsFenetre: boolean;
+}
+
+/**
+ * Envoi RÉEL de fichiers à un client (archivage sur le volume, dépôt chez Meta, message WhatsApp),
+ * partagé par la conversation et la réponse rapide de l'onglet Jacob : même fiabilité partout.
+ * Chaque fichier envoyé apparaît dans l'historique de la conversation.
+ */
+async function sendFilesToClient(waId: string, fichiers: File[], legende: string): Promise<FilesOutcome> {
   const { core, wa, log } = getRuntime();
-  const fichiers = formData
-    .getAll("fichier")
-    .filter((f): f is File => f instanceof File && f.size > 0);
-  const legende = String(formData.get("legende") ?? "")
-    .trim()
-    .slice(0, CAPTION_MAX_CHARS);
-
-  if (fichiers.length === 0) mediaRedirect(waId, "⚠️ Aucun fichier sélectionné.");
-  if (fichiers.length > MEDIA_BATCH_MAX) {
-    mediaRedirect(waId, `⚠️ ${MEDIA_BATCH_MAX} fichiers maximum en une fois.`);
-  }
-
   const envoyes: string[] = [];
   const echecs: string[] = [];
   let horsFenetre = false;
@@ -273,8 +271,6 @@ export async function sendHumanMediaAction(waId: string, formData: FormData): Pr
     const mime = check.mime;
     const stored = safeMediaName(randomUUID(), mime);
     const dir = mediaDir();
-    // Un seul passage en mémoire : le même buffer sert à l'archivage et au
-    // dépôt chez Meta.
     const buffer = Buffer.from(await file.arrayBuffer());
     try {
       await mkdir(dir, { recursive: true });
@@ -288,38 +284,27 @@ export async function sendHumanMediaAction(waId: string, formData: FormData): Pr
       await unlink(join(dir, stored)).catch(() => undefined);
     };
 
-    const mediaId = await wa.uploadMedia(buffer, mime, stored);
+    const mediaId = await wa.uploadMedia(buffer, mime, check.kind === "document" ? documentFilename(file.name) : stored);
     if (!mediaId) {
       await cleanup();
+      logDecision(log, "human_media_upload_failed", { waId, kind: check.kind, mime, bytes: file.size });
       echecs.push(`${file.name} — refusé par WhatsApp`);
       continue;
     }
 
     const result = await wa.sendMedia(waId, check.kind, mediaId, {
-      // La légende n'accompagne que le PREMIER fichier : répétée sur chacun,
-      // le client la recevrait autant de fois qu'il y a de pièces jointes.
       caption: index === 0 && legende ? legende : undefined,
-      // Sans `filename`, un document arrive chez le client sous son nom
-      // technique (un UUID) au lieu de « tarifs 2026.xlsx ».
       ...(check.kind === "document" ? { filename: documentFilename(file.name) } : {}),
       manual: true,
     });
     if (!result.sent) {
       await cleanup();
-      logDecision(log, "human_media_send_failed", {
-        waId,
-        kind: check.kind,
-        reason: result.reason,
-        metaCode: result.metaCode,
-      });
+      logDecision(log, "human_media_send_failed", { waId, kind: check.kind, reason: result.reason, metaCode: result.metaCode });
       if (result.reason === "outside_24h_window") horsFenetre = true;
       echecs.push(`${file.name} — ${result.reason ?? "échec d'envoi"}`);
       continue;
     }
 
-    // Le fichier est PARTI chez le client : on ne supprime plus rien. Si
-    // l'écriture en base casse, on le journalise sans faire croire à un échec
-    // d'envoi, ce qui pousserait à le renvoyer une seconde fois.
     const etiquette =
       check.kind === "image"
         ? "[Photo envoyée]"
@@ -341,11 +326,38 @@ export async function sendHumanMediaAction(waId: string, formData: FormData): Pr
     envoyes.push(file.name);
     logDecision(log, "human_media_sent", { waId, kind: check.kind, bytes: file.size });
   }
+  return { envoyes, echecs, horsFenetre };
+}
+
+function filesFrom(formData: FormData): File[] {
+  return formData.getAll("fichier").filter((f): f is File => f instanceof File && f.size > 0);
+}
+
+/**
+ * Envoi d'un ou PLUSIEURS fichiers depuis une conversation (photos, vidéos, PDF, tableurs,
+ * documents Word / PowerPoint / texte). Un échec sur un fichier n'empêche pas les suivants.
+ */
+export async function sendHumanMediaAction(waId: string, formData: FormData): Promise<void> {
+  await requireSession();
+  const { core } = getRuntime();
+  const fichiers = filesFrom(formData);
+  const legende = String(formData.get("legende") ?? "")
+    .trim()
+    .slice(0, CAPTION_MAX_CHARS);
+
+  if (fichiers.length === 0) mediaRedirect(waId, "⚠️ Aucun fichier sélectionné.");
+  if (fichiers.length > MEDIA_BATCH_MAX) {
+    mediaRedirect(waId, `⚠️ ${MEDIA_BATCH_MAX} fichiers maximum en une fois.`);
+  }
+
+  const { envoyes, echecs, horsFenetre } = await sendFilesToClient(waId, fichiers, legende);
 
   if (envoyes.length > 0) core.contacts.setModeHumain(waId, true);
   revalidatePath(`/admin/conversations/${waId}`);
 
-  if (echecs.length === 0) redirect(`/admin/conversations/${waId}`);
+  if (echecs.length === 0) {
+    redirect(`/admin/conversations/${waId}?msg=${encodeURIComponent(`✅ ${envoyes.length} fichier(s) envoyé(s) au client.`)}`);
+  }
   if (envoyes.length === 0 && horsFenetre) {
     mediaRedirect(
       waId,
@@ -607,25 +619,46 @@ export async function markClientTreatedAction(waId: string): Promise<void> {
 export async function jacobReplyAction(waId: string, formData: FormData): Promise<void> {
   await requireSession();
   const text = String(formData.get("message") ?? "").trim();
-  if (!text) return;
+  const fichiers = filesFrom(formData).slice(0, MEDIA_BATCH_MAX);
+  if (!text && fichiers.length === 0) return;
   const { core, wa, log } = getRuntime();
-  let sent = false;
-  const result = await wa.sendText(waId, text, { manual: true });
-  if (result.sent) sent = true;
-  else if (result.reason === "outside_24h_window") {
-    const fallback = await sendViaRelanceTemplate(core, wa, waId, text);
-    sent = fallback.status === "sent_with_text";
+  const back = (msg: string, keepDraft: boolean): never =>
+    redirect(
+      `/admin/jacob?msg=${encodeURIComponent(msg)}` +
+        (keepDraft ? `&client=${waId}&draft=${encodeURIComponent(text.slice(0, DRAFT_MAX_CHARS))}` : ""),
+    );
+
+  // 1) Le texte (s'il y en a)
+  let texteParti = !text;
+  if (text) {
+    const result = await wa.sendText(waId, text, { manual: true });
+    if (result.sent) texteParti = true;
+    else if (result.reason === "outside_24h_window") {
+      const fallback = await sendViaRelanceTemplate(core, wa, waId, text);
+      texteParti = fallback.status === "sent_with_text";
+    }
+    if (!texteParti) {
+      logDecision(log, "jacob_reply_failed", { waId, reason: result.reason });
+      back(`⚠️ Message NON envoyé : ${blockedSendMessage(result.reason)}`, true);
+    }
+    recordHumanMessage(core, waId, text);
   }
-  if (!sent) {
-    logDecision(log, "jacob_reply_failed", { waId, reason: result.reason });
-    const msg = encodeURIComponent(`⚠️ Message NON envoyé : ${blockedSendMessage(result.reason)}`);
-    redirect(`/admin/jacob?msg=${msg}&client=${waId}&draft=${encodeURIComponent(text.slice(0, DRAFT_MAX_CHARS))}`);
+
+  // 2) Les pièces jointes (même envoi que depuis la conversation)
+  const files = fichiers.length ? await sendFilesToClient(waId, fichiers, "") : { envoyes: [], echecs: [], horsFenetre: false };
+  if (fichiers.length && files.envoyes.length === 0) {
+    // Rien n'est parti en fichiers : la demande reste ouverte (sauf si le texte, lui, est parti).
+    if (!text) back(`⚠️ Aucun fichier envoyé. ${files.echecs.join(" · ")}`, false);
   }
-  recordHumanMessage(core, waId, text);
-  treatClient(core, waId, text); // après l'enregistrement : la main revient bien au bot
-  logDecision(log, "jacob_reply_sent_and_treated", { waId });
+
+  treatClient(core, waId, text || `[${files.envoyes.length} fichier(s) envoyé(s)]`);
+  logDecision(log, "jacob_reply_sent_and_treated", { waId, fichiers: files.envoyes.length });
   revalidateJacob(waId);
-  redirect(`/admin/jacob?msg=${encodeURIComponent("✅ Réponse envoyée — demande traitée, le bot a repris la main.")}`);
+  const bilan =
+    files.echecs.length > 0
+      ? `⚠️ Envoyé en partie — échec : ${files.echecs.join(" · ")}. Demande traitée, le bot a repris la main.`
+      : `✅ Réponse envoyée${files.envoyes.length ? ` (${files.envoyes.length} fichier(s))` : ""} — demande traitée, le bot a repris la main.`;
+  redirect(`/admin/jacob?msg=${encodeURIComponent(bilan)}`);
 }
 
 // ── Mémoire client (§5) ──

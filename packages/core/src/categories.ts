@@ -35,7 +35,12 @@ const FILLER = new Set(
     "salam salamalekoum salamalikoum salem slm wesh wsh bonjour bonsoir bjr bsr slt salut hello hi hey yo coucou cc " +
     "ok okay oki okk dac daccord d accord merci mrc thanks thank you top parfait super nickel cool vu recu bien " +
     "frere frerot khouya akhi gros mon ma le la les de du un une et a au svp stp please oui non ouais yes no ah oh " +
-    "hein bah ben euh mdr ptdr lol re alors donc voila bisous bonne journee soiree nuit aleykoum alaykoum wa alaykoum"
+    "hein bah ben euh mdr ptdr lol re alors donc voila bisous bonne journee soiree nuit aleykoum alaykoum wa alaykoum " +
+    // « Ça va, Dieu merci, et toi ? » et ses variantes / abréviations / fautes courantes
+    "al el hamdulilah hamdulillah hamdoulilah hamdoullah hamdoulah hamdoulillah hamdollah hamdoulila hamdulila " +
+    "alhamdulillah alhamdulilah alhamdoulilah alhamdoulillah elhamdoulilah hmdl hmld hamdl hamdo hamdou " +
+    "labas tranquille tranquil tranquillement trkl cv ca va vas toi vous moi aussi pareil tres grave " +
+    "inchallah inshallah incha inch mashallah machallah masha bismillah wallah wllh jte remercie remercie"
   ).split(" "),
 );
 

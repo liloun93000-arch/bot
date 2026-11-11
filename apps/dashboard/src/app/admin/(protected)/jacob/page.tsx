@@ -3,6 +3,9 @@ import { requireSession } from "@/lib/auth";
 import { getRuntime } from "@/lib/core";
 import { jacobHistory, jacobPending, waitingLabel, type JacobItem } from "@/lib/jacob";
 import { jacobReplyAction, markClientTreatedAction } from "@/lib/actions";
+import { OUTBOUND_MEDIA_ACCEPT } from "@arbi/core";
+import { ScrollMemory } from "../back-nav";
+import { FilePicker, SendButton } from "../file-picker";
 import { Icon, idx } from "../icons";
 import { JacobPhoto } from "./jacob-photo";
 
@@ -29,7 +32,7 @@ function Request({ r, i, draft = "" }: { r: JacobItem; i: number; draft?: string
       <footer className="aj-req-actions">
         <span className="aj-req-kind">{r.kind === "question" ? "Question inconnue du bot" : "Alerte"}</span>
         <span className="flex-1" />
-        <Link href={`/admin/conversations/${r.waId}`} className="btn btn-secondary">
+        <Link href={`/admin/conversations/${r.waId}?from=${encodeURIComponent(r.resolu ? "/admin/jacob?vue=historique" : "/admin/jacob")}`} className="btn btn-secondary">
           Voir la conversation
         </Link>
         {!r.resolu && (
@@ -44,17 +47,17 @@ function Request({ r, i, draft = "" }: { r: JacobItem; i: number; draft?: string
         <form action={jacobReplyAction.bind(null, r.waId)} className="aj-req-reply">
           <textarea
             name="message"
-            required
             rows={2}
             className="input"
             placeholder={`Répondre à ${r.nom}…`}
             aria-label={`Réponse à ${r.nom}`}
             defaultValue={draft}
           />
-          <button type="submit" className="btn btn-primary">
-            Envoyer
-          </button>
-          <span className="aj-req-hint">À l&apos;envoi : demande traitée et main rendue au bot.</span>
+          <SendButton>Envoyer</SendButton>
+          <div className="aj-req-files">
+            <FilePicker accept={OUTBOUND_MEDIA_ACCEPT} required={false} label="📎 Joindre photo / PDF / Excel…" />
+          </div>
+          <span className="aj-req-hint">Texte, pièce jointe, ou les deux. À l&apos;envoi : demande traitée et main rendue au bot.</span>
         </form>
       )}
     </article>
@@ -80,6 +83,7 @@ export default async function JacobPage({ searchParams }: { searchParams: Promis
         </p>
       </div>
 
+      <ScrollMemory id={`/admin/jacob?vue=${vue}`} />
       {msg && <div className="card text-sm font-medium">{msg}</div>}
 
       <div className="aj-jtabs" role="tablist">

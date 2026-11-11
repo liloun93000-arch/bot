@@ -1,5 +1,6 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import {
+  isRealQuestion,
   describeOffer,
   logDecision,
   triggerAlert,
@@ -320,6 +321,17 @@ export async function executeTool(
     case "ask_director": {
       const parsed = askDirectorSchema.safeParse(input);
       if (!parsed.success) return "Erreur : `question` manquante.";
+      // Formule de politesse / small talk (« hmdl et toi », « Al Hamdûlilah », « ok merci ») :
+      // ce n'est pas une demande, aucune alerte — on répond naturellement.
+      {
+        const last = core.sqlite
+          .prepare(`SELECT contenu FROM messages WHERE wa_id = ? AND role = 'user' ORDER BY id DESC LIMIT 1`)
+          .get(waId) as { contenu: string } | undefined;
+        if (last && !isRealQuestion(last.contenu)) {
+          logDecision(log, "alert_refused_small_talk", { waId });
+          return "PAS D'ALERTE : le dernier message du client est une formule de conversation (salutation, « ça va, Dieu merci, et toi ? », remerciement), pas une demande. Réponds-lui naturellement et chaleureusement (ex. « Ça va très bien merci 😊 »), puis relance doucement la conversation.";
+        }
+      }
       // La photo éventuelle, le contexte et le message d'information (UN SEUL, sans numéro)
       // sont gérés par escalateAndAck.
       const out = await escalateAndAck(

@@ -396,3 +396,35 @@ describe("Pas d'étoiles dans les réponses", () => {
     env.core.close();
   });
 });
+
+describe("TEST 7/8/9 — « Al Hamdûlilah et toi » : réponse naturelle, aucune alerte", () => {
+  for (const msg of ["Al Hamdûlilah et toi", "HMLD et toi", "HMDL"]) {
+    it(msg, async () => {
+      // Même si le modèle tente une alerte, elle est refusée et il répond naturellement.
+      const env = setup([{ tool: "ask_director", input: { question: msg } }, { text: "Ça va très bien merci 😊 Je peux t'aider pour quoi ?" }]);
+      await clientSays(env, msg);
+      expect(toClient(env).map((m) => m.text)).toEqual(["Ça va très bien merci 😊 Je peux t'aider pour quoi ?"]);
+      expect(env.core.alerts.countOpen() + env.core.knowledge.escalations.countOpen()).toBe(0);
+      expect(env.core.questions.unanswered()).toHaveLength(0);
+      env.core.close();
+    });
+  }
+});
+
+describe("Pièces jointes envoyables", () => {
+  it("photo, PDF, Excel, Word, PowerPoint, texte acceptés ; trop lourd refusé", async () => {
+    const { checkOutboundMedia } = await import("@arbi/core");
+    for (const [name, type, kind] of [
+      ["photo.jpg", "image/jpeg", "image"],
+      ["devis.pdf", "application/pdf", "document"],
+      ["tarifs.xlsx", "", "document"],
+      ["contrat.docx", "", "document"],
+      ["plan.pptx", "", "document"],
+      ["notes.txt", "text/plain", "document"],
+    ] as const) {
+      const r = checkOutboundMedia({ name, size: 1000, type });
+      expect(r.ok && r.kind, name).toBe(kind);
+    }
+    expect(checkOutboundMedia({ name: "x.jpg", size: 6 * 1024 * 1024, type: "image/jpeg" }).ok).toBe(false);
+  });
+});

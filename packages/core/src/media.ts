@@ -28,6 +28,15 @@ const EXTENSIONS: Record<string, string> = {
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx",
   "application/vnd.ms-excel": "xls",
   "text/csv": "csv",
+  "application/msword": "doc",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
+  "application/vnd.ms-powerpoint": "ppt",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation": "pptx",
+  "text/plain": "txt",
+  "image/heic": "heic",
+  "image/heif": "heif",
+  "image/avif": "avif",
+  "video/quicktime": "mov",
 };
 
 /** Type de média que le back-office peut envoyer à un client. */
@@ -48,6 +57,12 @@ const OUTBOUND_MIME: Record<string, OutboundMediaKind> = {
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "document",
   "application/vnd.ms-excel": "document",
   "text/csv": "document",
+  // Documents bureautiques acceptés par WhatsApp.
+  "application/msword": "document",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "document",
+  "application/vnd.ms-powerpoint": "document",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation": "document",
+  "text/plain": "document",
 };
 
 /** Plafonds Meta par type sortant — au-delà, l'API rejette l'upload. */
@@ -58,7 +73,8 @@ export const OUTBOUND_MEDIA_MAX_BYTES: Record<OutboundMediaKind, number> = {
 };
 
 /** Extensions proposées au sélecteur de fichier du back-office. */
-export const OUTBOUND_MEDIA_ACCEPT = ".jpg,.jpeg,.png,.mp4,.3gp,.pdf,.xlsx,.xls,.csv";
+export const OUTBOUND_MEDIA_ACCEPT =
+  "image/*,.jpg,.jpeg,.png,.heic,.heif,.webp,.mp4,.3gp,.mov,.pdf,.xlsx,.xls,.csv,.doc,.docx,.ppt,.pptx,.txt";
 
 /** `image` / `video` si le type MIME est envoyable, `null` sinon. */
 export function outboundMediaKind(mime: string): OutboundMediaKind | null {
@@ -77,6 +93,11 @@ const OUTBOUND_MIME_BY_EXT: Record<string, string> = {
   xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   xls: "application/vnd.ms-excel",
   csv: "text/csv",
+  doc: "application/msword",
+  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  ppt: "application/vnd.ms-powerpoint",
+  pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  txt: "text/plain",
 };
 
 /**
@@ -115,7 +136,7 @@ export function checkOutboundMedia(file: { name: string; size: number; type: str
     return {
       ok: false,
       message:
-        "Format non supporté par WhatsApp — photo JPEG/PNG, vidéo MP4, PDF ou tableur (xlsx, xls, csv).",
+        "Format non supporté par WhatsApp — photo, vidéo MP4, PDF, Word, Excel, PowerPoint ou texte.",
     };
   }
   const max = OUTBOUND_MEDIA_MAX_BYTES[kind];

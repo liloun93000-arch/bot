@@ -22,6 +22,15 @@ const MIME_BY_EXT: Record<string, string> = {
   xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   xls: "application/vnd.ms-excel",
   csv: "text/csv",
+  doc: "application/msword",
+  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  ppt: "application/vnd.ms-powerpoint",
+  pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  txt: "text/plain; charset=utf-8",
+  heic: "image/heic",
+  heif: "image/heif",
+  avif: "image/avif",
+  mov: "video/quicktime",
 };
 
 /**

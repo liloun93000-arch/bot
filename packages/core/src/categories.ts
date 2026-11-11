@@ -64,5 +64,6 @@ export function isRealQuestion(text: string): boolean {
   const meaningful = words.filter((w) => !FILLER.has(w) && w.length > 1);
   if (meaningful.length === 0) return false;
   if (meaningful.length >= 2) return true;
-  return INTENT_WORD.test(t) || (t.includes("?") && (meaningful[0]?.length ?? 0) >= 3);
+  // Un seul mot porteur de sens (« les derniers », « Wyoming »…) : c'est une vraie réponse/demande.
+  return INTENT_WORD.test(t) || (meaningful[0]?.length ?? 0) >= 4 || (t.includes("?") && (meaningful[0]?.length ?? 0) >= 3);
 }

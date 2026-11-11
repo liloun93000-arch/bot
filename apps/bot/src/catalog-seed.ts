@@ -78,6 +78,12 @@ export async function installScript(core: Core, path: string, log: Logger): Prom
  * et ses questions de ce type sortent de « sans réponse ». Idempotent (rejoué à chaque démarrage).
  */
 export function cleanupSmallTalkAlerts(core: Core, log: Logger): string[] {
+  // Correction ponctuelle : l'alerte 22 de cette vague (« Les dernier ») était une vraie réponse
+  // client fermée à tort par la 1re version du filtre → rouverte, une seule fois.
+  if (core.sends.claim("fix:reopen-alert-les-dernier")) {
+    core.sqlite.prepare(`UPDATE alerts SET statut = 'ouverte', treated_at = NULL WHERE statut <> 'ouverte' AND dernier_message = 'Les dernier'`).run();
+    core.sqlite.prepare(`UPDATE contacts SET statut = 'alerte' WHERE wa_id IN (SELECT wa_id FROM alerts WHERE statut = 'ouverte' AND dernier_message = 'Les dernier')`).run();
+  }
   const closed: string[] = [];
   for (const a of core.alerts.open()) {
     const txt = a.dernierMessage || "";

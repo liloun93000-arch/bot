@@ -454,3 +454,13 @@ describe("Formules « salut ça va » reconnues", () => {
     for (const t of ["ça va, et le prix du 18 Pro Max ?", "comment je paie ?", "salut, vous livrez en Belgique ?"]) expect(isRealQuestion(t), t).toBe(true);
   });
 });
+
+describe("« Slm ça va ? C'est toi ? » (+ capture Snapchat) : pas d'alerte", () => {
+  it("formules d'identité reconnues", async () => {
+    const { isRealQuestion } = await import("@arbi/core");
+    for (const t of ["Slm ça va ? C'ets toi ?", "c'est toi ?", "C'est bien toi Jacob ?", "c toi ?", "t'es qui ?", "cest toi le vrai ?", "slm cv"]) {
+      expect(isRealQuestion(t), t).toBe(false);
+    }
+    expect(isRealQuestion("C'est toi qui vends les Surron ?")).toBe(true);
+  });
+});

@@ -1701,3 +1701,6 @@ td {
 form#saisie input, form#saisie select { min-width: 0; max-width: 100%; width: 100%; box-sizing: border-box; }
 form#saisie input[type="date"] { -webkit-appearance: none; appearance: none; display: block; min-height: 44px; text-align: left; }
 form#saisie input[type="date"]::-webkit-date-and-time-value { text-align: left; }
+/* Réponse : le sélecteur de fichiers ne réserve plus 220 px vides sous la barre */
+.aj-reply .aj-files { flex: 0 0 auto; }
+.aj-chat-video { display: block; width: 100%; max-width: 320px; max-height: 360px; border-radius: 12px; background: #000; }

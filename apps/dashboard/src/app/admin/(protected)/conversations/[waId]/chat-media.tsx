@@ -13,10 +13,11 @@ export function ChatMedia({ file, mime, alt }: { file: string; mime: string; alt
   if (mime.startsWith("image/")) return <ChatImage src={src} alt={alt} />;
   if (mime.startsWith("audio/")) return <audio controls preload="none" src={src} className="w-full max-w-xs" />;
   if (mime.startsWith("video/"))
-    return <video controls preload="none" src={src} className="max-h-64 rounded-lg border border-neutral-200" />;
+    // preload="metadata" + #t=0.1 : la 1re image de la vidéo s'affiche (sinon cadre vide sur iPhone).
+    return <video controls playsInline preload="metadata" src={`${src}#t=0.1`} className="aj-chat-video" />;
   return (
     <a href={src} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 underline">
-      📎 Ouvrir le fichier reçu
+      📎 Ouvrir le fichier
     </a>
   );
 }

@@ -24,7 +24,7 @@ export function StatutSelect({
   return (
     <span className="flex items-center gap-2">
       <select
-        className="input w-36"
+        className="input w-40"
         value={valeur}
         disabled={pending}
         onChange={(event) => {

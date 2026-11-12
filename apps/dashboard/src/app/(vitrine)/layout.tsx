@@ -1,17 +1,14 @@
 import type { Metadata } from "next";
-import { requireSession } from "@/lib/auth";
 import "./kit.css";
 import "./vitrine.css";
 
-/** Version de TRAVAIL de la nouvelle vitrine : visible seulement une fois connecté au dashboard. */
+/** Site vitrine public (validé le 12/11/2026). */
 export const metadata: Metadata = {
-  title: "ARBI JACOB — Aperçu vitrine",
+  title: "ARBI JACOB — Formations, société, sourcing et services digitaux",
   description: "Formations, société, sourcing et services digitaux. Une seule personne à contacter, une réponse rapide sur WhatsApp.",
-  robots: { index: false, follow: false },
 };
 
-export default async function ApercuLayout({ children }: { children: React.ReactNode }) {
-  await requireSession();
+export default function VitrineLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
       <link rel="preconnect" href="https://fonts.googleapis.com" />

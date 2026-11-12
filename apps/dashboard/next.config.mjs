@@ -28,11 +28,26 @@ const nextConfig = {
       "/facturation",
       "/reglages",
     ];
-    return legacy.map((source) => ({
-      source,
-      destination: `/admin${source}`,
-      permanent: true,
-    }));
+    // Anciennes pages de la vitrine → sections de la nouvelle page unique.
+    const vitrine = [
+      ["/apercu", "/"],
+      ["/apercu/conditions", "/conditions"],
+      ["/apercu/confidentialite", "/confidentialite"],
+      ["/formations", "/#formations"],
+      ["/creation-llc-ltd", "/#llc"],
+      ["/comptes-snapchat", "/#snapchat"],
+      ["/graphisme-digital", "/#digital"],
+      ["/qui-suis-je", "/#qui"],
+      ["/contact", "/#contact"],
+    ].map(([source, destination]) => ({ source, destination, permanent: false }));
+    return [
+      ...legacy.map((source) => ({
+        source,
+        destination: `/admin${source}`,
+        permanent: true,
+      })),
+      ...vitrine,
+    ];
   },
 };
 

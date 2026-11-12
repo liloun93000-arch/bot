@@ -69,7 +69,6 @@ export default function ApercuVitrine() {
   const avail = availability(getRuntime().core);
   return (
     <>
-      <div className="kv-preview-bar">APERÇU DE TRAVAIL — NON PUBLIÉ · <Link href="/admin">RETOUR AU DASHBOARD</Link></div>
       <header className="site-header kv-header">
         <a className="brand" href="#accueil" aria-label="ARBI JACOB — accueil">
           <img src="/vitrine/logo.webp" alt="ARBI JACOB" />
@@ -447,7 +446,7 @@ export default function ApercuVitrine() {
       <footer>
         <span>© ARBI JACOB</span>
         <span>
-          <Link href="/apercu/conditions">CONDITIONS GÉNÉRALES</Link> · <Link href="/apercu/confidentialite">CONFIDENTIALITÉ</Link>
+          <Link href="/conditions">CONDITIONS GÉNÉRALES</Link> · <Link href="/confidentialite">CONFIDENTIALITÉ</Link>
         </span>
       </footer>
     </>

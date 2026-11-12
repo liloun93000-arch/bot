@@ -4,7 +4,6 @@ import Link from "next/link";
 export function LegalDraft({ titre, sections }: { titre: string; sections: Array<[string, string]> }) {
   return (
     <main className="section kv-legal">
-      <p className="kv-preview-bar">BROUILLON — À COMPLÉTER ET FAIRE VALIDER AVANT PUBLICATION</p>
       <h1>{titre}</h1>
       {sections.map(([h, t]) => (
         <section key={h}>
@@ -12,7 +11,7 @@ export function LegalDraft({ titre, sections }: { titre: string; sections: Array
           <p>{t}</p>
         </section>
       ))}
-      <Link href="/apercu" className="btn btn-brand btn-compact">
+      <Link href="/" className="btn btn-brand btn-compact">
         RETOUR
       </Link>
     </main>

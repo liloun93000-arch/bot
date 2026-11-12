@@ -140,10 +140,10 @@ export default function PreviewV2Home() {
       </section>
 
       {/* CALME : aperçus courts */}
-      <section className="section">
-        <h2 className="v2-h2" data-reveal>
-          NOS <span className="red-text">SERVICES</span>
-        </h2>
+      <section className="section v2-services" id="services">
+        <div className="v2-row-head" data-reveal>
+          <h2 className="v2-h2">NOS SERVICES</h2>
+        </div>
         <div className="v2-apercus">
           <Apercu
             href={`${BASE}/societe`}

@@ -486,3 +486,6 @@ html:has(.v2), body:has(.v2) { background: #07080b !important; }
 
 .kv .v2 .v2-h2 { margin-bottom: 28px; }
 .kv .v2 .v2-row-head { margin-bottom: 26px; }
+/* Formations → Nos services : même titre, enchaînement serré */
+.kv .v2 #formations { padding-bottom: 20px; }
+.kv .v2 .v2-services { padding-top: 20px; }

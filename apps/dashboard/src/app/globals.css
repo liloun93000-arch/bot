@@ -1665,3 +1665,7 @@ td {
 .aj-lead-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .aj-lead-actions .btn { flex: 1 1 auto; }
 .aj-lead-date { margin: 0; font-size: 11px; color: #7d828c; }
+
+/* Chiffres des cartes d'accueil : jamais coupés en colonne (65, 120, 1 250…) */
+.aj-stat-num { white-space: nowrap; flex: 0 0 auto; word-break: keep-all; overflow-wrap: normal; }
+.aj-stat-label { min-width: 0; }

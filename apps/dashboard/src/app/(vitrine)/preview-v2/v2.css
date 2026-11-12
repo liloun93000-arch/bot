@@ -416,3 +416,38 @@ html:has(.v2), body:has(.v2) { background: #07080b !important; }
 .kv .v2 .kv-book--v2 .kv-book-row > label, .kv .v2 .kv-book--v2 > label { font-size: 15px; font-weight: 700; color: #fff; }
 .kv .v2 .kv-book--v2 button[type="submit"] { white-space: nowrap; font-size: clamp(16px, 4.6vw, 20px); padding-left: 16px; padding-right: 16px; }
 @media (max-width: 420px) { .kv .v2 .v2-rdv-eyebrow { letter-spacing: .16em; font-size: 12px; } .kv .v2 .v2-rdv-eyebrow::before, .kv .v2 .v2-rdv-eyebrow::after { width: 24px; } }
+
+/* ===== Réservation : fidèle à la maquette ===== */
+.kv .v2 .v2-rdv { overflow: hidden; padding-left: 18px; padding-right: 18px; background:
+  radial-gradient(60% 30% at 0% 0%, #f0142f40, transparent 70%),
+  radial-gradient(50% 25% at 100% 18%, #f0142f2a, transparent 70%),
+  radial-gradient(60% 25% at 100% 100%, #f0142f3a, transparent 70%), #050507; }
+.kv .v2 .v2-rdv::before, .kv .v2 .v2-rdv::after { display: block; width: 140%; height: 70%; border: 0; border-radius: 50%; opacity: 1; filter: none; pointer-events: none; }
+.kv .v2 .v2-rdv::before { left: -95%; top: -38%; box-shadow: 0 0 0 1.5px #ff2a40aa, 0 0 22px #f0142f88; clip-path: inset(0 0 40% 50%); }
+.kv .v2 .v2-rdv::after { right: -95%; bottom: -42%; box-shadow: 0 0 0 1.5px #ff2a40aa, 0 0 22px #f0142f88; clip-path: inset(40% 50% 0 0); }
+.kv .v2 .v2-rdv-eyebrow { font-family: var(--body); font-weight: 800; color: #fff; }
+.kv .v2 .v2-rdv-eyebrow::before, .kv .v2 .v2-rdv-eyebrow::after { width: 56px; background: linear-gradient(90deg, transparent, #f0142f); box-shadow: 0 0 6px #f0142f; }
+.kv .v2 .v2-rdv-eyebrow .slash { width: 6px; height: 22px; }
+.kv .v2 .v2-rdv-title { font-family: var(--body); font-style: italic; font-weight: 800; letter-spacing: -.02em; font-size: clamp(40px, 11.5vw, 78px) !important; line-height: .95 !important; text-shadow: 0 2px 0 #0006, 0 8px 30px #000; }
+.kv .v2 .v2-rdv-title .red-text { text-shadow: 0 0 24px #f0142f66; }
+.kv .v2 .v2-rdv-lead { font-size: 15px; color: #fff; }
+.kv .v2 .kv-book--v2 .kv-book-types legend { font: 800 13px var(--body); letter-spacing: .14em; color: #d6d8dd; }
+/* Cartes : icône à gauche + titre à droite, sous-titre centré dessous */
+.kv .v2 .kv-book--v2 .kv-book-types label { display: grid; grid-template-columns: auto 1fr; grid-template-areas: "ico titre" "sous sous"; align-items: center; column-gap: 8px; row-gap: 8px; min-height: 0; padding: 16px 10px 14px; border-radius: 18px; background: linear-gradient(160deg, #ffffff0d, #ffffff04); box-shadow: inset 0 0 0 1px #ffffff33; }
+.kv .v2 .kv-book--v2 .kv-book-types label > .kv-ico { grid-area: ico; width: 34px; height: 34px; stroke-width: 1.6; filter: drop-shadow(0 0 6px #f0142f88); }
+.kv .v2 .kv-book--v2 .kv-book-types label b { grid-area: titre; font: italic 800 clamp(17px, 5vw, 24px)/1 var(--body); letter-spacing: -.01em; }
+.kv .v2 .kv-book--v2 .kv-book-types label b em { font: italic 800 clamp(14px, 4.2vw, 20px)/1 var(--body); padding: 4px 10px 5px; box-shadow: 0 0 14px #f0142f66; }
+.kv .v2 .kv-book--v2 .kv-book-types label b em.is-price { font-size: clamp(17px, 5vw, 24px); box-shadow: none; text-shadow: 0 0 14px #f0142f66; }
+.kv .v2 .kv-book--v2 .kv-book-types label span { grid-area: sous; font-size: clamp(11px, 3.4vw, 14px); color: #e4e6ea; }
+.kv .v2 .kv-book--v2 .kv-book-types label.is-on { background: linear-gradient(160deg, #2a0a10, #0e0608); box-shadow: inset 0 0 0 2px #ff2a40, 0 0 26px #f0142f77; }
+/* Champs : verre sombre, bord gris clair */
+.kv .v2 .kv-book--v2 input, .kv .v2 .kv-book--v2 select { background-color: #ffffff08; border: 1.5px solid #ffffff38; border-radius: 14px; box-shadow: inset 0 1px 0 #ffffff0d; }
+.kv .v2 .kv-book--v2 .kv-book-row > label > .kv-ico, .kv .v2 .kv-book--v2 > label > .kv-ico { color: #fff; width: 24px; height: 24px; bottom: 15px; left: 16px; }
+.kv .v2 .kv-book--v2 input, .kv .v2 .kv-book--v2 select { padding-left: 54px; }
+/* Bouton : pilule rouge lumineuse */
+.kv .v2 .kv-book--v2 button[type="submit"] { margin-top: 10px; min-height: 64px; border: 0; border-radius: 999px; font: 800 clamp(16px, 4.8vw, 22px) var(--body); letter-spacing: .01em; background: linear-gradient(180deg, #ff2a3f, #c4091d 60%, #9a0616); box-shadow: 0 0 0 1.5px #ff6b7a, 0 0 34px #f0142faa, 0 0 70px #f0142f44, inset 0 2px 0 #ffffff77; }
+.kv .v2 .kv-book--v2 button[type="submit"] .kv-ico { width: 28px; height: 28px; }
+.kv .v2 .v2-rdv::before, .kv .v2 .v2-rdv::after { display: none; }
+.kv .v2 .kv-book--v2 .kv-book-types label { padding-right: 22px; padding-left: 14px; }
+.kv .v2 .kv-book--v2 .kv-book-types label::after { top: 8px; right: 8px; width: 16px; height: 16px; }
+.kv .v2 .kv-book--v2 .kv-book-types label.is-on::after { top: -9px; right: -9px; width: 28px; height: 28px; }

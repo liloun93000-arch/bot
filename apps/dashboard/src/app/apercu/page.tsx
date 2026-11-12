@@ -240,7 +240,7 @@ export default function ApercuVitrine() {
             </div>
             <div className="kv-box">
               <h3>
-                LTD HONG KONG <span className="red-text">1 500 €</span>
+                LTD HONG KONG <span className="red-text">SUR DEVIS</span>
               </h3>
               <p>Environ 15 jours. Création, déclarations, comptabilité, adresse professionnelle et accompagnement inclus.</p>
               <a className="btn btn-whatsapp btn-compact" href={waOffre("Bonjour, je souhaite créer une LTD à Hong Kong.")} target="_blank" rel="noopener noreferrer">

@@ -1,6 +1,8 @@
 /** Contenu de la vitrine ARBI JACOB (kit final). Tous les libellés de boutons en MAJUSCULES. */
 
 export const SECRETARIAT = "33756975687";
+/** Numéro de paiement (panier prêt / paiement hors boutique) — se termine par 01. */
+export const PAIEMENT = "33778783701";
 export const GHOST_WA = "33754830994";
 
 /** Bouton général / flottant : WhatsApp sans texte (via le lien de suivi « site »). */
@@ -139,7 +141,7 @@ export const GHOST_PRIX = [
 ] as const;
 
 export const FAQ = [
-  ["Comment je paie ?", "Par carte sur la fiche produit quand elle existe, ou demande les autres modalités par WhatsApp."],
+  ["Comment je paie ?", "Par carte sur la fiche produit quand elle existe. Sinon, une fois ton choix fait, paiement par virement, crypto ou PayPal sur WhatsApp au +33 7 78 78 37 01. Pour toute question : +33 7 56 97 56 87."],
   ["Combien de temps j'ai accès aux formations ?", "À vie pour les formations où cette modalité est confirmée."],
   ["Je ne suis pas en France, c'est possible ?", "Oui, beaucoup de démarches et d'échanges se font à distance. Vérifie les conditions de l'offre."],
   ["J'ai une question avant d'acheter ?", "Écris au secrétariat sur WhatsApp."],

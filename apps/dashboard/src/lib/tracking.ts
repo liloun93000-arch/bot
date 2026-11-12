@@ -28,9 +28,9 @@ export interface TrackingSource {
   createdAt: number;
 }
 
-let ready = false;
+const ready = new WeakSet<object>();
 export function ensureTracking(core: Core): void {
-  if (ready) return;
+  if (ready.has(core)) return;
   for (const sql of [
     `CREATE TABLE IF NOT EXISTS tracking_sources (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -50,7 +50,7 @@ export function ensureTracking(core: Core): void {
   }
   const ins = core.sqlite.prepare(`INSERT OR IGNORE INTO tracking_sources (slug, nom, actif, created_at) VALUES (?, ?, 1, ?)`);
   for (const s of DEFAULT_SOURCES) ins.run(s.slug, s.nom, Date.now());
-  ready = true;
+  ready.add(core);
 }
 
 export function listSources(core: Core): TrackingSource[] {

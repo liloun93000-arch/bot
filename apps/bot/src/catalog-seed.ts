@@ -86,6 +86,7 @@ export function cleanupSmallTalkAlerts(core: Core, log: Logger): string[] {
   }
   const closed: string[] = [];
   for (const a of core.alerts.open()) {
+    if (a.categorie === "Réservation d'appel") continue; // une réservation n'est jamais de la politesse
     // Ce que le client a VRAIMENT écrit : le motif (« Jacob doit reprendre la conversation : … »),
     // sinon le dernier message reçu avant l'alerte, sinon le texte enregistré dans l'alerte.
     const fromMotif = /^Jacob doit reprendre la conversation : (.*?)(?: — |$)/.exec(a.motif)?.[1] ?? "";

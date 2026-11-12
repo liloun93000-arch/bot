@@ -7,16 +7,16 @@ import { waOffre } from "../data";
 type Reco = { titre: string; texte: string; ancre: string; wa: string };
 
 const R: Record<string, Reco> = {
-  china: { titre: "CHINA ACCESS", texte: "Import-export : fournisseurs, négociation, commandes.", ancre: "#formations", wa: "Bonjour, le diagnostic m'oriente vers China Access." },
-  traffic: { titre: "TRAFFIC PRO", texte: "Fais venir du monde vers toi, gratuitement.", ancre: "#formations", wa: "Bonjour, le diagnostic m'oriente vers Traffic Pro." },
-  vinted: { titre: "VINTED PRO", texte: "Apprendre l'achat-revente pas à pas.", ancre: "#formations", wa: "Bonjour, le diagnostic m'oriente vers Vinted Pro." },
-  shopper: { titre: "SHOPPER PRO", texte: "Lancer une boutique et vendre en ligne.", ancre: "#formations", wa: "Bonjour, le diagnostic m'oriente vers Shopper Pro." },
-  llc: { titre: "LLC / LTD", texte: "Ta société à l'étranger, créée à distance.", ancre: "#llc", wa: "Bonjour, je souhaite créer ma société (LLC / LTD)." },
-  sourcing: { titre: "SOURCING", texte: "On cherche le produit et le bon fournisseur.", ancre: "#sourcing", wa: "Bonjour, je cherche un fournisseur." },
-  snap: { titre: "COMPTES SNAPCHAT", texte: "Des comptes prêts pour vendre et communiquer.", ancre: "#snapchat", wa: "Bonjour, je souhaite voir les comptes Snapchat disponibles." },
-  ghost: { titre: "GHOST STUDIO", texte: "Logo, flyers, site, Shopify : ton image pro.", ancre: "#digital", wa: "Bonjour, j'ai besoin d'un visuel / d'un site avec Ghost Studio." },
-  bot: { titre: "ASSISTANT WHATSAPP", texte: "Tes messages répondent même quand tu es occupé.", ancre: "#assistant", wa: "Bonjour, je veux un assistant WhatsApp pour mon business." },
-  appel: { titre: "APPEL AVEC JACOB", texte: "15 min offertes pour faire le point ensemble.", ancre: "#rdv", wa: "Bonjour, je ne sais pas par où commencer." },
+  china: { titre: "CHINA ACCESS", texte: "Import-export : fournisseurs, négociation, commandes.", ancre: "/preview-v2/formations/china-access", wa: "Bonjour, le diagnostic m'oriente vers China Access." },
+  traffic: { titre: "TRAFFIC PRO", texte: "Fais venir du monde vers toi, gratuitement.", ancre: "/preview-v2/formations/traffic-pro", wa: "Bonjour, le diagnostic m'oriente vers Traffic Pro." },
+  vinted: { titre: "VINTED PRO", texte: "Apprendre l'achat-revente pas à pas.", ancre: "/preview-v2/formations/vinted-pro", wa: "Bonjour, le diagnostic m'oriente vers Vinted Pro." },
+  shopper: { titre: "SHOPPER PRO", texte: "Lancer une boutique et vendre en ligne.", ancre: "/preview-v2/formations/shopper-pro", wa: "Bonjour, le diagnostic m'oriente vers Shopper Pro." },
+  llc: { titre: "LLC / LTD", texte: "Ta société à l'étranger, créée à distance.", ancre: "/preview-v2/societe", wa: "Bonjour, je souhaite créer ma société (LLC / LTD)." },
+  sourcing: { titre: "SOURCING", texte: "On cherche le produit et le bon fournisseur.", ancre: "/preview-v2/sourcing", wa: "Bonjour, je cherche un fournisseur." },
+  snap: { titre: "COMPTES SNAPCHAT", texte: "Des comptes prêts pour vendre et communiquer.", ancre: "/preview-v2/snapchat", wa: "Bonjour, je souhaite voir les comptes Snapchat disponibles." },
+  ghost: { titre: "GHOST STUDIO", texte: "Logo, flyers, site, Shopify : ton image pro.", ancre: "/preview-v2/ghost-studio", wa: "Bonjour, j'ai besoin d'un visuel / d'un site avec Ghost Studio." },
+  bot: { titre: "ASSISTANT WHATSAPP", texte: "Tes messages répondent même quand tu es occupé.", ancre: "/preview-v2/assistant", wa: "Bonjour, je veux un assistant WhatsApp pour mon business." },
+  appel: { titre: "APPEL AVEC JACOB", texte: "15 min offertes pour faire le point ensemble.", ancre: "/preview-v2#rdv", wa: "Bonjour, je ne sais pas par où commencer." },
 };
 
 const Q: Array<{ id: string; label: string; q2: string; choix: Array<{ label: string; recos: string[] }> }> = [

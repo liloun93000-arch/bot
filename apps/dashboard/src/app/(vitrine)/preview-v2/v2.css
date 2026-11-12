@@ -484,53 +484,5 @@ html:has(.v2), body:has(.v2) { background: #07080b !important; }
 .kv .v2 .v2-row-head { margin-bottom: 22px; align-items: center; }
 .kv .v2 .v2-row-head .v2-h2 { margin: 0; }
 
-/* ===== « Quel est ton objectif ? » : 4 tuiles compactes et soignées ===== */
-.kv .v2 .v2-goals { grid-template-columns: 1fr 1fr; gap: 10px; }
-@media (min-width: 900px) { .kv .v2 .v2-goals { grid-template-columns: repeat(4, 1fr); gap: 14px; } }
-.kv .v2 .v2-goalcard {
-  --acc: #f0142f;
-  position: relative; display: flex; flex-direction: column; justify-content: flex-start; gap: 6px;
-  min-height: 0; padding: 14px 14px 16px; border-radius: 18px; overflow: hidden;
-  background: linear-gradient(160deg, #16181e 0%, #0c0d11 100%);
-  box-shadow: inset 0 0 0 1px #ffffff12, 0 10px 26px #0008;
-}
-.kv .v2 .v2-goalcard::before { content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
-  background: linear-gradient(140deg, color-mix(in srgb, var(--acc) 85%, transparent), transparent 45%, transparent 70%, #ffffff22);
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
-.kv .v2 .v2-goalcard::after { content: ""; position: absolute; width: 120px; height: 120px; right: -40px; top: -40px; border-radius: 50%; background: radial-gradient(closest-side, color-mix(in srgb, var(--acc) 40%, transparent), transparent); filter: none; opacity: .8; transition: transform .4s ease, opacity .3s; }
-.kv .v2 .v2-goalcard .v2-goalicon { width: 40px; height: 40px; padding: 8px; margin: 0 0 4px; border-radius: 12px; color: #fff; background: color-mix(in srgb, var(--acc) 22%, #0000); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--acc) 55%, transparent), 0 0 18px color-mix(in srgb, var(--acc) 30%, transparent); }
-.kv .v2 .v2-goalcard small { font-size: 9px; letter-spacing: .2em; color: #8b909b; }
-.kv .v2 .v2-goalcard b { font: italic 800 clamp(17px, 4.8vw, 22px)/1 var(--display); color: #fff; }
-.kv .v2 .v2-goalcard span { font-size: 12px; color: #a9aeb7; line-height: 1.35; }
-.kv .v2 .v2-goalcard i { position: absolute; right: 12px; bottom: 12px; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; font-size: 14px; color: #fff; background: color-mix(in srgb, var(--acc) 30%, #0000); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--acc) 60%, transparent); }
-.kv .v2 .v2-goalcard span { padding-right: 28px; }
-.kv .v2 .v2-goalcard.is-build { --acc: #f0142f; background: linear-gradient(160deg, #2a0a10, #0c0d11 70%); }
-.kv .v2 .v2-goalcard.is-globe { --acc: #ff5a3c; }
-.kv .v2 .v2-goalcard.is-learn { --acc: #d9dde4; }
-.kv .v2 .v2-goalcard.is-grow { --acc: #c4c8d0; }
-.kv .v2 .v2-goalcard.is-build span { color: #d8b9be; }
-.kv .v2 .v2-goalcard.is-grow b, .kv .v2 .v2-goalcard.is-grow .v2-goalicon { color: #fff; }
-.kv .v2 .v2-goalcard.is-globe .v2-goalicon { color: #fff; }
-@media (hover: hover) { .kv .v2 .v2-goalcard:hover { transform: translateY(-3px); box-shadow: inset 0 0 0 1px #ffffff18, 0 16px 34px #000a, 0 0 24px color-mix(in srgb, var(--acc) 25%, transparent); } .kv .v2 .v2-goalcard:hover::after { transform: scale(1.3); opacity: 1; } }
 .kv .v2 .v2-h2 { margin-bottom: 28px; }
 .kv .v2 .v2-row-head { margin-bottom: 26px; }
-
-/* ===== Objectif v3 : rangées fines et élégantes (remplace les tuiles) ===== */
-.kv .v2 .v2-goals { grid-template-columns: 1fr; gap: 0; border-radius: 18px; overflow: hidden; background: #0d0e12; box-shadow: inset 0 0 0 1px #ffffff14, 0 14px 34px #0009; }
-@media (min-width: 900px) { .kv .v2 .v2-goals { grid-template-columns: 1fr 1fr; } }
-.kv .v2 .v2-goalcard { --acc: #f0142f; display: grid; grid-template-columns: auto 1fr auto; grid-template-areas: "ico titre fl" "ico sous fl"; align-items: center; column-gap: 14px; row-gap: 2px; padding: 16px 18px; border-radius: 0; background: transparent !important; box-shadow: none; overflow: visible; transition: background .25s ease; }
-.kv .v2 .v2-goalcard + .v2-goalcard { box-shadow: inset 0 1px 0 #ffffff10; }
-@media (min-width: 900px) { .kv .v2 .v2-goalcard:nth-child(2) { box-shadow: inset 1px 0 0 #ffffff10; } .kv .v2 .v2-goalcard:nth-child(3) { box-shadow: inset 0 1px 0 #ffffff10; } .kv .v2 .v2-goalcard:nth-child(4) { box-shadow: inset 1px 1px 0 #ffffff10; } }
-.kv .v2 .v2-goalcard::before { content: ""; position: absolute; left: 0; top: 22%; bottom: 22%; width: 2px; padding: 0; border-radius: 2px; background: var(--red); opacity: 0; transform: scaleY(.3); transition: opacity .25s, transform .25s; -webkit-mask: none; mask: none; }
-.kv .v2 .v2-goalcard::after { display: none; }
-.kv .v2 .v2-goalcard small { display: none; }
-.kv .v2 .v2-goalcard .v2-goalicon { grid-area: ico; width: 26px; height: 26px; padding: 0; margin: 0; border-radius: 0; background: none; box-shadow: none; color: var(--red); }
-.kv .v2 .v2-goalcard b { grid-area: titre; font: italic 800 19px/1.05 var(--display); letter-spacing: .02em; color: #fff; }
-.kv .v2 .v2-goalcard span { grid-area: sous; padding: 0; font-size: 12px; color: #8b909b; }
-.kv .v2 .v2-goalcard i { grid-area: fl; position: static; width: auto; height: auto; background: none; box-shadow: none; color: #6f7581; font-size: 18px; transition: transform .25s, color .25s; }
-.kv .v2 .v2-goalcard:hover, .kv .v2 .v2-goalcard:active { background: #f0142f0f !important; transform: none; }
-.kv .v2 .v2-goalcard:hover::before, .kv .v2 .v2-goalcard:active::before { opacity: 1; transform: none; }
-.kv .v2 .v2-goalcard:hover i, .kv .v2 .v2-goalcard:active i { color: var(--red); transform: translateX(4px); }
-.kv .v2 .v2-goalcard.is-in .v2-goalicon { animation: none; }
-.kv .v2 .v2-goalcard.v2-goalcard .v2-goalicon { color: var(--red) !important; }
-.kv .v2 .v2-goalcard.v2-goalcard span { color: #8b909b !important; }

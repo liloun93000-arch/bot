@@ -1669,3 +1669,30 @@ td {
 /* Chiffres des cartes d'accueil : jamais coupés en colonne (65, 120, 1 250…) */
 .aj-stat-num { white-space: nowrap; flex: 0 0 auto; word-break: keep-all; overflow-wrap: normal; }
 .aj-stat-label { min-width: 0; }
+
+/* Compta */
+.aj-compta-sum { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+@media (min-width: 900px) { .aj-compta-sum { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.aj-compta-sum div { border-radius: 14px; padding: 12px; background: #ffffff08; border: 1px solid #ffffff1a; min-width: 0; }
+.aj-compta-sum span { display: block; font-size: 12px; color: #a9aeb7; }
+.aj-compta-sum b { display: block; font-size: 20px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.aj-compta-sum .is-in b { color: #25d366; }
+.aj-compta-sum .is-out b { color: #ff6b7d; }
+.aj-compta-sum .is-kimi b { color: #7aa2ff; }
+.aj-compta-sum .is-neg b { color: #ff6b7d; }
+.aj-compta-cats { display: flex; flex-wrap: wrap; gap: 6px; }
+.aj-compta-cats span { font-size: 12px; padding: 4px 8px; border-radius: 999px; background: #ffffff10; }
+.aj-compta-cats .is-in b { color: #25d366; }
+.aj-compta-cats .is-out b { color: #ff6b7d; }
+.aj-compta-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.aj-compta-switch a { text-align: center; padding: 12px 6px; border-radius: 12px; border: 1px solid #ffffff22; font-weight: 700; font-size: 14px; }
+.aj-compta-switch a.is-on.is-in { background: #25d36622; border-color: #25d366; }
+.aj-compta-switch a.is-on.is-out { background: #f0142f22; border-color: #f0142f; }
+.aj-compta-line { display: flex; justify-content: space-between; gap: 10px; align-items: center; border-left: 4px solid #25d366; }
+.aj-compta-line.is-out { border-left-color: #f0142f; }
+.aj-compta-line p { margin: 0; overflow-wrap: anywhere; }
+.aj-compta-right { text-align: right; flex: 0 0 auto; }
+.aj-compta-right b { display: block; white-space: nowrap; }
+.aj-compta-line.is-in .aj-compta-right b { color: #25d366; }
+.aj-compta-line.is-out .aj-compta-right b { color: #ff6b7d; }
+.aj-compta-del { font-size: 11px; color: #8b909b; text-decoration: underline; background: none; border: 0; padding: 4px 0; cursor: pointer; }

@@ -55,6 +55,10 @@ export default async function ReglagesPage({
   const kimi = lastKimiSnap(getRuntime().core);
   return (
     <div className="space-y-6">
+      <Link href="/admin/compta" className="card block">
+        <b>💶 Compta</b>
+        <span className="block text-sm text-neutral-500">Ventes encaissées, achats, hébergement et consommation Kimi</span>
+      </Link>
       <Link href="/admin/conso" className="card block">
         <b>💰 Consommation Kimi</b>
         <span className="block text-sm text-neutral-500">

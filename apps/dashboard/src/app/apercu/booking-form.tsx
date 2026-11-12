@@ -22,6 +22,11 @@ export function BookingForm({ avail }: { avail: Avail }) {
       <div className="kv-book-ok" role="status">
         <b>DEMANDE ENREGISTRÉE ✓</b>
         <p>{state.message}</p>
+        {state.payer && (
+          <a className="btn btn-whatsapp" href={state.payer} target="_blank" rel="noopener noreferrer">
+            PAYER L&apos;APPEL SUR WHATSAPP
+          </a>
+        )}
       </div>
     );
   }
@@ -37,7 +42,7 @@ export function BookingForm({ avail }: { avail: Avail }) {
         <label className={type === "1h" ? "is-on" : ""}>
           <input type="radio" name="type" value="1h" checked={type === "1h"} onChange={() => setType("1h")} />
           <b>1 HEURE — 25 €</b>
-          <span>Paiement convenu avec le secrétariat</span>
+          <span>Paiement ensuite sur WhatsApp</span>
         </label>
       </fieldset>
       <div className="kv-book-row">

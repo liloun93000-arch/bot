@@ -1,6 +1,7 @@
 export * from "./alerts";
 export * from "./categories";
 export * from "./billing";
+export * from "./kimi-balance";
 export * from "./db";
 export * from "./director";
 export * from "./documents";

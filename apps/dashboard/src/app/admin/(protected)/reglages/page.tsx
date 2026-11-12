@@ -13,7 +13,7 @@ import {
 } from "@/lib/actions";
 import Link from "next/link";
 import { requireSession } from "@/lib/auth";
-import { suiviConso } from "@/lib/api-balance";
+import { lastKimiSnap } from "@arbi/core";
 import { getRuntime } from "@/lib/core";
 import { checkWhatsAppTemplates, templateLanguageWarning } from "@/lib/templates";
 
@@ -52,15 +52,15 @@ export default async function ReglagesPage({
   const deploiement = (process.env.RAILWAY_DEPLOYMENT_ID ?? "").slice(0, 8);
   const enLigneDepuis = new Date(Date.now() - process.uptime() * 1000);
 
-  const conso = suiviConso(getRuntime().core);
+  const kimi = lastKimiSnap(getRuntime().core);
   return (
     <div className="space-y-6">
       <Link href="/admin/conso" className="card block">
         <b>💰 Consommation Kimi</b>
         <span className="block text-sm text-neutral-500">
-          {conso.restantUsd !== null
-            ? `Solde estimé : ${Math.max(0, conso.restantUsd).toLocaleString("fr-FR", { maximumFractionDigits: 2 })} $ — voir le détail`
-            : "Saisir le solde Kimi pour suivre la consommation"}
+          {kimi
+            ? `Solde Kimi : ${kimi.available.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $ — voir le détail`
+            : "Voir le solde et la consommation"}
         </span>
       </Link>
       <div className="flex flex-wrap items-baseline justify-between gap-2">

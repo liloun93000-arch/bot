@@ -1,5 +1,6 @@
 import {
   createCore,
+  refreshKimiBalance,
   createGate,
   createLlmClient,
   createLogger,
@@ -181,6 +182,16 @@ async function main(): Promise<void> {
     { port: config.PORT, model: config.ANTHROPIC_MODEL },
     "Agent commercial WhatsApp v2 démarré",
   );
+
+  // Relevé du solde Kimi réel toutes les 10 min (page « Consommation Kimi »).
+  const kimiTick = (): void => {
+    void refreshKimiBalance(core, config.ANTHROPIC_API_KEY, config.ANTHROPIC_BASE_URL, 60_000).then((r) => {
+      if (!r.ok) log.warn({ err: r.error }, "kimi_balance_failed");
+    });
+  };
+  kimiTick();
+  const kimiTimer = setInterval(kimiTick, 10 * 60 * 1000);
+  kimiTimer.unref?.();
 
   // Réactivation automatique du bot après inactivité en mode humain.
   const releaseTimer = setInterval(() => {

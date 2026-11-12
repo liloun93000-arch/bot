@@ -30,12 +30,6 @@ function ensure(core: Core): void {
       )`,
     )
     .run();
-  // Premier solde donné par Lilou : 21,12488 $ le 12/11/2026 à 07:08 (heure de Paris).
-  const n = core.sqlite.prepare(`SELECT COUNT(*) AS n FROM api_balance`).get() as { n: number };
-  if (n.n === 0 && !process.env.VITEST && !process.env.NO_SEED_BALANCE)
-    core.sqlite
-      .prepare(`INSERT INTO api_balance (solde_usd, prix_entree, prix_sortie, created_at) VALUES (?, ?, ?, ?)`)
-      .run(21.12488, PRIX_DEFAUT.entree, PRIX_DEFAUT.sortie, Date.parse("2026-11-12T06:08:00Z"));
   ready.add(core);
 }
 

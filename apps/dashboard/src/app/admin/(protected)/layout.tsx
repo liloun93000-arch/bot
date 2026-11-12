@@ -33,6 +33,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
     { href: "/admin/jacob", label: "Demandes de Jacob", icon: "headset", badge: jacobCount, tone: "red" },
     { href: "/admin/manager-ia", label: "Apprentissage IA", icon: "brain", badge: enAttenteJacob, tone: "amber" },
     { href: "/admin/sources", label: "Liens de suivi", icon: "chart" },
+    { href: "/admin/conso", label: "Consommation Kimi", icon: "chart" },
     { href: "/admin/medias", label: "Photos clients", icon: "image" },
     { href: "/admin/catalogue", label: "Catalogue & tarifs", icon: "layers" },
     { href: "/admin/fichiers", label: "Fichiers du bot", icon: "clip" },

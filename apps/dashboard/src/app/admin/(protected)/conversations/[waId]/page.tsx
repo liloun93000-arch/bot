@@ -291,7 +291,7 @@ export default async function ConversationDetailPage({
                 />
                 <SendButton disabled={sendDisabled}>Envoyer</SendButton>
               </div>
-              <FilePicker accept={OUTBOUND_MEDIA_ACCEPT} disabled={sendDisabled} required={false} label="📎 Joindre photo / PDF / Excel…" />
+              <FilePicker accept={OUTBOUND_MEDIA_ACCEPT} disabled={sendDisabled} required={false} label="📎 Joindre photo / vidéo / PDF / Word / Excel…" />
             </form>
             {/* En dehors du <form> ci-dessus : un <form> ne peut pas en contenir un autre (HTML). */}
             {contact.optOut === 1 && (

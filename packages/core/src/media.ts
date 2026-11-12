@@ -74,7 +74,7 @@ export const OUTBOUND_MEDIA_MAX_BYTES: Record<OutboundMediaKind, number> = {
 
 /** Extensions proposées au sélecteur de fichier du back-office. */
 export const OUTBOUND_MEDIA_ACCEPT =
-  "image/*,.jpg,.jpeg,.png,.heic,.heif,.webp,.mp4,.3gp,.mov,.pdf,.xlsx,.xls,.csv,.doc,.docx,.ppt,.pptx,.txt";
+  "image/*,video/*,.jpg,.jpeg,.png,.heic,.heif,.webp,.mp4,.3gp,.mov,.m4v,.webm,.mkv,.avi,.pdf,.xlsx,.xls,.csv,.doc,.docx,.ppt,.pptx,.txt";
 
 /** `image` / `video` si le type MIME est envoyable, `null` sinon. */
 export function outboundMediaKind(mime: string): OutboundMediaKind | null {
@@ -136,7 +136,7 @@ export function checkOutboundMedia(file: { name: string; size: number; type: str
     return {
       ok: false,
       message:
-        "Format non supporté par WhatsApp — photo, vidéo MP4, PDF, Word, Excel, PowerPoint ou texte.",
+        "Format non supporté par WhatsApp — photo, vidéo, PDF, Word, Excel, PowerPoint ou texte.",
     };
   }
   const max = OUTBOUND_MEDIA_MAX_BYTES[kind];

@@ -55,7 +55,7 @@ function Request({ r, i, draft = "" }: { r: JacobItem; i: number; draft?: string
           />
           <SendButton>Envoyer</SendButton>
           <div className="aj-req-files">
-            <FilePicker accept={OUTBOUND_MEDIA_ACCEPT} required={false} label="📎 Joindre photo / PDF / Excel…" />
+            <FilePicker accept={OUTBOUND_MEDIA_ACCEPT} required={false} label="📎 Joindre photo / vidéo / PDF / Word / Excel…" />
           </div>
           <span className="aj-req-hint">Texte, pièce jointe, ou les deux. À l&apos;envoi : demande traitée et main rendue au bot.</span>
         </form>

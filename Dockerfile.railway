@@ -18,6 +18,8 @@ RUN npm run build -w packages/core && npm run build -w apps/bot && npm run build
 FROM node:20-bookworm-slim
 WORKDIR /app
 ENV NODE_ENV=production
+# ffmpeg : conversion des vidéos envoyées depuis le dashboard (iPhone .mov → MP4 WhatsApp)
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg && rm -rf /var/lib/apt/lists/*
 # Bot + core (les symlinks workspace de node_modules restent valides)
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/package.json ./package.json

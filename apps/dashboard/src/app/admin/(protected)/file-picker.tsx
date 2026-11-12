@@ -9,7 +9,7 @@ function formatMo(bytes: number): string {
 
 const SENDABLE_IMAGE = /^image\/(jpeg|png)$/;
 const IMAGE_LIMIT = 5 * 1024 * 1024; // plafond WhatsApp pour une photo
-const VIDEO_LIMIT = 16 * 1024 * 1024;
+const VIDEO_LIMIT = 48 * 1024 * 1024; // compressée ensuite côté serveur sous 16 Mo
 const DOC_LIMIT = 45 * 1024 * 1024;
 
 /**
@@ -96,7 +96,7 @@ export function FilePicker({
       f.type.startsWith("image/") ? f.size > IMAGE_LIMIT : f.type.startsWith("video/") ? f.size > VIDEO_LIMIT : f.size > DOC_LIMIT,
     );
     if (trop) {
-      setErreur(`« ${trop.name} » fait ${formatMo(trop.size)} — trop lourd pour WhatsApp (photo 5 Mo, vidéo 16 Mo, document 45 Mo).`);
+      setErreur(`« ${trop.name} » fait ${formatMo(trop.size)} — trop lourd pour WhatsApp (vidéo 48 Mo, document 45 Mo).`);
       el.value = "";
       setPreviews([]);
       return;

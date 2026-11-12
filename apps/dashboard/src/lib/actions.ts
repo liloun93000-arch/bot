@@ -35,6 +35,7 @@ import {
 } from "./auth";
 import { getRuntime } from "./core";
 import { mediaDir } from "./media";
+import { isVideoFile, prepareVideo } from "./video-convert";
 import {
   docsDir,
   generatedDocFilename,
@@ -262,16 +263,28 @@ async function sendFilesToClient(waId: string, fichiers: File[], legende: string
   const echecs: string[] = [];
   let horsFenetre = false;
 
-  for (const [index, file] of fichiers.entries()) {
-    const check = checkOutboundMedia({ name: file.name, size: file.size, type: file.type });
+  for (const [index, original] of fichiers.entries()) {
+    let file: { name: string; size: number; type: string } = { name: original.name, size: original.size, type: original.type };
+    let buffer = Buffer.from(await original.arrayBuffer());
+    // Vidéo d'iPhone (.mov), autre format ou trop lourde : convertie en MP4 envoyable par WhatsApp.
+    if (isVideoFile(original.name, original.type)) {
+      const v = await prepareVideo(buffer, original.name, original.type);
+      if (v.converted) {
+        buffer = v.buffer;
+        file = { name: v.name, size: v.buffer.length, type: v.type };
+        logDecision(log, "human_video_converted", { waId, from: original.name, bytes: v.buffer.length });
+      } else if (v.error) {
+        log.warn({ waId, err: v.error, name: original.name }, "human_video_convert_failed");
+      }
+    }
+    const check = checkOutboundMedia(file);
     if (!check.ok) {
-      echecs.push(`${file.name} — ${check.message}`);
+      echecs.push(`${original.name} — ${check.message}`);
       continue;
     }
     const mime = check.mime;
     const stored = safeMediaName(randomUUID(), mime);
     const dir = mediaDir();
-    const buffer = Buffer.from(await file.arrayBuffer());
     try {
       await mkdir(dir, { recursive: true });
       await writeFile(join(dir, stored), buffer);

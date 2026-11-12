@@ -1,6 +1,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { Logger } from "./logger";
+import { extractVideoParts } from "./video-frames";
 import { logDecision } from "./logger";
 
 /**
@@ -279,7 +280,7 @@ export function mediaPlaceholder(type: string, caption?: string): string {
     case "audio":
       return "[Le client a envoyé un message vocal que tu ne peux pas écouter : demande-lui poliment de résumer par écrit.]";
     case "video":
-      return `[Le client a envoyé une vidéo${legende}. Tu ne peux pas la voir : demande-lui poliment de préciser par écrit.]`;
+      return `[Le client a envoyé une vidéo${legende}. Son contenu n'a pas pu être analysé : réponds naturellement selon la conversation, sans lui demander de réécrire ce qu'elle montre.]`;
     case "document":
       return `[Le client a envoyé un document${legende}. Tu ne peux pas l'ouvrir : demande-lui poliment de préciser sa demande.]`;
     default:
@@ -371,6 +372,30 @@ export async function processInboundMedia(
     }
   }
 
+  // Vidéo : 4 images (début → fin) analysées comme une photo + le son transcrit comme un vocal.
+  if (input.type === "video" || downloaded.mime.startsWith("video/")) {
+    const parts = await extractVideoParts(downloaded.buffer);
+    let vu: string | null = null;
+    if (parts.planche && deps.vision) {
+      vu = await deps.vision(
+        { data: parts.planche, mime: "image/jpeg" },
+        `Ce sont 4 images extraites, dans l'ordre (haut-gauche → bas-droite), d'une VIDÉO envoyée par le client${input.caption?.trim() ? ` avec la légende « ${input.caption.trim()} »` : ""}. Décris ce que montre la vidéo.`,
+      );
+    }
+    let entendu: string | null = null;
+    if (parts.audio) {
+      const t = await transcribeAudio(deps.transcription, { buffer: parts.audio, mime: "audio/mpeg" }, deps.log);
+      if (t && t.text.trim()) {
+        entendu = t.text.trim();
+        deps.onTranscriptionCost?.((t.seconds / 60) * deps.transcription.costCentsPerMinute, t.seconds, deps.transcription.model);
+      }
+    }
+    if (vu || entendu) {
+      logDecision(deps.log, "video_analyzed", { wamid: input.wamid, seconds: Math.round(parts.seconds), vu: !!vu, entendu: !!entendu });
+      return { text: videoAnalysisText(vu, entendu, input.caption), mediaFile, mediaMime: downloaded.mime, transcribed: !!entendu };
+    }
+  }
+
   return {
     text: mediaPlaceholder(input.type, input.caption),
     mediaFile,
@@ -378,6 +403,15 @@ export async function processInboundMedia(
     transcribed: false,
   };
 }
+
+/** Texte stocké (et vu par le bot) quand la vidéo a été analysée. */
+export function videoAnalysisText(vu: string | null, entendu: string | null, caption?: string): string {
+  const legende = caption?.trim() ? ` — légende : « ${caption.trim()} »` : "";
+  const parts = [vu ? `On y voit : ${vu.trim()}` : "", entendu ? `On y entend : « ${entendu} »` : ""].filter(Boolean);
+  return `[Vidéo du client — analyse automatique${legende}] ${parts.join("\n")}`;
+}
+
+const VIDEO_ANALYSIS_RE = /^\[Vidéo du client — analyse automatique(?: — légende : « (.+?) »)?\] ([\s\S]*)$/;
 
 /** Texte stocké (et vu par le bot) quand la photo a été analysée. */
 export function imageAnalysisText(description: string, caption?: string): string {
@@ -412,7 +446,7 @@ const FINAL_PLACEHOLDER_PATTERNS: Array<{ kind: DisplayMediaKind; re: RegExp }> 
   },
   {
     kind: "video",
-    re: /^\[Le client a envoyé une vidéo(?: — légende : « (.+) »)?\. Tu ne peux pas la voir : demande-lui poliment de préciser par écrit\.\]$/,
+    re: /^\[Le client a envoyé une vidéo(?: — légende : « (.+) »)?\. (?:Tu ne peux pas la voir : demande-lui poliment de préciser par écrit|Son contenu n'a pas pu être analysé : réponds naturellement selon la conversation, sans lui demander de réécrire ce qu'elle montre)\.\]$/,
   },
   {
     kind: "document",
@@ -451,7 +485,7 @@ const VOICE_TRANSCRIPT_RE = /^\[Message vocal\] ([\s\S]*)$/;
  * Ne change RIEN à ce qui est stocké en base ni à ce que reçoit le LLM.
  */
 export function displayMediaText(contenu: string, mediaFile: string, mediaMime: string): string {
-  const analysis = contenu.match(IMAGE_ANALYSIS_RE);
+  const analysis = contenu.match(IMAGE_ANALYSIS_RE) ?? contenu.match(VIDEO_ANALYSIS_RE);
   if (analysis) {
     const caption = analysis[1]?.trim();
     return `${caption ? `${caption}\n` : ""}🤖 Analyse du bot : ${(analysis[2] ?? "").trim()}`;

@@ -1,4 +1,4 @@
-import { spawn } from "node:child_process";
+import { spawn, type ChildProcess } from "node:child_process";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -18,7 +18,7 @@ export function isVideoFile(name: string, type: string): boolean {
 function run(args: string[], timeoutMs = 240_000): Promise<{ code: number; err: string }> {
   return new Promise((resolve) => {
     let err = "";
-    let p;
+    let p: ChildProcess;
     try {
       p = spawn("ffmpeg", args, { stdio: ["ignore", "ignore", "pipe"] });
     } catch {

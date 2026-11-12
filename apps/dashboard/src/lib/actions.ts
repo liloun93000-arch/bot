@@ -265,7 +265,7 @@ async function sendFilesToClient(waId: string, fichiers: File[], legende: string
 
   for (const [index, original] of fichiers.entries()) {
     let file: { name: string; size: number; type: string } = { name: original.name, size: original.size, type: original.type };
-    let buffer = Buffer.from(await original.arrayBuffer());
+    let buffer: Buffer = Buffer.from(await original.arrayBuffer());
     // Vidéo d'iPhone (.mov), autre format ou trop lourde : convertie en MP4 envoyable par WhatsApp.
     if (isVideoFile(original.name, original.type)) {
       const v = await prepareVideo(buffer, original.name, original.type);

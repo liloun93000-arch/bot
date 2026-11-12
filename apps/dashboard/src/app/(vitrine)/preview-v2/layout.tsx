@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { headers } from "next/headers";
 import { requireSession } from "@/lib/auth";
 import { Header, FloatingWa, BASE } from "./ui";
 import { Reveal } from "./reveal";
@@ -8,7 +9,8 @@ import "./v2.css";
 export const metadata: Metadata = { title: "ARBI JACOB — Preview V2", robots: { index: false, follow: false } };
 
 export default async function PreviewV2Layout({ children }: { children: React.ReactNode }) {
-  await requireSession();
+  // Accès : session admin, ou lien de partage (?k=…) validé par le middleware.
+  if ((await headers()).get("x-pv2") !== "1") await requireSession();
   return (
     <div className="v2">
       <Reveal />

@@ -11,40 +11,83 @@ import { Apercu, BASE, Faq, FormationCard, Jacob } from "./ui";
 export const dynamic = "force-dynamic";
 
 const OBJECTIFS = [
-  { href: `${BASE}/societe`, n: "01", titre: "CRÉER MON BUSINESS", txt: "Société, LLC, LTD.", cls: "is-red" },
-  { href: `${BASE}/sourcing`, n: "02", titre: "TROUVER UN FOURNISSEUR", txt: "Sourcing, Chine, import.", cls: "" },
-  { href: `${BASE}/formations`, n: "03", titre: "ME FORMER", txt: "Formations business.", cls: "" },
-  { href: `${BASE}/ghost-studio`, n: "04", titre: "DÉVELOPPER MON BUSINESS", txt: "Image, site, bot.", cls: "is-silver" },
-];
+  { href: `${BASE}/societe`, n: "01", titre: "CRÉER MON BUSINESS", txt: "Société, LLC, LTD.", cls: "is-build", icon: "build" },
+  { href: `${BASE}/sourcing`, n: "02", titre: "TROUVER UN FOURNISSEUR", txt: "Sourcing, Chine, import.", cls: "is-globe", icon: "globe" },
+  { href: `${BASE}/formations`, n: "03", titre: "ME FORMER", txt: "Formations business.", cls: "is-learn", icon: "learn" },
+  { href: `${BASE}/ghost-studio`, n: "04", titre: "DÉVELOPPER MON ACTIVITÉ", txt: "Image, site, bot.", cls: "is-grow", icon: "grow" },
+] as const;
+
+function GoalIcon({ name }: { name: string }) {
+  const p = { fill: "none", stroke: "currentColor", strokeWidth: 1.6, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+  return (
+    <svg viewBox="0 0 48 48" width="44" height="44" aria-hidden className="v2-goalicon">
+      {name === "build" && (
+        <>
+          <path {...p} d="M8 40h32M12 40V18l12-8 12 8v22" />
+          <path {...p} d="M20 40v-9h8v9M18 24h2M28 24h2" />
+        </>
+      )}
+      {name === "globe" && (
+        <>
+          <circle {...p} cx="24" cy="24" r="15" />
+          <path {...p} d="M9 24h30M24 9c5 5 5 25 0 30M24 9c-5 5-5 25 0 30" />
+          <circle cx="33" cy="17" r="2.2" fill="currentColor" />
+        </>
+      )}
+      {name === "learn" && (
+        <>
+          <path {...p} d="M6 19l18-8 18 8-18 8z" />
+          <path {...p} d="M14 23v8c3 3 7 4 10 4s7-1 10-4v-8M42 19v10" />
+        </>
+      )}
+      {name === "grow" && (
+        <>
+          <path {...p} d="M8 38l10-11 7 6 14-16" />
+          <path {...p} d="M31 17h8v8" />
+          <path {...p} d="M8 42h32" />
+        </>
+      )}
+    </svg>
+  );
+}
 
 export default function PreviewV2Home() {
   const avail = availability(getRuntime().core);
   return (
     <>
-      {/* FORT : hero */}
-      <section className="hero v2-hero" id="accueil">
-        <div className="hero-copy">
-          <p className="eyebrow">
-            <span className="slash" /> L&apos;UNIVERS ARBI JACOB
-          </p>
-          <h1>
-            LANCE TON BUSINESS.
-            <br />
-            <span className="red-text">ON S&apos;OCCUPE</span> DU RESTE.
-          </h1>
-          <p className="hero-intro">Formations, société, sourcing et digital. Une seule personne à contacter.</p>
-          <div className="hero-actions">
-            <a className="btn btn-brand" href="#objectif">
-              TROUVER MON OFFRE <span className="arrow">↓</span>
-            </a>
-            <Link className="btn btn-silver" href={`${BASE}/formations`}>
-              VOIR LES FORMATIONS
-            </Link>
-          </div>
+      {/* SCÈNE D'OUVERTURE : visuelle avant d'être commerciale */}
+      <section className="v2-scene" id="accueil" aria-label="ARBI JACOB">
+        <div className="v2-scene-bg" aria-hidden>
+          <span className="v2-scene-glow" />
+          <span className="v2-scene-floor" />
+          <span className="v2-scene-arc v2-scene-arc--1" />
+          <span className="v2-scene-arc v2-scene-arc--2" />
         </div>
-        <div className="hero-figure">
-          <div className="figure-glow" />
-          <img src="/vitrine/mascotte.webp" alt="Jacob, personnage masqué, travaillant sur un ordinateur" width={1000} height={907} />
+        <div className="v2-scene-jacob" aria-hidden>
+          <span className="v2-scene-halo" />
+          <img src="/vitrine/mascotte.webp" alt="" width={1000} height={907} fetchPriority="high" />
+        </div>
+        <div className="v2-scene-copy">
+          <p className="v2-scene-eyebrow">
+            <span className="slash" /> ARBI JACOB
+          </p>
+          <h1 className="v2-scene-title">
+            <span>TON BUSINESS</span>
+            <span className="red-text">COMMENCE ICI.</span>
+          </h1>
+          <p className="v2-scene-sub">Formations, société, sourcing et digital — de la France à la Chine.</p>
+          <a className="btn btn-brand v2-scene-cta" href="#objectif">
+            ENTRER DANS L&apos;UNIVERS <span className="arrow">↓</span>
+          </a>
+        </div>
+        <div className="v2-scene-cities" aria-hidden>
+          <span>PARIS</span>
+          <i />
+          <span>SHENZHEN</span>
+          <i />
+          <span>HONG KONG</span>
+          <i />
+          <span>NEW YORK</span>
         </div>
       </section>
 
@@ -56,6 +99,7 @@ export default function PreviewV2Home() {
         <div className="v2-goals">
           {OBJECTIFS.map((g) => (
             <Link key={g.href} href={g.href} className={`v2-goalcard ${g.cls}`} data-reveal>
+              <GoalIcon name={g.icon} />
               <small>{g.n}</small>
               <b>{g.titre}</b>
               <span>{g.txt}</span>

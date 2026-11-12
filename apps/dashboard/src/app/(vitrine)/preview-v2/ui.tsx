@@ -126,16 +126,31 @@ export function Apercu({ href, eyebrow, titre, points, cta }: { href: string; ey
   );
 }
 
+const FAQ_ICO = [
+  "M3 6h18v12H3zM3 10h18M7 15h4",
+  "M2 9l10-5 10 5-10 5zM6 11v5c2 2 4 3 6 3s4-1 6-3v-5",
+  "M12 21a9 9 0 100-18 9 9 0 000 18zM3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18",
+  "M4 5h16v11H9l-5 4zM9 10.5h.01M12 10.5h.01M15 10.5h.01",
+];
+
 export function Faq() {
   return (
-    <section className="section kv-faq" data-reveal>
-      <p className="eyebrow">
+    <section className="section v2-faq" data-reveal>
+      <p className="v2-faq-eyebrow">
         <span className="slash" /> QUESTIONS FRÉQUENTES
       </p>
-      <div className="kv-faq-list">
-        {FAQ.map(([q, r]) => (
+      <div className="v2-faq-list">
+        {FAQ.map(([q, r], i) => (
           <details key={q}>
-            <summary>{q}</summary>
+            <summary>
+              <span className="v2-faq-ico" aria-hidden>
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                  <path d={FAQ_ICO[i % FAQ_ICO.length]} />
+                </svg>
+              </span>
+              <span className="v2-faq-q">{q}</span>
+              <i aria-hidden>+</i>
+            </summary>
             <p>{r}</p>
           </details>
         ))}

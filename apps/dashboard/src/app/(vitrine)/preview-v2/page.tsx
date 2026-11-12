@@ -4,7 +4,6 @@ import { getRuntime } from "@/lib/core";
 import { availability } from "@/lib/bookings";
 import { BookingForm } from "../booking-form";
 import { FORMATIONS, WA_GENERAL } from "../data";
-import { Wa } from "../wa-icon";
 import { Diagnostic } from "./diagnostic";
 import { Apercu, BASE, Faq, FormationCard, Jacob } from "./ui";
 
@@ -50,6 +49,14 @@ function GoalIcon({ name }: { name: string }) {
     </svg>
   );
 }
+
+const QUI_TAGS: Array<[string, string]> = [
+  ["M4 20V10M10 20V4M16 20v-7M22 20H2", "Entrepreneur"],
+  ["M3 5h18v11H3zM1 19h22", "Digital"],
+  ["M3 8l9-4 9 4v10l-9 4-9-4zM3 8l9 4 9-4M12 12v10", "Import-export"],
+  ["M3 4h2l2.5 11h11L21 8H6.5M10 20a1 1 0 100-2 1 1 0 000 2zM18 20a1 1 0 100-2 1 1 0 000 2z", "E-commerce"],
+  ["M12 21a9 9 0 100-18 9 9 0 000 18zM12 16a4 4 0 100-8 4 4 0 000 8zM12 13a1 1 0 100-2 1 1 0 000 2z", "Expérience terrain"],
+];
 
 export default function PreviewV2Home() {
   const avail = availability(getRuntime().core);
@@ -164,46 +171,64 @@ export default function PreviewV2Home() {
       </section>
 
       {/* VISUEL JACOB */}
-      <section className="section v2-about" data-reveal>
-        <img src="/vitrine/mascotte.webp" alt="" width={1000} height={907} />
-        <div>
-          <p className="eyebrow">
-            <span className="slash" /> QUI SUIS-JE
+      <section className="v2-qui" data-reveal>
+        <div className="v2-qui-visual">
+          <img src="/vitrine/jacob-qui.webp" alt="Jacob devant son ordinateur, Shanghai en arrière-plan" width={640} height={691} loading="lazy" />
+        </div>
+        <div className="v2-qui-copy">
+          <p className="v2-qui-eyebrow">
+            <span className="slash" /> QUI SUIS-JE ?
           </p>
-          <h2 className="v2-h2">JACOB.</h2>
-          <ul className="v2-tags">
-            <li>Entrepreneur</li>
-            <li>Digital</li>
-            <li>Import-export</li>
-            <li>E-commerce</li>
-            <li>Expérience terrain</li>
+          <h2 className="v2-qui-title">
+            JACOB<span>.</span>
+          </h2>
+          <p className="v2-qui-txt">
+            Entrepreneur du digital, de l&apos;<b>import-export</b> et du e-commerce, j&apos;accompagne celles et ceux qui veulent lancer,
+            structurer et <b>faire grandir</b> un vrai business.
+          </p>
+          <ul className="v2-qui-tags">
+            {QUI_TAGS.map(([ic, t]) => (
+              <li key={t}>
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  <path d={ic} />
+                </svg>
+                {t}
+              </li>
+            ))}
           </ul>
-          <Link href={`${BASE}/a-propos`} className="v2-go">
-            EN SAVOIR PLUS <i>→</i>
+          <Link href={`${BASE}/a-propos`} className="btn btn-brand v2-qui-btn">
+            EN SAVOIR PLUS <span className="arrow">→</span>
           </Link>
         </div>
       </section>
 
       {/* NOUVELLE ACCROCHE : rendez-vous */}
-      <section className="section v2-band" id="rdv" data-reveal>
-        <p className="eyebrow">
+      <section className="section v2-rdv" id="rdv" data-reveal>
+        <p className="v2-rdv-eyebrow">
           <span className="slash" /> RÉSERVER UN APPEL
         </p>
-        <h2 className="v2-h2">
-          ON EN PARLE <span className="red-text">EN DIRECT.</span>
+        <h2 className="v2-rdv-title">
+          ON EN PARLE
+          <br />
+          <span className="red-text">EN DIRECT ?</span>
         </h2>
-        <p className="v2-lead">15 min offertes ou 1 h à 25 €. Tous les jours, 20 h – minuit (heure de Paris).</p>
-        <BookingForm avail={avail} />
+        <p className="v2-rdv-lead">Un échange concret pour avancer sur ton projet, obtenir des conseils et définir la meilleure stratégie.</p>
+        <BookingForm avail={avail} v2 />
       </section>
 
-      <section className="v2-contact" data-reveal>
-        <div>
-          <b>UNE QUESTION ?</b>
-          <span>Le secrétariat te répond sur WhatsApp.</span>
+      <section className="v2-ask" data-reveal>
+        <div className="v2-ask-ico" aria-hidden>
+          <img src="/vitrine/whatsapp.svg" alt="" width={44} height={44} />
         </div>
-        <a className="btn btn-whatsapp btn-compact" href={WA_GENERAL} target="_blank" rel="noopener noreferrer">
-          <Wa /> PARLER AU SECRÉTARIAT
-        </a>
+        <div className="v2-ask-body">
+          <h2>
+            UNE QUESTION <span className="red-text">?</span>
+          </h2>
+          <p>Notre secrétaire te répond sur WhatsApp.</p>
+          <a className="v2-ask-btn" href={WA_GENERAL} target="_blank" rel="noopener noreferrer">
+            <img src="/vitrine/whatsapp.svg" alt="" width={22} height={22} /> PARLER AU SECRÉTARIAT <span>→</span>
+          </a>
+        </div>
       </section>
 
       <Faq />

@@ -312,3 +312,85 @@ html:has(.v2), body:has(.v2) { background: #07080b !important; }
   .v2-diag > * { animation: none; }
 }
 @media (prefers-reduced-motion: reduce) and (min-width: 900px) { .v2-scene-jacob { transform: translate(0, -50%); } }
+
+/* ===== V2.4 : Qui suis-je, Réservation, Question + FAQ (d'après les maquettes) ===== */
+.v2-qui { position: relative; isolation: isolate; overflow: hidden; display: grid; margin: 24px 0; background: radial-gradient(120% 90% at 20% 50%, #3a0710 0%, #12040a 45%, #07080b 75%); }
+.v2-qui::before { content: ""; position: absolute; z-index: -1; width: 900px; height: 900px; left: -260px; top: -120px; border-radius: 50%; border: 2px solid #f0142f; border-left-color: transparent; border-bottom-color: transparent; opacity: .55; filter: drop-shadow(0 0 12px #f0142f); }
+.v2-qui-visual { position: relative; }
+.v2-qui-visual img { display: block; width: 100%; height: auto; max-height: 440px; object-fit: cover; object-position: 30% 30%; mask-image: linear-gradient(to bottom, #000 70%, transparent); -webkit-mask-image: linear-gradient(to bottom, #000 70%, transparent); }
+.v2-qui-copy { padding: 0 22px 36px; margin-top: -30px; position: relative; }
+.v2-qui-eyebrow { display: flex; align-items: center; gap: 10px; margin: 0 0 6px; font: italic 800 15px var(--display); letter-spacing: .14em; }
+.v2-qui-title { font-size: clamp(64px, 18vw, 118px) !important; line-height: .9 !important; margin: 0 0 14px !important; background: linear-gradient(180deg, #fff, #c9ccd2); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.v2-qui-title span { color: var(--red); -webkit-text-fill-color: var(--red); }
+.v2-qui-txt { margin: 0 0 18px; font-size: 16px; line-height: 1.55; color: #e4e6ea; max-width: 520px; }
+.v2-qui-txt b { color: #fff; }
+.v2-qui-tags { list-style: none; margin: 0 0 22px; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.v2-qui-tags li { display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: 999px; background: #ffffff0a; box-shadow: inset 0 0 0 1px #ffffff1c; font-size: 14px; }
+.v2-qui-tags svg { color: var(--red); }
+.v2-qui-btn { border-radius: 999px !important; padding-left: 30px !important; padding-right: 30px !important; box-shadow: 0 0 24px #f0142f66, inset 0 1px #ffffff55 !important; }
+@media (min-width: 860px) {
+  .v2-qui { grid-template-columns: 1fr 1.05fr; align-items: center; margin: 40px 0; }
+  .v2-qui-visual img { max-height: none; mask-image: linear-gradient(to right, #000 75%, transparent); -webkit-mask-image: linear-gradient(to right, #000 75%, transparent); }
+  .v2-qui-copy { margin: 0; padding: 40px clamp(24px, 5vw, 80px) 40px 0; }
+}
+
+/* Réservation */
+.v2-rdv { text-align: center; position: relative; isolation: isolate; }
+.v2-rdv::before, .v2-rdv::after { content: ""; position: absolute; z-index: -1; width: 520px; height: 520px; border-radius: 50%; border: 2px solid #f0142f; opacity: .35; filter: drop-shadow(0 0 10px #f0142f); }
+.v2-rdv::before { left: -420px; top: -80px; border-left-color: transparent; border-bottom-color: transparent; }
+.v2-rdv::after { right: -420px; bottom: -120px; border-right-color: transparent; border-top-color: transparent; }
+.v2-rdv-eyebrow { display: inline-flex; align-items: center; gap: 12px; margin: 0 0 10px; font: 800 13px var(--body); letter-spacing: .28em; }
+.v2-rdv-eyebrow::before, .v2-rdv-eyebrow::after { content: ""; width: 40px; height: 1px; background: linear-gradient(90deg, transparent, #f0142f); }
+.v2-rdv-eyebrow::after { transform: scaleX(-1); }
+.v2-rdv-title { font-size: clamp(46px, 13vw, 84px) !important; line-height: .9 !important; margin: 0 0 14px !important; }
+.v2-rdv-lead { margin: 0 auto 26px; max-width: 460px; font-size: 15px; line-height: 1.5; color: #e4e6ea; }
+.kv-book--v2 { text-align: left; margin: 0 auto; max-width: 560px; gap: 14px; }
+.kv-book--v2 .kv-book-row { grid-template-columns: 1fr; gap: 14px; }
+.kv-book--v2 .kv-book-types legend { font-size: 12px; letter-spacing: .14em; color: #c9ccd2; }
+.kv-book--v2 .kv-book-types label { position: relative; display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; column-gap: 10px; align-items: center; padding: 16px 12px; border-radius: 16px; background: #0f1015; box-shadow: inset 0 0 0 1px #ffffff1f; text-align: center; transition: box-shadow .25s, transform .15s; }
+.kv-book--v2 .kv-book-types label .kv-ico { grid-row: 1 / 3; width: 34px; height: 34px; color: var(--red); }
+.kv-book--v2 .kv-book-types label b { font-size: 22px; display: grid; justify-items: center; gap: 4px; }
+.kv-book--v2 .kv-book-types label b em { font-style: italic; color: #fff; background: var(--red); padding: 2px 10px; border-radius: 999px; font-size: 18px; }
+.kv-book--v2 .kv-book-types label b em.is-price { background: none; color: var(--red); padding: 0; font-size: 22px; }
+.kv-book--v2 .kv-book-types label span { font-size: 12px; color: #d2d4da; }
+.kv-book--v2 .kv-book-types label::after { content: ""; position: absolute; top: 10px; right: 10px; width: 20px; height: 20px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px #ffffff55; }
+.kv-book--v2 .kv-book-types label.is-on { box-shadow: inset 0 0 0 2px #f0142f, 0 0 24px #f0142f55; }
+.kv-book--v2 .kv-book-types label.is-on::after { content: "✓"; display: grid; place-items: center; top: -8px; right: -8px; width: 28px; height: 28px; background: var(--red); color: #fff; font-weight: 800; font-size: 15px; box-shadow: 0 0 12px #f0142f; }
+.kv-book--v2 .kv-book-types label:active { transform: scale(.98); }
+@media (max-width: 380px) { .kv-book--v2 .kv-book-types label { grid-template-columns: 1fr; } .kv-book--v2 .kv-book-types label .kv-ico { grid-row: auto; justify-self: center; } }
+.kv-book--v2 > label, .kv-book--v2 .kv-book-row > label { position: relative; font-size: 15px; color: #fff; }
+.kv-book--v2 label > .kv-ico { position: absolute; left: 14px; bottom: 13px; width: 22px; height: 22px; color: #c9ccd2; pointer-events: none; }
+.kv-book--v2 input, .kv-book--v2 select { min-height: 52px; padding-left: 48px; border-radius: 14px; background: #0f1015; border-color: #ffffff2a; font-size: 16px; }
+.kv-book--v2 input:focus, .kv-book--v2 select:focus { outline: none; border-color: #f0142f; box-shadow: 0 0 0 3px #f0142f33; }
+.kv-book--v2 button[type="submit"] { min-height: 60px; border-radius: 999px; font-size: 20px; gap: 12px; box-shadow: 0 0 30px #f0142f77, inset 0 1px #ffffff66; }
+.kv-book--v2 button[type="submit"] .kv-ico { width: 26px; height: 26px; }
+.kv-book--v2 > small { text-align: center; }
+
+/* Une question ? */
+.v2-ask { display: flex; align-items: center; gap: 16px; margin: 30px 16px 0; padding: 22px 18px; border-radius: 26px; background: linear-gradient(145deg, #1a0a0e, #0b0c10); box-shadow: inset 0 0 0 1.5px #f0142f, 0 0 30px #f0142f44; }
+@media (min-width: 760px) { .v2-ask { max-width: 760px; margin: 40px auto 0; padding: 28px 34px; gap: 26px; } }
+.v2-ask-ico { flex: 0 0 auto; display: grid; place-items: center; width: 74px; height: 74px; border-radius: 20px; background: radial-gradient(circle at 30% 25%, #2a7a45, #0d2a17 70%); box-shadow: 0 10px 24px #000a, inset 0 1px #ffffff40, 0 0 18px #25d36633; }
+.v2-ask-ico img { width: 40px; height: 40px; }
+.v2-ask-body { min-width: 0; padding-left: 16px; box-shadow: -1px 0 0 #f0142f88; }
+.v2-ask-body h2 { font-size: clamp(30px, 8vw, 46px) !important; margin: 0 0 4px !important; }
+.v2-ask-body p { margin: 0 0 14px; font-size: 14px; color: #e4e6ea; }
+.v2-ask-btn { display: inline-flex; align-items: center; gap: 10px; min-height: 48px; padding: 0 18px; border-radius: 999px; box-shadow: inset 0 0 0 1.5px #f0142f, 0 0 16px #f0142f44; font: 800 14px var(--body); letter-spacing: .04em; transition: background .2s, transform .15s; }
+.v2-ask-btn img { width: 20px; height: 20px; filter: grayscale(1) brightness(2); }
+.v2-ask-btn:hover { background: #f0142f22; }
+.v2-ask-btn:active { transform: scale(.97); }
+@media (max-width: 400px) { .v2-ask { flex-direction: column; align-items: flex-start; } .v2-ask-body { padding-left: 0; box-shadow: none; } .v2-ask-btn { font-size: 13px; } }
+
+/* FAQ */
+.v2-faq-eyebrow { display: flex; align-items: center; gap: 14px; margin: 0 0 18px; font: italic 800 20px var(--display); letter-spacing: .18em; }
+.v2-faq-eyebrow .slash { width: 7px; height: 30px; }
+.v2-faq-list { display: grid; gap: 12px; max-width: 760px; }
+.v2-faq-list details { border-radius: 18px; background: linear-gradient(145deg, #15171d, #0d0e12); box-shadow: inset 0 0 0 1px #ffffff1a; transition: box-shadow .25s; }
+.v2-faq-list details[open] { box-shadow: inset 0 0 0 1px #f0142f66, 0 0 20px #f0142f22; }
+.v2-faq-list summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 14px; padding: 14px 16px; min-height: 64px; }
+.v2-faq-list summary::-webkit-details-marker { display: none; }
+.v2-faq-ico { flex: 0 0 auto; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 12px; background: #f0142f14; color: #ff4d62; }
+.v2-faq-q { flex: 1; min-width: 0; padding-left: 14px; box-shadow: -1px 0 0 #f0142f88; font-weight: 700; font-size: 16px; line-height: 1.3; }
+.v2-faq-list summary i { font-style: normal; color: var(--red); font-size: 28px; font-weight: 400; line-height: 1; transition: transform .25s; }
+.v2-faq-list details[open] summary i { transform: rotate(45deg); }
+.v2-faq-list details p { margin: 0; padding: 0 18px 18px 90px; color: #c9ccd2; font-size: 14px; line-height: 1.6; animation: v2-rise .35s ease both; }
+@media (max-width: 400px) { .v2-faq-list details p { padding-left: 18px; } }

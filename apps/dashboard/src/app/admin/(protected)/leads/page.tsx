@@ -30,8 +30,9 @@ export default async function LeadsPage({
   const compte = (valeur: string) => tous.filter((lead) => lead.statut === valeur).length;
 
   // Les plus urgents d'abord : nouveaux, puis les plus chauds, puis les plus récents.
-  const ordre = (st: string) => ({ nouveau: 0, en_cours: 1, devis_envoye: 2, gagne: 3, perdu: 4 })[st] ?? 5;
-  const tries = [...leads].sort((a, b) => ordre(a.statut) - ordre(b.statut) || b.score - a.score || b.ts - a.ts);
+  const RANG: Record<string, number> = { nouveau: 0, en_cours: 1, devis_envoye: 2, gagne: 3, perdu: 4 };
+  const ordre = (st: string): number => RANG[st] ?? 5;
+  const tries = [...leads].sort((a, b) => ordre(a.statut) - ordre(b.statut) || (b.score ?? 0) - (a.score ?? 0) || Number(b.ts) - Number(a.ts));
 
   return (
     <div className="space-y-4">
@@ -67,7 +68,7 @@ export default async function LeadsPage({
       <div className="aj-lead-list">
         {tries.map((lead) => {
           const contact = core.contacts.get(lead.waId);
-          const score = Math.max(0, Math.min(5, lead.score));
+          const score = Math.max(0, Math.min(5, lead.score ?? 0));
           return (
             <article key={lead.id} className={`card aj-lead st-${lead.statut}`}>
               <div className="aj-lead-top">

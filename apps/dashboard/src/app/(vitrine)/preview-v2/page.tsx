@@ -173,7 +173,7 @@ export default function PreviewV2Home() {
       {/* VISUEL JACOB */}
       <section className="v2-qui" data-reveal>
         <div className="v2-qui-visual">
-          <img src="/vitrine/jacob-qui.webp" alt="Jacob devant son ordinateur, Shanghai en arrière-plan" width={640} height={691} loading="lazy" />
+          <img src="/vitrine/jacob-qui.webp" alt="Jacob devant son ordinateur, Shanghai en arrière-plan" width={575} height={691} loading="lazy" />
         </div>
         <div className="v2-qui-copy">
           <p className="v2-qui-eyebrow">

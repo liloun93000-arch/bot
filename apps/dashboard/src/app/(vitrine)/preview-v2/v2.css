@@ -463,3 +463,18 @@ html:has(.v2), body:has(.v2) { background: #07080b !important; }
 .kv .v2 .v2-rdv { background: radial-gradient(60% 30% at 0% 10%, #f0142f33, transparent 70%), radial-gradient(50% 25% at 100% 25%, #f0142f22, transparent 70%), radial-gradient(60% 25% at 100% 95%, #f0142f2e, transparent 70%); }
 .kv .v2 .v2-band { background: transparent; }
 .kv .v2 .v2-ask { margin-bottom: 10px; }
+
+/* ===== Aucun bloc de fond par section : tout se fond dans le décor général ===== */
+.kv .v2 .v2-rdv, .kv .v2 .v2-band, .kv .v2 .v2-qui { background: none !important; overflow: visible; }
+.kv .v2 .v2-qui::before { display: none; }
+.kv .v2 .v2-qui::after { inset: -10% -20%; background: radial-gradient(closest-side, #f0142f2e, transparent); mask-image: none; -webkit-mask-image: none; }
+.kv .v2 .v2-rdv { position: relative; }
+.kv .v2 .v2-rdv::before { display: block; content: ""; position: absolute; z-index: -1; inset: -8% -30% auto; height: 70%; border: 0; border-radius: 0; opacity: 1; filter: none; clip-path: none; box-shadow: none; background: radial-gradient(closest-side, #f0142f26, transparent); }
+.kv .v2 .v2-rdv::after { display: none; }
+/* Image de Jacob : bords fondus sur les 4 côtés */
+.kv .v2 .v2-qui-visual img {
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 14%, #000 72%, transparent 100%), linear-gradient(to right, transparent 0, #000 10%, #000 88%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(to bottom, transparent 0, #000 14%, #000 72%, transparent 100%), linear-gradient(to right, transparent 0, #000 10%, #000 88%, transparent 100%);
+  mask-composite: intersect;
+}

@@ -451,3 +451,15 @@ html:has(.v2), body:has(.v2) { background: #07080b !important; }
 .kv .v2 .kv-book--v2 .kv-book-types label { padding-right: 22px; padding-left: 14px; }
 .kv .v2 .kv-book--v2 .kv-book-types label::after { top: 8px; right: 8px; width: 16px; height: 16px; }
 .kv .v2 .kv-book--v2 .kv-book-types label.is-on::after { top: -9px; right: -9px; width: 28px; height: 28px; }
+
+/* Fondu des sections illustrées dans le décor (plus de bandes) */
+.kv .v2 .v2-qui { margin: 0; background: transparent; }
+.kv .v2 .v2-qui > * { position: relative; z-index: 1; }
+.kv .v2 .v2-qui::after { content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background: radial-gradient(110% 80% at 25% 45%, #3a0710cc 0%, #12040a88 45%, transparent 75%);
+  mask-image: linear-gradient(to bottom, transparent, #000 18%, #000 82%, transparent); -webkit-mask-image: linear-gradient(to bottom, transparent, #000 18%, #000 82%, transparent); }
+.kv .v2 .v2-qui-visual img { mask-image: radial-gradient(85% 80% at 50% 45%, #000 55%, transparent 100%); -webkit-mask-image: radial-gradient(85% 80% at 50% 45%, #000 55%, transparent 100%); }
+@media (min-width: 860px) { .kv .v2 .v2-qui-visual img { mask-image: radial-gradient(90% 85% at 40% 50%, #000 55%, transparent 100%); -webkit-mask-image: radial-gradient(90% 85% at 40% 50%, #000 55%, transparent 100%); } }
+.kv .v2 .v2-rdv { background: radial-gradient(60% 30% at 0% 10%, #f0142f33, transparent 70%), radial-gradient(50% 25% at 100% 25%, #f0142f22, transparent 70%), radial-gradient(60% 25% at 100% 95%, #f0142f2e, transparent 70%); }
+.kv .v2 .v2-band { background: transparent; }
+.kv .v2 .v2-ask { margin-bottom: 10px; }

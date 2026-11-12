@@ -20,10 +20,15 @@ export function Reveal() {
             io.unobserve(en.target);
           }
         }),
-      { rootMargin: "0px 0px -8% 0px" },
+      { rootMargin: "0px 0px 0px 0px", threshold: 0 },
     );
     els.forEach((e) => io.observe(e));
-    return () => io.disconnect();
+    // Filet de sécurité : rien ne doit rester invisible (pas de « trou »).
+    const t = window.setTimeout(() => els.forEach((e) => e.classList.add("is-in")), 1500);
+    return () => {
+      io.disconnect();
+      window.clearTimeout(t);
+    };
   }, [path]);
   return null;
 }

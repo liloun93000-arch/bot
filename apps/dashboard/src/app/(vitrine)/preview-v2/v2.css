@@ -131,8 +131,8 @@ html:has(.v2), body:has(.v2) { background: #07080b !important; }
 .v2 .floating-wa { display: none; }
 
 /* Hiérarchie : titres plus mesurés, un seul niveau fort par section */
-.v2-hero { min-height: auto; padding-bottom: 0; }
-.v2-hero h1 { font-size: clamp(44px, 11vw, 78px); }
+.v2 .v2-hero { min-height: auto; padding-bottom: 0; }
+.v2 .v2-hero h1 { font-size: clamp(44px, 11vw, 78px); }
 .v2-h2 { font-size: clamp(32px, 8vw, 52px); margin: 0 0 22px; }
 .v2-h3 { font: italic 800 22px/1 var(--display); text-transform: uppercase; margin: 22px 0 12px; }
 .v2-lead { color: #b9bdc5; font-size: 14px; margin: -8px 0 22px; }
@@ -210,3 +210,24 @@ html:has(.v2), body:has(.v2) { background: #07080b !important; }
 .v2-foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; padding: 30px 22px 90px; font-size: 10px; letter-spacing: .12em; color: #6f7581; }
 .v2-foot a { text-decoration: underline; }
 .v2 .kv-faq .kv-faq-list { margin-top: 16px; }
+
+/* ===== Correctifs V2.2 ===== */
+/* Menu : le flou de la barre enfermait le menu dans 58 px → barre opaque, menu plein écran */
+.v2-head { backdrop-filter: none; -webkit-backdrop-filter: none; background: #07080b; }
+.v2-menu nav { height: calc(100vh - 58px - env(safe-area-inset-top, 0px)); height: calc(100dvh - 58px - env(safe-area-inset-top, 0px)); bottom: auto; overscroll-behavior: contain; }
+.v2-menu nav a { padding: 13px 2px; font-size: 22px; }
+
+/* Moins de vides entre les blocs */
+.v2 .section { padding-top: 40px; padding-bottom: 40px; }
+@media (min-width: 760px) { .v2 .section { padding-top: 64px; padding-bottom: 64px; } }
+.v2 .section.v2-tight { padding-top: 8px; }
+.v2 .v2-hero { padding-top: 28px; padding-bottom: 8px; }
+.v2 .v2-hero .hero-figure { min-height: 0; margin-top: 8px; margin-bottom: 0; }
+.v2 .v2-hero .hero-figure img { max-height: 300px; width: auto; }
+@media (min-width: 760px) { .v2 .v2-hero .hero-figure img { max-height: 460px; } }
+.v2-jacob { margin-top: 0; margin-bottom: 0; }
+.v2-h2 { margin-bottom: 16px; }
+.v2 .section-heading { margin-bottom: 22px; }
+.v2-about img { width: min(200px, 55%); }
+.v2-foot { padding-top: 20px; padding-bottom: 80px; }
+.v2 [data-reveal] { transform: translateY(12px); transition-duration: .5s; }

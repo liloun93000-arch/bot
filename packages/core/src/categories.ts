@@ -59,7 +59,7 @@ export function isRealQuestion(text: string): boolean {
     .replace(/^\[[^\]]*\]\s*/g, "") // marqueurs « [Image reçue] » etc.
     .replace(/[’']/g, " ")
     // Formules de conversation entières : « comment ça va », « tu vas bien », « et la famille »…
-    .replace(/\b(comment (ca|tu|vous) (va|vas|allez)|comment (allez|vas)[- ](vous|tu)|tu vas bien|vous allez bien|ca (va|roule|dit quoi)|quoi de neuf|et (la|ta) famille|bien ou quoi|bien ou bien|la forme|c ?(est|ets|es|et) (bien )?(toi|vous|lui|jacob|arbi|le vrai|ton numero|ton whatsapp)|cest (bien )?(toi|vous|jacob)|t es (qui|jacob)|vous etes (qui|jacob)|c est qui)\b/g, " ");
+    .replace(/\b(comment (ca|tu|vous) (va|vas|allez)|comment (allez|vas)[- ](vous|tu)|tu vas bien|vous allez bien|ca (va|roule|dit quoi)|quoi de neuf|et (la|ta) famille|bien ou quoi|bien ou bien|la forme|c ?(est|ets|es|et) (bien )?(toi|vous|lui|jacob|arbi|le vrai|ton numero|ton whatsapp)|cest (bien )?(toi|vous|jacob)|t es (qui|jacob)|vous etes (qui|jacob)|c est qui|c ?est (bon|ok|good|parfait|carre|clair|note|compris|valide)|ca (marche|me va|roule)|je (confirme|valide)|pas de (souci|soucis|probleme)|bien recu|ca marche)\b/g, " ");
   const words = t.match(/[a-z0-9]+/g) ?? [];
   const meaningful = words.filter((w) => !FILLER.has(w) && w.length > 1);
   if (meaningful.length === 0) return false;

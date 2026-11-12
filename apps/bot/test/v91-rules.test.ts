@@ -464,3 +464,9 @@ describe("« Slm ça va ? C'est toi ? » (+ capture Snapchat) : pas d'alerte", (
     expect(isRealQuestion("C'est toi qui vends les Surron ?")).toBe(true);
   });
 });
+
+it("confirmations simples (« Et oui c'est bon ») ne déclenchent pas d'alerte", async () => {
+  const { isRealQuestion } = await import("@arbi/core");
+  for (const t of ["Et oui c'est bon", "Et oui c’est bon", "ok ça marche", "oui je confirme", "c'est bon merci"]) expect(isRealQuestion(t), t).toBe(false);
+  expect(isRealQuestion("J'ai lu le site au complet je vais prendre les agents")).toBe(true);
+});

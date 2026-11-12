@@ -5,6 +5,7 @@ import { getRuntime } from "@/lib/core";
 import { CATS_ENTREE, CATS_SORTIE, MOYENS, ecritures, totaux } from "@/lib/compta";
 import { ajouterEcritureAction, supprimerEcritureAction } from "@/lib/compta-actions";
 import { parsePeriod, parisYmd } from "@/lib/period";
+import { usdEur } from "@/lib/fx";
 import { PeriodFilter } from "../period-filter";
 
 export const dynamic = "force-dynamic";
@@ -25,14 +26,17 @@ export default async function ComptaPage({
   const kimi = kimiFlows(core, period.from, period.to + 1).conso;
   const sens = p.sens === "sortie" ? "sortie" : "entree";
   const cats = sens === "entree" ? CATS_ENTREE : CATS_SORTIE;
-  const resultat = t.entrees - t.sorties;
+  const fx = await usdEur();
+  const kimiCents = Math.round(kimi * fx.taux * 100);
+  const depenses = t.sorties + kimiCents;
+  const resultat = t.entrees - depenses;
 
   return (
     <div className="space-y-4">
       <div>
         <h1 className="text-2xl font-bold">💶 Compta</h1>
         <p className="text-sm text-neutral-500">
-          Note chaque vente encaissée et chaque achat. La consommation Kimi est ajoutée toute seule.
+          Note chaque vente encaissée et chaque achat. La consommation Kimi est ajoutée toute seule aux dépenses.
         </p>
       </div>
       {p.msg && <div className="card text-sm font-medium">{p.msg}</div>}
@@ -45,15 +49,15 @@ export default async function ComptaPage({
             <b>{eur(t.entrees)}</b>
           </div>
           <div className="is-out">
-            <span>Dépensé</span>
-            <b>{eur(t.sorties)}</b>
+            <span>Dépensé (Kimi inclus)</span>
+            <b>{eur(depenses)}</b>
           </div>
           <div className="is-kimi">
-            <span>Kimi (IA)</span>
-            <b>{kimi.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $</b>
+            <span>dont Kimi (IA)</span>
+            <b>{eur(kimiCents)}</b>
           </div>
           <div className={resultat >= 0 ? "is-res" : "is-neg"}>
-            <span>Reste (hors Kimi)</span>
+            <span>Bénéfice</span>
             <b>{eur(resultat)}</b>
           </div>
         </div>
@@ -122,7 +126,23 @@ export default async function ComptaPage({
 
       <div className="space-y-2">
         <h2 className="font-semibold">Détail — {period.label}</h2>
-        {list.length === 0 && <div className="card text-sm text-neutral-400">Rien sur cette période.</div>}
+        {kimiCents > 0 && (
+          <article className="card aj-compta-line is-out">
+            <div className="min-w-0">
+              <p className="font-semibold">
+                Kimi (IA) <span className="text-neutral-400">· automatique</span>
+              </p>
+              <p className="text-xs text-neutral-500">
+                {kimi.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $ consommés sur la période · 1 $ ={" "}
+                {fx.taux.toLocaleString("fr-FR", { maximumFractionDigits: 4 })} €{fx.secours ? " (taux approximatif)" : ` (BCE${fx.date ? ` du ${fx.date.split("-").reverse().join("/")}` : ""})`}
+              </p>
+            </div>
+            <div className="aj-compta-right">
+              <b>−{eur(kimiCents)}</b>
+            </div>
+          </article>
+        )}
+        {list.length === 0 && kimiCents === 0 && <div className="card text-sm text-neutral-400">Rien sur cette période.</div>}
         {list.map((e) => (
           <article key={e.id} className={`card aj-compta-line ${e.sens === "entree" ? "is-in" : "is-out"}`}>
             <div className="min-w-0">

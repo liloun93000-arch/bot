@@ -1696,3 +1696,8 @@ td {
 .aj-compta-line.is-in .aj-compta-right b { color: #25d366; }
 .aj-compta-line.is-out .aj-compta-right b { color: #ff6b7d; }
 .aj-compta-del { font-size: 11px; color: #8b909b; text-decoration: underline; background: none; border: 0; padding: 4px 0; cursor: pointer; }
+/* Compta : champs qui ne dépassent jamais (date iPhone) */
+.aj-compta-form-fix, form#saisie .grid > label { min-width: 0; }
+form#saisie input, form#saisie select { min-width: 0; max-width: 100%; width: 100%; box-sizing: border-box; }
+form#saisie input[type="date"] { -webkit-appearance: none; appearance: none; display: block; min-height: 44px; text-align: left; }
+form#saisie input[type="date"]::-webkit-date-and-time-value { text-align: left; }

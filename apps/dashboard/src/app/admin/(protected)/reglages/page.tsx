@@ -55,6 +55,10 @@ export default async function ReglagesPage({
   const kimi = lastKimiSnap(getRuntime().core);
   return (
     <div className="space-y-6">
+      <a href="/preview-v2" target="_blank" rel="noopener" className="card block" style={{ borderColor: "#f0142f" }}>
+        <b>👀 Voir le site — Preview V2</b>
+        <span className="block text-sm text-neutral-500">Nouvelle proposition de la boutique, visible seulement par toi</span>
+      </a>
       <Link href="/admin/compta" className="card block">
         <b>💶 Compta</b>
         <span className="block text-sm text-neutral-500">Ventes encaissées, achats, hébergement et consommation Kimi</span>

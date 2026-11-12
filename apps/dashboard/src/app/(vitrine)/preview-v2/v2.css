@@ -394,3 +394,22 @@ html:has(.v2), body:has(.v2) { background: #07080b !important; }
 .v2-faq-list details[open] summary i { transform: rotate(45deg); }
 .v2-faq-list details p { margin: 0; padding: 0 18px 18px 90px; color: #c9ccd2; font-size: 14px; line-height: 1.6; animation: v2-rise .35s ease both; }
 @media (max-width: 400px) { .v2-faq-list details p { padding-left: 18px; } }
+
+/* ===== Correctifs réservation (spécificité au-dessus du kit) ===== */
+.kv .v2 .v2-rdv::before, .kv .v2 .v2-rdv::after { display: none; }
+@media (min-width: 900px) { .kv .v2 .v2-rdv::before, .kv .v2 .v2-rdv::after { display: block; } }
+/* Cartes type d'appel : icône, titre, sous-titre empilés et centrés */
+.kv .v2 .kv-book--v2 .kv-book-types { grid-template-columns: 1fr 1fr; gap: 12px; }
+.kv .v2 .kv-book--v2 .kv-book-types label { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 18px 8px 14px; min-height: 150px; text-align: center; }
+.kv .v2 .kv-book--v2 .kv-book-types label > .kv-ico { position: static; width: 32px; height: 32px; color: var(--red); }
+.kv .v2 .kv-book--v2 .kv-book-types label b { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 22px; line-height: 1; white-space: nowrap; }
+.kv .v2 .kv-book--v2 .kv-book-types label b em { font-size: 16px; padding: 3px 10px; }
+.kv .v2 .kv-book--v2 .kv-book-types label b em.is-price { font-size: 20px; padding: 0; }
+.kv .v2 .kv-book--v2 .kv-book-types label span { font-size: 12px; line-height: 1.3; }
+/* Champs : icône à gauche DANS le champ, texte décalé */
+.kv .v2 .kv-book--v2 .kv-book-row > label, .kv .v2 .kv-book--v2 > label { display: grid; gap: 8px; position: relative; }
+.kv .v2 .kv-book--v2 .kv-book-row > label > .kv-ico, .kv .v2 .kv-book--v2 > label > .kv-ico { position: absolute; left: 14px; bottom: 15px; width: 22px; height: 22px; color: #c9ccd2; pointer-events: none; z-index: 1; }
+.kv .v2 .kv-book--v2 input, .kv .v2 .kv-book--v2 select { min-height: 54px; padding: 12px 40px 12px 48px; border-radius: 14px; background: #0f1015; border: 1px solid #ffffff2a; color: #fff; font-size: 16px; -webkit-appearance: none; appearance: none; }
+.kv .v2 .kv-book--v2 select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23c9ccd2' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 16px center; }
+.kv .v2 .kv-book--v2 input::placeholder { color: #8b909b; }
+.kv .v2 .kv-book--v2 > small { margin-right: 54px; margin-left: 54px; }

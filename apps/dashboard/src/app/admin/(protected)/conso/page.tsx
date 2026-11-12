@@ -1,7 +1,6 @@
-import { kimiFlows, lastKimiSnap, refreshKimiBalance } from "@arbi/core";
+import { kimiFlows, lastKimiSnap, refreshKimiBalance, saveKimiSnap, type Core } from "@arbi/core";
 import { requireSession } from "@/lib/auth";
 import { getRuntime } from "@/lib/core";
-import { PRIX_DEFAUT, coutUsd } from "@/lib/api-balance";
 import { parsePeriod, parisMidnight, parisYmd } from "@/lib/period";
 import { PeriodFilter } from "../period-filter";
 
@@ -18,21 +17,21 @@ const usd = (n: number): string => `$ ${n.toLocaleString("fr-FR", { minimumFract
 const heure = (ts: number): string =>
   new Date(ts).toLocaleString("fr-FR", { timeZone: "Europe/Paris", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
 
-function estimation(from: number, to: number): number {
-  const r = getRuntime()
-    .core.sqlite.prepare(
-      `SELECT COALESCE(SUM(input_tokens),0) AS i, COALESCE(SUM(output_tokens),0) AS o FROM llm_usage WHERE created_at >= ? AND created_at < ?`,
-    )
-    .get(from, to) as { i: number; o: number };
-  return coutUsd({ entree: r.i, sortie: r.o }, PRIX_DEFAUT);
+/**
+ * Historique d'avant le suivi, recopié de la console Kimi (capture du 12/11/2026 à 07:11, heure de Paris) :
+ * solde 21,12488 $, consommé aujourd'hui 6,44464 $, total consommé 23,87512 $ (clé créée en novembre).
+ * On pose trois relevés de référence pour que « Aujourd'hui », « Ce mois-ci » et « Total » collent à Kimi.
+ */
+function poserHistorique(core: Core): void {
+  const avant = core.sqlite.prepare(`SELECT COUNT(*) AS n FROM kimi_balance_snaps WHERE ts <= ?`).get(Date.parse("2026-11-12T06:11:00Z")) as { n: number };
+  if (avant.n > 0) return;
+  saveKimiSnap(core, { ts: Date.parse("2026-10-31T23:00:00Z"), available: 45, voucher: 0, cash: 0 }); // 1er nov. : 40 $ + 5 $ de bons
+  saveKimiSnap(core, { ts: Date.parse("2026-11-11T22:59:59Z"), available: 21.12488 + 6.44464, voucher: 0, cash: 0 }); // fin du 11/11
+  saveKimiSnap(core, { ts: Date.parse("2026-11-12T06:11:00Z"), available: 21.12488, voucher: 0, cash: 0 }); // capture
 }
 
-/** Conso d'une tranche : réelle si les relevés la couvrent, sinon estimation par les tokens (marquée ≈). */
 function tranche(from: number, to: number): { usd: number; estime: boolean } {
-  const f = kimiFlows(getRuntime().core, from, to);
-  if (f.couvert) return { usd: f.conso, estime: false };
-  if (f.premier !== null && f.premier < to) return { usd: f.conso + estimation(from, f.premier), estime: true };
-  return { usd: estimation(from, to), estime: true };
+  return { usd: kimiFlows(getRuntime().core, from, to).conso, estime: false };
 }
 
 export default async function ConsoPage({ searchParams }: { searchParams: Promise<{ periode?: string; du?: string; au?: string }> }) {
@@ -40,6 +39,8 @@ export default async function ConsoPage({ searchParams }: { searchParams: Promis
   const params = await searchParams;
   const period = parsePeriod({ periode: params.periode ?? "aujourdhui", du: params.du, au: params.au });
   const { core } = getRuntime();
+  lastKimiSnap(core);
+  poserHistorique(core);
   const maj = await refreshKimiBalance(core, process.env.ANTHROPIC_API_KEY ?? "", process.env.ANTHROPIC_BASE_URL || undefined);
   const snap = lastKimiSnap(core);
   const now = Date.now();
@@ -79,6 +80,7 @@ export default async function ConsoPage({ searchParams }: { searchParams: Promis
       <div>
         <h1 className="text-2xl font-bold">Consommation Kimi</h1>
         <p className="text-sm text-neutral-500">
+          {"Avant le 12/11 07:11, Kimi ne donne que le total : la consommation du 1er au 11/11 apparaît en un seul bloc le 11/11. "}
           {snap ? `Solde lu directement sur Kimi — dernier relevé ${heure(snap.ts)} (mis à jour toutes les 10 min).` : "Aucun relevé Kimi pour l'instant."}
           {!maj.ok && ` ⚠️ Lecture du solde impossible : ${maj.error}.`}
         </p>
@@ -131,8 +133,7 @@ export default async function ConsoPage({ searchParams }: { searchParams: Promis
         </div>
         {ilYaEstime && (
           <p className="text-xs text-neutral-500">
-            ≈ et barres claires : estimation à partir des tokens (avant le premier relevé du solde
-            {toutes.premier ? `, ${heure(toutes.premier)}` : ""}). Ensuite, les chiffres sont ceux de Kimi.
+            ≈ : estimation.
           </p>
         )}
       </div>

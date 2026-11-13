@@ -178,7 +178,7 @@ export function AssistantSection() {
               MÊME QUAND TU ES OCCUPÉ.
             </h2>
             <p>Un assistant qui répond automatiquement aux questions qui reviennent souvent, pour les entreprises qui perdent du temps à répondre à la main. Il ne remplace pas tout : il te soulage.</p>
-            <a className="btn btn-whatsapp" href={`https://wa.me/33756975687`} target="_blank" rel="noopener noreferrer">
+            <a className="btn btn-whatsapp" href="/go/site" target="_blank" rel="noopener noreferrer">
               <Wa /> TESTER SUR WHATSAPP
             </a>
           </div>

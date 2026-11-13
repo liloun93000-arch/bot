@@ -5,12 +5,14 @@ export const dynamic = "force-dynamic";
 
 /**
  * Lien de suivi : compte le clic pour la source, puis redirige IMMÉDIATEMENT vers WhatsApp,
- * sans page intermédiaire et sans message prérempli. Les aperçus de liens (robots de Snapchat,
+ * sans page intermédiaire (message prérempli seulement si le lien le demande, ex. boutons d'offre du site). Les aperçus de liens (robots de Snapchat,
  * Telegram, WhatsApp…) sont redirigés mais NE sont PAS comptés.
  */
 export async function GET(request: Request, { params }: { params: Promise<{ source: string }> }): Promise<Response> {
   const { source } = await params;
-  const destination = `https://wa.me/${WA_DESTINATION}`;
+  // Message prérempli optionnel (?text=…) : utilisé par les boutons « offre » du site, toujours comptés.
+  const text = new URL(request.url).searchParams.get("text")?.slice(0, 500);
+  const destination = `https://wa.me/${WA_DESTINATION}${text ? `?text=${encodeURIComponent(text)}` : ""}`;
   try {
     const { core } = getRuntime();
     const src = sourceBySlug(core, source.toLowerCase());

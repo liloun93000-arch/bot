@@ -10,7 +10,8 @@ export const WA_GENERAL = "/go/site";
 
 /** Bouton lié à une offre : texte court prérempli qui nomme l'offre (demande du kit). */
 export function waOffre(texte: string): string {
-  return `https://wa.me/${SECRETARIAT}?text=${encodeURIComponent(texte)}`;
+  // Passe par le lien de suivi « site » : chaque contact venu du site est compté dans le dashboard.
+  return `/go/site?text=${encodeURIComponent(texte)}`;
 }
 
 export const NAV = [

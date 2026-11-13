@@ -11,17 +11,24 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
   return [
     { url: new URL("/", base).toString(), lastModified: now, changeFrequency: "weekly", priority: 1 },
-    ...["/formations", "/societe", "/sourcing", "/ghost-studio", "/snapchat", "/affiliation", "/assistant", "/a-propos"].map((p) => ({
+    // Pages mises en avant (liens annexes souhaités) : Formations, Création de société, Mon compte.
+    ...["/formations", "/societe", "/compte"].map((p) => ({
+      url: new URL(p, base).toString(),
+      lastModified: now,
+      changeFrequency: "weekly" as const,
+      priority: 0.9,
+    })),
+    ...["/sourcing", "/ghost-studio", "/snapchat", "/affiliation", "/assistant", "/a-propos"].map((p) => ({
       url: new URL(p, base).toString(),
       lastModified: now,
       changeFrequency: "monthly" as const,
-      priority: 0.7,
+      priority: 0.5,
     })),
     ...FORMATIONS.map((o) => ({
       url: new URL(`/formations/${slugOf(o)}`, base).toString(),
       lastModified: now,
       changeFrequency: "monthly" as const,
-      priority: 0.8,
+      priority: 0.6,
     })),
     { url: new URL("/conditions", base).toString(), lastModified: now, changeFrequency: "yearly", priority: 0.3 },
     { url: new URL("/confidentialite", base).toString(), lastModified: now, changeFrequency: "yearly", priority: 0.3 },

@@ -3,7 +3,7 @@ import { PageTop } from "../ui";
 import { pageMeta } from "../seo";
 
 export function generateMetadata() {
-  return pageMeta("/compte", "Mon compte | ARBI JACOB", "Espace client et espace administrateur ARBI JACOB.", { noindex: true });
+  return pageMeta("/compte", "Mon compte — Espace client ARBI JACOB", "Accède à ton espace : formations, commandes et dossiers (espace client), ou connexion de l'équipe ARBI JACOB.");
 }
 
 /**

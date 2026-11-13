@@ -39,7 +39,8 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
       <footer className="v2-foot">
         <span>© ARBI JACOB</span>
         <span>
-          <Link href={`${BASE}/a-propos`}>À PROPOS</Link> · <Link href="/conditions">CONDITIONS</Link> ·{" "}
+          <Link href="/">ACCUEIL</Link> · <Link href="/formations">FORMATIONS</Link> · <Link href="/societe">CRÉATION DE SOCIÉTÉ</Link> ·{" "}
+          <Link href="/compte">MON COMPTE</Link> · <Link href={`${BASE}/a-propos`}>À PROPOS</Link> · <Link href="/conditions">CONDITIONS</Link> ·{" "}
           <Link href="/confidentialite">CONFIDENTIALITÉ</Link>
         </span>
       </footer>

@@ -489,3 +489,18 @@ html:has(.v2), body:has(.v2) { background: #07080b !important; }
 /* Formations → Nos services : même titre, enchaînement serré */
 .kv .v2 #formations { padding-bottom: 20px; }
 .kv .v2 .v2-services { padding-top: 20px; }
+
+/* Mon compte : icône seule dans la barre */
+.kv .v2 .v2-account { width: 42px; height: 42px; min-height: 0; padding: 0; justify-content: center; border-radius: 50%; }
+/* Deux espaces */
+.v2-spaces { display: grid; gap: 14px; max-width: 760px; }
+@media (min-width: 700px) { .v2-spaces { grid-template-columns: 1fr 1fr; } }
+.v2-space { position: relative; display: flex; flex-direction: column; gap: 8px; padding: 24px 20px; border-radius: 20px; background: linear-gradient(160deg, #181b22, #0d0f13); box-shadow: 0 12px 30px #0008, inset 0 0 0 1px #ffffff12; transition: transform .25s, box-shadow .25s; }
+.v2-space-ico { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 16px; color: var(--red); background: #f0142f14; box-shadow: inset 0 0 0 1px #f0142f44; margin-bottom: 4px; }
+.v2-space b { font: italic 800 26px/1 var(--display); }
+.v2-space small { font-size: 13px; color: #a9aeb7; line-height: 1.45; }
+.v2-space .v2-go { margin-top: 8px; }
+a.v2-space:hover, a.v2-space:active { transform: translateY(-3px); box-shadow: 0 16px 36px #000a, inset 0 0 0 1px #f0142f77; }
+.v2-space.is-locked { cursor: not-allowed; opacity: .75; }
+.v2-space.is-locked .v2-space-ico { color: #8b909b; background: #ffffff08; box-shadow: inset 0 0 0 1px #ffffff1a; }
+.v2-space em { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; margin-top: 8px; padding: 6px 12px; border-radius: 999px; font-style: normal; font: 800 11px var(--body); letter-spacing: .12em; color: #fff; background: #ffffff10; box-shadow: inset 0 0 0 1px #ffffff26; }

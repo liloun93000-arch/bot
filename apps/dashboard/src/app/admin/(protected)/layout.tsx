@@ -36,6 +36,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
     { href: "/admin/sources", label: "Liens de suivi", icon: "chart" },
     { href: "/admin/conso", label: "Consommation Kimi", icon: "chart" },
     { href: "/admin/compta", label: "Compta", icon: "layers" },
+    { href: "/admin/rendez-vous", label: "Rendez-vous", icon: "headset" },
     { href: "/admin/medias", label: "Photos clients", icon: "image" },
     { href: "/admin/catalogue", label: "Catalogue & tarifs", icon: "layers" },
     { href: "/admin/fichiers", label: "Fichiers du bot", icon: "clip" },

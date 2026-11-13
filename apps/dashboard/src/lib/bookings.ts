@@ -29,6 +29,12 @@ export function ensureBookings(core: Core): void {
        date TEXT NOT NULL, heure TEXT NOT NULL, booking_id INTEGER NOT NULL,
        PRIMARY KEY (date, heure))`,
   ]) core.sqlite.prepare(sql).run();
+  // Statut de validation par l'équipe : en_attente → approuve / refuse.
+  try {
+    core.sqlite.prepare(`ALTER TABLE call_bookings ADD COLUMN statut TEXT NOT NULL DEFAULT 'en_attente'`).run();
+  } catch {
+    /* colonne déjà là */
+  }
   ready.add(core);
 }
 
@@ -123,4 +129,50 @@ export function book(
     }
     return { ok: false, error: "Ce créneau vient d'être pris. Choisis-en un autre." };
   }
+}
+
+export interface Booking {
+  id: number;
+  date: string;
+  heure: string;
+  type: CallType;
+  nom: string;
+  waId: string;
+  sujet: string;
+  alertId: number | null;
+  statut: "en_attente" | "approuve" | "refuse";
+  createdAt: number;
+}
+
+export function listBookings(core: Core, opts: { depuis?: string } = {}): Booking[] {
+  ensureBookings(core);
+  const rows = core.sqlite
+    .prepare(
+      `SELECT id, date, heure, type, nom, wa_id, sujet, alert_id, statut, created_at FROM call_bookings
+       WHERE date >= ? ORDER BY date ASC, heure ASC`,
+    )
+    .all(opts.depuis ?? "0000-00-00") as Array<{ id: number; date: string; heure: string; type: CallType; nom: string; wa_id: string; sujet: string; alert_id: number | null; statut: Booking["statut"]; created_at: number }>;
+  return rows.map((r) => ({ id: r.id, date: r.date, heure: r.heure, type: r.type, nom: r.nom, waId: r.wa_id, sujet: r.sujet, alertId: r.alert_id, statut: r.statut, createdAt: r.created_at }));
+}
+
+export function getBooking(core: Core, id: number): Booking | undefined {
+  return listBookings(core).find((b) => b.id === id);
+}
+
+/** Approuver ou refuser. Refuser libère le créneau. L'alerte associée passe en traitée. */
+export function decideBooking(core: Core, id: number, decision: "approuve" | "refuse"): Booking | undefined {
+  ensureBookings(core);
+  const b = getBooking(core, id);
+  if (!b || b.statut !== "en_attente") return b;
+  core.sqlite.prepare(`UPDATE call_bookings SET statut = ? WHERE id = ?`).run(decision, id);
+  if (decision === "refuse") core.sqlite.prepare(`DELETE FROM call_slots WHERE booking_id = ?`).run(id);
+  if (b.alertId) core.alerts.markTreated(b.alertId);
+  return { ...b, statut: decision };
+}
+
+/** Message envoyé au client quand le rendez-vous est approuvé. */
+export function approvalMessage(b: Booking, paiementNumero: string): string {
+  const [y, m, d] = b.date.split("-");
+  const base = `Bonjour ${b.nom} ✅ Ton rendez-vous est confirmé : ${b.type === "1h" ? "appel d'une heure" : "appel de 15 minutes"} le ${d}/${m}/${y} à ${b.heure} (heure de Paris). Jacob t'appellera sur ce numéro WhatsApp.`;
+  return b.type === "1h" ? `${base} Pour régler l'appel (25 €), écris sur WhatsApp au ${paiementNumero}.` : base;
 }

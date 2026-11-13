@@ -27,6 +27,11 @@ function Request({ r, i, draft = "" }: { r: JacobItem; i: number; draft?: string
       </header>
       <p className="aj-req-q">“{r.question}”</p>
       {r.contexte && <p className="aj-req-ctx">{r.contexte}</p>}
+      {r.rdv && !r.resolu && (
+        <Link href="/admin/rendez-vous" className="btn btn-primary" style={{ alignSelf: "flex-start" }}>
+          📞 Approuver ou refuser le rendez-vous
+        </Link>
+      )}
       {r.mediaFile && <JacobPhoto file={r.mediaFile} nom={r.nom} />}
       {r.reponse && <p className="aj-req-answer">Réponse de Jacob : {r.reponse}</p>}
       <footer className="aj-req-actions">

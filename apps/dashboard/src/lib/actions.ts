@@ -37,6 +37,7 @@ import {
 } from "./auth";
 import { getRuntime } from "./core";
 import { mediaDir } from "./media";
+import { approvalMessage, decideBooking } from "./bookings";
 import { isVideoFile, prepareVideo } from "./video-convert";
 import {
   docsDir,
@@ -1855,4 +1856,37 @@ export async function checkStripePaymentsAction(): Promise<void> {
   }
   revalidatePath("/admin/facturation");
   redirect("/admin/facturation?msg=" + encodeURIComponent(message));
+}
+
+// ── Rendez-vous (réservations d'appel du site) : approuver / refuser ──
+
+export async function decideBookingAction(id: number, decision: "approuve" | "refuse"): Promise<void> {
+  await requireSession();
+  const { core, wa, log } = getRuntime();
+  const b = decideBooking(core, id, decision);
+  if (!b) redirect(`/admin/rendez-vous?msg=${encodeURIComponent("⚠️ Rendez-vous introuvable.")}`);
+  let msg = decision === "refuse" ? "Rendez-vous refusé : le créneau est de nouveau libre." : "✅ Rendez-vous approuvé.";
+  if (decision === "approuve") {
+    const text = approvalMessage(b, "+33 7 78 78 37 01");
+    let sent = false;
+    const r = await wa.sendText(b.waId, text, { manual: true });
+    if (r.sent) sent = true;
+    else if (r.reason === "outside_24h_window") {
+      const f = await sendViaRelanceTemplate(core, wa, b.waId, text);
+      sent = f.status === "sent_with_text";
+    }
+    if (sent) {
+      core.messages.insert(b.waId, "assistant", text);
+      msg = "✅ Rendez-vous approuvé : le client a reçu la confirmation sur WhatsApp.";
+    } else {
+      msg = "✅ Rendez-vous approuvé, mais la confirmation WhatsApp n'a pas pu partir (fenêtre de 24 h fermée et modèle de relance indisponible). Préviens le client à la main.";
+    }
+    logDecision(log, "booking_approved", { id, waId: b.waId, sent });
+  } else {
+    logDecision(log, "booking_refused", { id, waId: b.waId });
+  }
+  revalidatePath("/admin/rendez-vous");
+  revalidatePath("/admin/jacob");
+  revalidatePath("/admin");
+  redirect(`/admin/rendez-vous?msg=${encodeURIComponent(msg)}`);
 }

@@ -34,3 +34,21 @@ describe("Réservation d'appel", () => {
     core.close();
   });
 });
+
+describe("validation des rendez-vous", () => {
+  it("approuver garde le créneau, refuser le libère ; l'alerte passe en traitée", async () => {
+    const { book, decideBooking, availability, approvalMessage, getBooking } = await import("../../dashboard/src/lib/bookings");
+    const core = testCore();
+    const now = Date.parse("2026-11-14T10:00:00Z");
+    const r1 = book(core, { type: "15min", date: "2026-11-15", heure: "20:00", nom: "Karim", numero: "0612345678", sujet: "" }, now);
+    const r2 = book(core, { type: "1h", date: "2026-11-15", heure: "21:00", nom: "Lina", numero: "0611111111", sujet: "" }, now);
+    if (!r1.ok || !r2.ok) throw new Error("book");
+    decideBooking(core, r1.id, "approuve");
+    decideBooking(core, r2.id, "refuse");
+    const free = availability(core, now)["15min"]["2026-11-15"]!;
+    expect(free).not.toContain("20:00");
+    expect(free).toContain("21:00");
+    expect(core.alerts.open()).toHaveLength(0);
+    expect(approvalMessage(getBooking(core, r1.id)!, "+33 7 78 78 37 01")).toContain("15/11/2026 à 20:00");
+  });
+});

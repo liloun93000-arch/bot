@@ -24,6 +24,8 @@ export interface JacobItem {
   mediaMime: string;
   reponse: string;
   resolvedAt: number | null;
+  /** Alerte de réservation d'appel : à approuver ou refuser (page Rendez-vous). */
+  rdv?: boolean;
 }
 
 export function jacobPendingCount(core: Core): number {
@@ -96,6 +98,7 @@ function fromAlert(core: Core, a: AlertLike): JacobItem {
     mediaMime: photo.mime,
     reponse: "",
     resolvedAt: a.treatedAt ?? null,
+    rdv: a.categorie === "Réservation d'appel",
   };
 }
 

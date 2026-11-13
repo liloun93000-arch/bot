@@ -59,6 +59,10 @@ export default async function ReglagesPage({
         <b>👀 Voir le site</b>
         <span className="block text-sm text-neutral-500">Le site public ARBI JACOB</span>
       </a>
+      <Link href="/admin/rendez-vous" className="card block">
+        <b>📞 Rendez-vous</b>
+        <span className="block text-sm text-neutral-500">Réservations d&apos;appel du site : approuver ou refuser</span>
+      </Link>
       <Link href="/admin/compta" className="card block">
         <b>💶 Compta</b>
         <span className="block text-sm text-neutral-500">Ventes encaissées, achats, hébergement et consommation Kimi</span>

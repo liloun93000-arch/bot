@@ -67,3 +67,22 @@ export function isRealQuestion(text: string): boolean {
   // Un seul mot porteur de sens (« les derniers », « Wyoming »…) : c'est une vraie réponse/demande.
   return INTENT_WORD.test(t) || (meaningful[0]?.length ?? 0) >= 4 || (t.includes("?") && (meaningful[0]?.length ?? 0) >= 3);
 }
+
+/** Tournures de demande (sans point d'interrogation) : « je veux… », « vous avez… », « c'est possible… ». */
+const ASK_RE = /\b(je (veux|voudrais|cherche|souhaite|recherche|aimerais|peux|pourrais|prends?)|j aimerais|vous (avez|faites|vendez|livrez|proposez|pouvez|acceptez)|tu (as|fais|vends|livres|proposes|peux|acceptes)|t as|y a|il y a|est ce|c est (quoi|combien|possible|comment|ou)|possible|besoin|ca coute|ca fait combien|envoie|envoyez|montre|explique|renseign|interess)/;
+
+/**
+ * Pour le TOP 10 : seulement ce qui ressemble vraiment à une question ou une demande
+ * (point d'interrogation, mot interrogatif ou tournure de demande). Écarte « je t'ai envoyé »,
+ * « c'est bon pour moi », « ok je regarde ça », les réponses courtes et les remerciements.
+ */
+export function looksLikeQuestion(text: string): boolean {
+  if (!isRealQuestion(text)) return false;
+  const t = text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/^\[[^\]]*\]\s*/g, "")
+    .replace(/[\u2019']/g, " ");
+  return t.includes("?") || INTENT_WORD.test(t) || ASK_RE.test(t);
+}

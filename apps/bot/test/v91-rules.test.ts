@@ -470,3 +470,9 @@ it("confirmations simples (« Et oui c'est bon ») ne déclenchent pas d'alerte"
   for (const t of ["Et oui c'est bon", "Et oui c’est bon", "ok ça marche", "oui je confirme", "c'est bon merci"]) expect(isRealQuestion(t), t).toBe(false);
   expect(isRealQuestion("J'ai lu le site au complet je vais prendre les agents")).toBe(true);
 });
+
+it("top 10 : seulement de vraies questions", async () => {
+  const { looksLikeQuestion } = await import("@arbi/core");
+  for (const t of ["je t'ai envoyé la photo", "c'est bon pour moi", "ok je regarde ça", "Et oui c'est bon", "merci beaucoup frère", "d'accord je vois"]) expect(looksLikeQuestion(t), t).toBe(false);
+  for (const t of ["Combien le 18 Pro Max", "vous livrez en Belgique", "je cherche un fournisseur de sneakers", "c'est possible en 4 fois ?", "t'as des drones"]) expect(looksLikeQuestion(t), t).toBe(true);
+});

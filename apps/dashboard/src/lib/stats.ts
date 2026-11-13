@@ -1,4 +1,4 @@
-import { isRealQuestion, levenshtein, type Core } from "@arbi/core";
+import { isRealQuestion, levenshtein, looksLikeQuestion, type Core } from "@arbi/core";
 
 export interface PeriodKpis {
   conversations: number;
@@ -99,7 +99,10 @@ export function groupQuestions(core: Core, limit = 1000): QuestionGroup[] {
 }
 
 export function topQuestions(core: Core, limit = 10): QuestionGroup[] {
-  return groupQuestions(core).slice(0, limit);
+  // Seulement de vraies questions / demandes (pas « je t'ai envoyé », « c'est bon pour moi »…).
+  return groupQuestions(core)
+    .filter((g) => looksLikeQuestion(g.representative))
+    .slice(0, limit);
 }
 
 export interface TopicGroup {

@@ -31,7 +31,7 @@ describe("autonomie du bot — script V9.1", () => {
     for (const niveau of ["autonome", "equilibre", "prudent"] as const) {
       const p = prompt(niveau);
       expect(p).toContain("Une question de prix ne mène JAMAIS à Jacob");
-      expect(p).toContain("uniquement dans les deux cas de la section 11");
+      expect(p).toContain("uniquement dans les cas prévus par le script (section 11");
       expect(p).toContain("raise_alert");
       expect(p).not.toContain("t.me/");
     }

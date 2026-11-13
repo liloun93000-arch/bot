@@ -123,7 +123,7 @@ describe("V9.1 — paiement : boutique d'abord, numéro de Jacob seulement en se
   it("le prompt impose le lien du produit et réserve le numéro aux deux cas de la section 11", () => {
     const p = buildStaticPrompt("catalogue", [], [], [], "", "autonome", [], true);
     expect(p).toContain("LIEN DU PRODUIT");
-    expect(p).toContain("uniquement dans les deux cas de la section 11");
+    expect(p).toContain("uniquement dans les cas prévus par le script (section 11");
     expect(p).toContain("Une question de prix ne mène JAMAIS à Jacob");
   });
 
@@ -168,13 +168,13 @@ describe("V9.1 — catalogues PDF installés automatiquement", () => {
     const core = testCore();
     const seed = mkdtempSync(join(tmpdir(), "seed-"));
     const media = mkdtempSync(join(tmpdir(), "media-"));
-    for (const f of ["APPLE_TECH", "VEHICULES", "DRONES", "VOLANTS"]) writeFileSync(join(seed, `CATALOGUE_${f}_CHINA_ACCESS.pdf`), "%PDF-1.4");
+    for (const f of ["APPLE_TECH", "VEHICULES", "DRONES", "VOLANTS", "KIT_AFFILIE", "KIT_VENTE"]) writeFileSync(join(seed, `CA_${f}_V92.pdf`), "%PDF-1.4");
     core.botFiles.create({ cle: "catalogue_drones_arbi", nom: "Catalogue drones ARBI JACOB", description: "", fichier: "old.pdf", mime: "application/pdf", kind: "document", taille: 1 });
     core.botFiles.create({ cle: "plaquette", nom: "Plaquette", description: "", fichier: "p.pdf", mime: "application/pdf", kind: "document", taille: 1 });
     await installCatalogues(core, seed, media, silentLogger());
     await installCatalogues(core, seed, media, silentLogger());
     const actifs = core.botFiles.actifs().map((f) => f.cle).sort();
-    expect(actifs).toEqual(["catalogue_apple", "catalogue_drones", "catalogue_vehicules", "catalogue_volants", "plaquette"]);
+    expect(actifs).toEqual(["catalogue_apple", "catalogue_drones", "catalogue_vehicules", "catalogue_volants", "kit_affilie", "kit_vente", "plaquette"]);
     core.close();
   });
 
@@ -191,9 +191,9 @@ describe("V9.1 — catalogues PDF installés automatiquement", () => {
 describe("V9.1 — rythme des réponses (bloc 1)", () => {
   it("délai proportionnel : 1 s minimum, 4 s maximum", async () => {
     const { replyDelayMs } = await import("../src/pacing");
-    expect(replyDelayMs("250 €, à vie.")).toBe(1000);
+    expect(replyDelayMs("250 €, à vie.")).toBe(2000);
     expect(replyDelayMs(Array(85).fill("mot").join(" "))).toBeGreaterThanOrEqual(2500);
-    expect(replyDelayMs(Array(1000).fill("mot").join(" "))).toBe(4000);
+    expect(replyDelayMs(Array(1000).fill("mot").join(" "))).toBe(12000);
   });
 
   it("une grille longue part en 2 ou 3 messages, une réponse courte en un seul", async () => {
@@ -212,16 +212,16 @@ describe("V9.1 — script installé en entier, en tête du prompt", () => {
     const { installScript } = await import("../src/catalog-seed");
     const core = testCore();
     const path = join(mkdtempSync(join(tmpdir(), "v91-")), "script.txt");
-    writeFileSync(path, "SCRIPT COMPLET — BOT CHINA ACCESS\n...\nFIN DU SCRIPT V9.1\n=====\n");
+    writeFileSync(path, "SCRIPT COMPLET — BOT CHINA ACCESS\n...\nFIN DU SCRIPT V9.2\n=====\n");
     expect(await installScript(core, path, silentLogger())).toBe(true);
-    expect(core.catalogue.current().contenu).toContain("FIN DU SCRIPT V9.1");
+    expect(core.catalogue.current().contenu).toContain("FIN DU SCRIPT V9.2");
     expect(await installScript(core, path, silentLogger())).toBe(false);
     const p = buildStaticPrompt(core.catalogue.current().contenu, [], [], [], "", "autonome", [], true);
     expect(p.startsWith("<catalogue>\nSCRIPT COMPLET — BOT CHINA ACCESS")).toBe(true);
     core.close();
   });
 
-  it("un fichier tronqué (sans « FIN DU SCRIPT V9.1 ») n'est jamais installé", async () => {
+  it("un fichier tronqué (sans « FIN DU SCRIPT V9.2 ») n'est jamais installé", async () => {
     const { installScript } = await import("../src/catalog-seed");
     const core = testCore();
     const path = join(mkdtempSync(join(tmpdir(), "v91-")), "script.txt");
@@ -234,7 +234,7 @@ describe("V9.1 — script installé en entier, en tête du prompt", () => {
     const { readFileSync } = await import("node:fs");
     const txt = readFileSync(join(__dirname, "../../../data/catalogue.md"), "utf8");
     expect(txt.trimEnd().endsWith("=")).toBe(true);
-    expect(txt).toContain("FIN DU SCRIPT V9.1");
+    expect(txt).toContain("FIN DU SCRIPT V9.2");
     expect(txt).toMatch(/^63\. /m);
   });
 });

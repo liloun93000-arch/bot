@@ -3,21 +3,38 @@ import { join } from "node:path";
 import { NIVEAU4_MESSAGE, NIVEAU4_MESSAGE_V8, isRealQuestion, type Core, type Logger } from "@arbi/core";
 
 /**
- * Les 4 catalogues PDF China Access (V9.1) sont installés automatiquement dans
- * « Fichiers du bot » : aucun bouton à presser. Une clé déjà présente n'est pas
- * réécrite (Jacob garde la main sur la description / l'activation).
+ * Les 6 PDF China Access (V9.2) installés automatiquement dans « Fichiers du bot » : 4 catalogues + 2 kits
+ * affiliés. À l'installation V9.2 (une seule fois), les anciennes fiches de ces clés sont remplacées par
+ * les nouveaux fichiers, et tous les anciens PDF périmés (CATALOGUE_…, « ARBI JACOB ») sont désactivés.
  */
 export const CHINA_ACCESS_CATALOGUES = [
-  { cle: "catalogue_apple", fichier: "CATALOGUE_APPLE_TECH_CHINA_ACCESS.pdf", nom: "Catalogue Apple & Tech — China Access", description: "Grille Apple (iPhone, iPad, Mac…), consoles et reconditionné. À envoyer quand le client veut toute la grille Apple ou le catalogue Apple." },
-  { cle: "catalogue_vehicules", fichier: "CATALOGUE_VEHICULES_CHINA_ACCESS.pdf", nom: "Catalogue Véhicules électriques — China Access", description: "31 véhicules électriques (Surron, Talaria…), deux prix par modèle. À envoyer quand le client veut le catalogue motos / véhicules." },
-  { cle: "catalogue_drones", fichier: "CATALOGUE_DRONES_CHINA_ACCESS.pdf", nom: "Catalogue Drones DJI — China Access", description: "38 références DJI. À envoyer quand le client demande le catalogue drones." },
-  { cle: "catalogue_volants", fichier: "CATALOGUE_VOLANTS_CHINA_ACCESS.pdf", nom: "Catalogue Volants — China Access", description: "46 familles de volants sur mesure (cuir, carbone, LED) par marque. À envoyer quand le client demande le catalogue volants." },
+  { cle: "catalogue_apple", fichier: "CA_APPLE_TECH_V92.pdf", nom: "Catalogue Apple & Tech — China Access", description: "Grille Apple, consoles et reconditionné (section 38). À envoyer si le client choisit le PDF plutôt que la réponse modèle par modèle." },
+  { cle: "catalogue_vehicules", fichier: "CA_VEHICULES_V92.pdf", nom: "Catalogue Véhicules électriques — China Access", description: "31 véhicules électriques, deux prix par modèle (section 39). À envoyer si le client choisit le PDF." },
+  { cle: "catalogue_drones", fichier: "CA_DRONES_V92.pdf", nom: "Catalogue Drones DJI — China Access", description: "Les références DJI par gamme (section 47). À envoyer si le client choisit le PDF." },
+  { cle: "catalogue_volants", fichier: "CA_VOLANTS_V92.pdf", nom: "Catalogue Volants auto sport — China Access", description: "Les familles de volants par marque (section 46). À envoyer si le client choisit le PDF." },
+  { cle: "kit_affilie", fichier: "CA_KIT_AFFILIE_V92.pdf", nom: "Kit affilié — China Access", description: "Pour un nouvel affilié : fonctionnement du programme et offres (section 64)." },
+  { cle: "kit_vente", fichier: "CA_KIT_VENTE_V92.pdf", nom: "Kit de vente affilié — China Access", description: "Pour un affilié qui veut vendre : méthode TikTok, Snap et lives, messages types, objections (section 64)." },
 ] as const;
 
 const NEW_KEYS = new Set<string>(CHINA_ACCESS_CATALOGUES.map((c) => c.cle));
 
 export async function installCatalogues(core: Core, seedDir: string, mediaDir: string, log: Logger): Promise<void> {
   await mkdir(mediaDir, { recursive: true }).catch(() => undefined);
+  // V9.2, une seule fois : les fiches existantes de ces clés pointent vers les anciens PDF → retirées pour être recréées,
+  // et les autres anciens catalogues / kits périmés sont désactivés (pas supprimés).
+  if (core.sends.claim("seed:catalogues:v9.2")) {
+    for (const c of CHINA_ACCESS_CATALOGUES) {
+      const old = core.botFiles.byCle(c.cle);
+      if (old && old.fichier !== c.fichier) core.botFiles.remove(old.id);
+    }
+    for (const f of core.botFiles.list()) {
+      if (NEW_KEYS.has(f.cle) || f.actif !== 1) continue;
+      if (/catalogue|kit|drone|volant|moto|surron|talaria|v[ée]hicule|apple|arbi jacob/i.test(`${f.cle} ${f.nom} ${f.fichier}`)) {
+        core.botFiles.toggle(f.id);
+        log.info({ cle: f.cle }, "old_catalogue_disabled_v92");
+      }
+    }
+  }
   for (const c of CHINA_ACCESS_CATALOGUES) {
     if (core.botFiles.byCle(c.cle)) continue;
     const src = join(seedDir, c.fichier);
@@ -30,20 +47,8 @@ export async function installCatalogues(core: Core, seedDir: string, mediaDir: s
       log.error({ err: String(err), cle: c.cle }, "catalogue_pdf_install_failed");
     }
   }
-  // Message niveau 4 : l'ancien texte (« je n'ai pas les connaissances… écris à Jacob ») est remplacé
-  // par le message de secours paiement, sauf s'il a été personnalisé dans le tableau de bord.
+  // Message niveau 4 : l'ancien texte est remplacé par le message de secours paiement, sauf s'il a été personnalisé.
   if (String(core.settings.get("niveau4_message")) === NIVEAU4_MESSAGE_V8) core.settings.set("niveau4_message", NIVEAU4_MESSAGE);
-
-  // Une seule fois : les anciens PDF « ARBI JACOB » (drones, volants, motos) sont périmés → désactivés (pas supprimés).
-  if (core.sends.claim("seed:old-catalogues-off:v9.1")) {
-    for (const f of core.botFiles.list()) {
-      if (NEW_KEYS.has(f.cle) || f.actif !== 1) continue;
-      if (/drone|volant|moto|surron|talaria|v[ée]hicule/i.test(`${f.cle} ${f.nom}`)) {
-        core.botFiles.toggle(f.id);
-        log.info({ cle: f.cle }, "old_catalogue_disabled");
-      }
-    }
-  }
 }
 
 /**
@@ -51,7 +56,7 @@ export async function installCatalogues(core: Core, seedDir: string, mediaDir: s
  * pas, on écrase »), une seule fois, et seulement si le fichier livré est complet (« FIN DU SCRIPT
  * V9.1 » tout en bas). L'ancienne version reste dans l'historique des versions du back-office.
  */
-export const SCRIPT_END_MARKER = "FIN DU SCRIPT V9.1";
+export const SCRIPT_END_MARKER = "FIN DU SCRIPT V9.2";
 
 export async function installScript(core: Core, path: string, log: Logger): Promise<boolean> {
   let content: string;
@@ -66,8 +71,8 @@ export async function installScript(core: Core, path: string, log: Logger): Prom
     return false;
   }
   if (core.catalogue.current().contenu === content) return false;
-  if (!core.sends.claim("seed:catalogue:v9.1")) return false; // déjà installé une fois : Jacob garde la main ensuite
-  core.catalogue.save(content, "Script China Access V9.1 — remplace entièrement l'ancien catalogue");
+  if (!core.sends.claim("seed:catalogue:v9.2")) return false; // déjà installé une fois : Jacob garde la main ensuite
+  core.catalogue.save(content, "Script V9.2 (secrétariat de Jacob + affiliés) — remplace entièrement l'ancien");
   log.info({ chars: content.length }, "script_v91_installed");
   return true;
 }

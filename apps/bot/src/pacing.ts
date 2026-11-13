@@ -3,8 +3,8 @@
  *  - délai proportionnel à la longueur : ~1 s par tranche de 15 à 20 mots, minimum 2 s, maximum 12 s ;
  *  - réponses très longues découpées en 2 ou 3 messages, 1 à 2 s entre chacun.
  */
-// Raccourci à la demande de Jacob (réponses jugées trop lentes) : 1 à 4 s, 0,8 s entre deux messages.
-export const PACING = { minMs: 1000, maxMs: 4000, wordsPerSecond: 30, gapMs: 800, splitChars: 700, maxParts: 3 };
+// Consignes V9.2 (section 4.3) : ~1 s par tranche de 15 à 20 mots, minimum 2 s, maximum 12 s ; 1,5 s entre deux messages.
+export const PACING = { minMs: 2000, maxMs: 12000, wordsPerSecond: 17, gapMs: 1500, splitChars: 700, maxParts: 3 };
 
 export function replyDelayMs(text: string): number {
   const words = text.trim().split(/\s+/).filter(Boolean).length;

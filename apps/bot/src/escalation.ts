@@ -175,7 +175,7 @@ export function looksLikeNoAnswer(reply: string): boolean {
 
 /** Parcours de paiement / engagement ferme : le SEUL cas où le contact de Jacob peut être donné. */
 const PAYMENT_STAGE_RE =
-  /\b(paiement|payer|paye|regler|reglement|virement|rib|iban|crypto|acompte|facture|encaiss|commande ferme|devis ferme|bon de commande|engagement|signer|paypal|pcs|cash|especes|lydia|western union|pas de carte|sans carte|carte bancaire|cb|acheter|achete|commander|je prends|je le prends|je la prends)/;
+  /\b(paiement|payer|paye|regler|reglement|virement|rib|iban|crypto|acompte|facture|encaiss|commande ferme|devis ferme|bon de commande|engagement|signer|paypal|pcs|cash|especes|lydia|western union|pas de carte|sans carte|carte bancaire|cb|acheter|achete|commander|je prends|je le prends|je la prends|vendre|affilie)/;
 
 export function isPaymentStage(...texts: Array<string | undefined>): boolean {
   return PAYMENT_STAGE_RE.test(normalizeText(texts.filter(Boolean).join(" ")));

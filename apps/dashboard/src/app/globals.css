@@ -1719,3 +1719,11 @@ form#saisie input[type="date"]::-webkit-date-and-time-value { text-align: left; 
 .aj-toast-spin { width: 16px; height: 16px; border-radius: 50%; border: 2px solid #ffffff40; border-top-color: #fff; animation: aj-spin .8s linear infinite; flex: none; }
 @keyframes aj-toast-in { from { opacity: 0; transform: translateY(-8px); } }
 @keyframes aj-spin { to { transform: rotate(360deg); } }
+
+/* Barre du haut du dashboard : toujours visible pendant le défilement */
+.aj-header { position: fixed; top: 0; left: 0; right: 0; height: calc(var(--aj-header-h) + env(safe-area-inset-top, 0px)); padding-top: env(safe-area-inset-top, 0px); }
+.aj-shell-body { padding-top: calc(var(--aj-header-h) + env(safe-area-inset-top, 0px)); }
+body { overflow-x: clip; }
+@media (min-width: 768px) {
+  .aj-header { left: 252px; background: linear-gradient(180deg, rgba(12, 12, 16, 0.96), rgba(10, 10, 13, 0.92)); }
+}

@@ -1,4 +1,9 @@
 import { LegalDraft } from "../../legal";
+import { pageMeta } from "../seo";
+
+export function generateMetadata() {
+  return pageMeta("/conditions", 'Conditions générales | ARBI JACOB', "Conditions générales de vente et d'utilisation du site ARBI JACOB.");
+}
 
 export default function Conditions() {
   return (

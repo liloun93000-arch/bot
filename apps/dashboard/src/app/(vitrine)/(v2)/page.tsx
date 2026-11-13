@@ -6,6 +6,11 @@ import { BookingForm } from "../booking-form";
 import { FORMATIONS, WA_GENERAL } from "../data";
 import { Diagnostic } from "./diagnostic";
 import { Apercu, BASE, Faq, FormationCard, Jacob } from "./ui";
+import { FAQ_LD, JsonLd, ORGANISATION, WEBSITE, pageMeta } from "./seo";
+
+export function generateMetadata() {
+  return pageMeta("/", "ARBI JACOB — Formations business, création de société LLC, sourcing Chine et digital", "Lance ton business avec Jacob : formations China Access, Traffic Pro, Vinted Pro, création de LLC USA et LTD Hong Kong, sourcing de fournisseurs en Chine, Ghost Studio et assistant WhatsApp.");
+}
 
 export const dynamic = "force-dynamic";
 
@@ -62,6 +67,9 @@ export default function PreviewV2Home() {
   const avail = availability(getRuntime().core);
   return (
     <>
+      <JsonLd data={ORGANISATION} />
+      <JsonLd data={WEBSITE} />
+      <JsonLd data={FAQ_LD} />
       {/* SCÈNE D'OUVERTURE : visuelle avant d'être commerciale */}
       <section className="v2-scene" id="accueil" aria-label="ARBI JACOB">
         <div className="v2-scene-bg" aria-hidden>

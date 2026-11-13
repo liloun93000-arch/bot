@@ -1,4 +1,9 @@
 import { LegalDraft } from "../../legal";
+import { pageMeta } from "../seo";
+
+export function generateMetadata() {
+  return pageMeta("/confidentialite", 'Politique de confidentialité | ARBI JACOB', 'Comment ARBI JACOB protège tes données personnelles.');
+}
 
 export default function Confidentialite() {
   return (

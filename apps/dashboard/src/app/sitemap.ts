@@ -1,5 +1,7 @@
 import type { MetadataRoute } from "next";
 import { siteBaseUrl } from "@/lib/site/server";
+import { FORMATIONS } from "./(vitrine)/data";
+import { slugOf } from "./(vitrine)/(v2)/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +16,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: now,
       changeFrequency: "monthly" as const,
       priority: 0.7,
+    })),
+    ...FORMATIONS.map((o) => ({
+      url: new URL(`/formations/${slugOf(o)}`, base).toString(),
+      lastModified: now,
+      changeFrequency: "monthly" as const,
+      priority: 0.8,
     })),
     { url: new URL("/conditions", base).toString(), lastModified: now, changeFrequency: "yearly", priority: 0.3 },
     { url: new URL("/confidentialite", base).toString(), lastModified: now, changeFrequency: "yearly", priority: 0.3 },

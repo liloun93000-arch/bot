@@ -3,6 +3,15 @@ import { notFound } from "next/navigation";
 import { FAQ } from "../../../data";
 import { Wa } from "../../../wa-icon";
 import { BASE, PageTop, formationBySlug } from "../../ui";
+import { JsonLd, breadcrumbLd, courseLd, pageMeta } from "../../seo";
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const o = formationBySlug(slug);
+  if (!o) return { title: "Formation introuvable — ARBI JACOB", robots: { index: false } };
+  const nom = o.titre.filter(Boolean).join(" ");
+  return pageMeta(`/formations/${slug}`, `${nom} — formation ${o.tag.replace(/^\d+\s*\/\s*/, "").toLowerCase()} (${o.prix}) | ARBI JACOB`, `${o.accroche} ${o.points.slice(0, 2).join(". ")}.`.slice(0, 300));
+}
 
 export default async function FormationPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -11,6 +20,8 @@ export default async function FormationPage({ params }: { params: Promise<{ slug
   const paiement = FAQ.find(([q]) => /paie/i.test(q));
   return (
     <section className="section">
+      <JsonLd data={courseLd(o)} />
+      <JsonLd data={breadcrumbLd([["Formations", "/formations"], [o.titre.filter(Boolean).join(" "), `/formations/${slug}`]])} />
       <PageTop eyebrow={o.tag} titre={<>{o.titre[0]} {o.titre[1] && <span className="red-text">{o.titre[1]}</span>}</>} intro={o.accroche} />
       <div className="v2-detail">
         <div className="v2-detail-main" data-reveal>

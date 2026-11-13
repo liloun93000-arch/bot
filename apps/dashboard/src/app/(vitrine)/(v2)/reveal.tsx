@@ -6,6 +6,18 @@ import { useEffect } from "react";
 /** Apparition douce des sections au défilement (désactivée si l'utilisateur réduit les animations). */
 export function Reveal() {
   const path = usePathname();
+  // Statistique de visite (page vue), une fois par page affichée.
+  useEffect(() => {
+    try {
+      const body = JSON.stringify({ path: path || "/" });
+      if (!navigator.sendBeacon?.("/api/visit", new Blob([body], { type: "application/json" }))) {
+        void fetch("/api/visit", { method: "POST", body, headers: { "Content-Type": "application/json" }, keepalive: true });
+      }
+    } catch {
+      /* ignoré */
+    }
+  }, [path]);
+
   // Barre du haut qui s'opacifie au défilement + parallaxe très légère du hero (une seule écoute, rAF).
   useEffect(() => {
     const root = document.querySelector<HTMLElement>(".v2");

@@ -3,6 +3,8 @@ import { requireSession } from "@/lib/auth";
 import { getRuntime } from "@/lib/core";
 import { jacobPendingCount } from "@/lib/jacob";
 import { parsePeriod, previousPeriod } from "@/lib/period";
+import { visitStats } from "@/lib/visits";
+import { VisitChart } from "./visit-chart";
 import { clicksBySource, listSources } from "@/lib/tracking";
 import { PeriodFilter } from "./period-filter";
 import { clientPhotos, homeStats, recentConversations, themeCounts, type Delta } from "@/lib/home";
@@ -103,6 +105,7 @@ export default async function OverviewPage({
   const unanswered = core.questions.unanswered(10);
   // ── Période choisie (catégories + origine des contacts) ──
   const period = parsePeriod(await searchParams);
+  const visites = visitStats(getRuntime().core, period.from, period.to + 1);
   const prev = previousPeriod(period);
   const parCategorie = core.sqlite
     .prepare(
@@ -445,6 +448,33 @@ export default async function OverviewPage({
               <Link href="/admin/sources" className="underline">
                 Gérer les liens
               </Link>
+            </p>
+          </div>
+
+          <div className="card">
+            <h2 className="mb-2 font-semibold">Visiteurs du site</h2>
+            <PeriodFilter period={period} />
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <div className="rounded-lg bg-neutral-50 p-3">
+                <div className="text-xs text-neutral-500">Visiteurs</div>
+                <div className="text-2xl font-bold">{visites.visiteurs}</div>
+              </div>
+              <div className="rounded-lg bg-neutral-50 p-3">
+                <div className="text-xs text-neutral-500">Pages vues</div>
+                <div className="text-2xl font-bold">{visites.pages}</div>
+              </div>
+            </div>
+            <div className="mt-3">
+              <VisitChart tranches={visites.tranches} />
+            </div>
+            {visites.topPages.length > 0 && (
+              <div className="mt-3 text-xs text-neutral-500">
+                Pages les plus vues :{" "}
+                {visites.topPages.map((p) => `${p === visites.topPages[0] ? "" : " · "}${p.path === "/" ? "Accueil" : p.path} (${p.n})`).join("")}
+              </div>
+            )}
+            <p className="mt-2 text-xs text-neutral-500">
+              Un visiteur = une personne par jour (sans cookie, robots exclus). Par heure sur une journée, par jour sinon.
             </p>
           </div>
 

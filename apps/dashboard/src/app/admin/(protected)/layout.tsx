@@ -2,6 +2,7 @@ import { logoutAction } from "@/lib/actions";
 import { requireSession } from "@/lib/auth";
 import { getRuntime } from "@/lib/core";
 import { TabGuard } from "./tab-guard";
+import { ActionToasts } from "./action-toasts";
 import { IntroVideo } from "./intro-video";
 import { jacobPending, jacobPendingCount } from "@/lib/jacob";
 import { Icon } from "./icons";
@@ -72,6 +73,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
   return (
     <div className="aj-shell">
       <TabGuard />
+      <ActionToasts />
       <IntroVideo />
       <NavShell
         nav={nav}

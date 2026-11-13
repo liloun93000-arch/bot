@@ -26,7 +26,7 @@ export function KimiChart({ barres, unite }: { barres: Barre[]; unite: "jour" | 
       <div className="aj-kchart-info" aria-live="polite">
         {b ? (
           <>
-            <span>{unite === "heure" ? `${b.label} h` : b.label}</span>
+            <span>{b.label}</span>
             <b>
               {b.estime ? "≈ " : ""}
               {usd(b.usd)}

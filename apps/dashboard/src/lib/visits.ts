@@ -56,7 +56,7 @@ export function visitStats(core: Core, from: number, to: number, now = Date.now(
   if (to - from <= 26 * 3_600_000) {
     for (let t = from; t < Math.min(to, now); t += 3_600_000) {
       const c = count(core, t, t + 3_600_000);
-      tranches.push({ label: new Date(t).toLocaleTimeString("fr-FR", { timeZone: "Europe/Paris", hour: "2-digit" }) + " h", visiteurs: c.v, pages: c.p });
+      tranches.push({ label: new Date(t).toLocaleTimeString("fr-FR", { timeZone: "Europe/Paris", hour: "2-digit" }), visiteurs: c.v, pages: c.p });
     }
   } else {
     let ymd = parisYmd(from);

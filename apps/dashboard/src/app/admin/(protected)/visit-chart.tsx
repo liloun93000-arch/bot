@@ -35,7 +35,7 @@ export function VisitChart({ tranches }: { tranches: T[] }) {
         {tranches.map((x, i) => (
           <div key={i} className={`aj-kimi-col${i === sel ? " is-sel" : ""}`}>
             <div className="aj-kimi-bar" style={{ height: `${(x.visiteurs / max) * 100}%` }} />
-            <span>{x.label.replace(" h", "")}</span>
+            <span>{x.label}</span>
           </div>
         ))}
       </div>

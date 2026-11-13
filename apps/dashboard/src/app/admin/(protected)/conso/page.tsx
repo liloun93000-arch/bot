@@ -3,6 +3,7 @@ import { requireSession } from "@/lib/auth";
 import { getRuntime } from "@/lib/core";
 import { parsePeriod, parisMidnight, parisYmd } from "@/lib/period";
 import { PeriodFilter } from "../period-filter";
+import { KimiChart } from "./chart";
 
 export const dynamic = "force-dynamic";
 
@@ -72,7 +73,6 @@ export default async function ConsoPage({ searchParams }: { searchParams: Promis
       ymd = parisYmd(b);
     }
   }
-  const max = Math.max(0.01, ...barres.map((b) => b.usd));
   const ilYaEstime = barres.some((b) => b.estime) || perio.estime;
 
   return (
@@ -123,14 +123,7 @@ export default async function ConsoPage({ searchParams }: { searchParams: Promis
           {perio.estime ? "≈ " : ""}
           {usd(perio.usd)}
         </p>
-        <div className="aj-kimi-chart" role="img" aria-label="Consommation par tranche">
-          {barres.map((b, i) => (
-            <div key={i} className="aj-kimi-col" title={`${b.label} : ${usd(b.usd)}${b.estime ? " (estimé)" : ""}`}>
-              <div className={`aj-kimi-bar${b.estime ? " is-est" : ""}`} style={{ height: `${(b.usd / max) * 100}%` }} />
-              <span>{b.label}</span>
-            </div>
-          ))}
-        </div>
+        <KimiChart barres={barres} unite={unJour ? "heure" : "jour"} />
         {ilYaEstime && (
           <p className="text-xs text-neutral-500">
             ≈ : estimation.

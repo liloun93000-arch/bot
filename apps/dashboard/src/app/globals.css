@@ -1704,3 +1704,9 @@ form#saisie input[type="date"]::-webkit-date-and-time-value { text-align: left; 
 /* Réponse : le sélecteur de fichiers ne réserve plus 220 px vides sous la barre */
 .aj-reply .aj-files { flex: 0 0 auto; }
 .aj-chat-video { display: block; width: 100%; max-width: 320px; max-height: 360px; border-radius: 12px; background: #000; }
+/* Graphique Kimi : glisser le doigt pour lire chaque jour */
+.aj-kchart-info { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 8px 12px; border-radius: 10px; background: rgba(255,255,255,0.05); margin-bottom: 8px; font-size: 13px; }
+.aj-kchart-info b { font-size: 18px; color: #7aa2ff; }
+.aj-kchart-zone { touch-action: pan-y; cursor: crosshair; user-select: none; -webkit-user-select: none; }
+.aj-kimi-col.is-sel .aj-kimi-bar { background: #f0142f; }
+.aj-kimi-col.is-sel span { color: #fff; font-weight: 700; }

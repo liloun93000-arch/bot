@@ -183,3 +183,16 @@ describe("Manager IA — photos, demandes simultanées, vocal", () => {
     expect(sent.filter((s) => s.to === "33611111111").length).toBe(toClient);
   });
 });
+
+describe("apprentissage depuis le dashboard", () => {
+  it("une réponse de Jacob dans le dashboard devient une connaissance réutilisable, sans rien envoyer", async () => {
+    const { learnFromDashboardReply } = await import("../src/director");
+    const llm = fakeLlm({ sujet: "Livraison Martinique", theme: "Livraison", categorie: "Autre", offre_cle: "", intention: "Livrez-vous en Martinique ?", reponse: "Oui, la livraison en Martinique est possible, compter environ 3 semaines.", conditions: "", exceptions: "", nature: "nouvelle", memoriser: true });
+    const { core } = setup(llm);
+    const { wa, sent } = fakeWa();
+    const out = await learnFromDashboardReply({ core, wa: wa as never, llm, model: "m", log: silentLogger() }, { question: "Vous livrez en Martinique ?", jacobText: "oui ça passe, 3 semaines environ", categorie: "Autre" });
+    expect(out.entryId).not.toBeNull();
+    expect(core.knowledge.entries.active().some((e) => e.reponse.includes("Martinique"))).toBe(true);
+    expect(sent).toHaveLength(0);
+  });
+});

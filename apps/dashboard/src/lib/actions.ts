@@ -11,6 +11,8 @@ import {
   extractText,
   flattenTemplateParam,
   formatAlertText,
+  isRealQuestion,
+  learnFromDashboardReply,
   logDecision,
   maskAmounts,
   pollStripePayments,
@@ -176,6 +178,7 @@ export async function sendHumanMessageAction(waId: string, formData: FormData): 
   const { core, wa, log } = getRuntime();
   const result = await wa.sendText(waId, text, { manual: true });
   if (result.sent) {
+    learnInBackground(waId, text, pendingQuestionsFor(core, waId));
     recordHumanMessage(core, waId, text);
     revalidatePath(`/admin/conversations/${waId}`);
     // Redirect explicite (comme deleteHumanMessageAction) : sans lui, l'URL
@@ -405,6 +408,7 @@ export async function sendHumanReplyAction(waId: string, formData: FormData): Pr
     const msg = encodeURIComponent(`⚠️ Rien n'est parti (message et fichiers) : ${blockedSendMessage(result.reason)}`);
     redirect(`/admin/conversations/${waId}?msg=${msg}&draft=${draft}`);
   }
+  learnInBackground(waId, text, pendingQuestionsFor(core, waId));
   recordHumanMessage(core, waId, text);
   const { envoyes, echecs } = await sendFilesToClient(waId, fichiers, "");
   revalidatePath(`/admin/conversations/${waId}`);
@@ -638,6 +642,38 @@ function treatClient(core: Core, waId: string, reponse: string): void {
   core.contacts.setStatut(waId, "en_cours");
 }
 
+
+/**
+ * Apprentissage : quand Jacob répond depuis le dashboard à un client qui avait une question en
+ * attente (alerte ou demande au directeur), le bot retient la réponse (sans l'apprendre par cœur :
+ * elle est restructurée, puis réutilisée et reformulée pour les prochains clients). En arrière-plan.
+ */
+function pendingQuestionsFor(core: Core, waId: string) {
+  const out: Array<{ question: string; categorie: string; contexte?: string; hasPhoto?: boolean; escalationId?: number | null }> = [];
+  for (const e of core.knowledge.escalations.open().filter((x) => x.waId === waId)) {
+    out.push({ question: e.question, categorie: e.categorie, contexte: e.contexte ?? "", hasPhoto: !!e.mediaFile, escalationId: e.id });
+  }
+  for (const a of core.alerts.open().filter((x) => x.waId === waId)) {
+    const q = (a.dernierMessage || a.motif || "").trim();
+    if (q && isRealQuestion(q) && !out.some((o) => o.question === q)) out.push({ question: q, categorie: a.categorie });
+  }
+  return out.slice(0, 3);
+}
+
+function learnInBackground(waId: string, jacobText: string, pending: ReturnType<typeof pendingQuestionsFor>): void {
+  if (!jacobText.trim() || pending.length === 0) return;
+  const { core, wa, llm, model, log } = getRuntime();
+  void (async () => {
+    for (const p of pending) {
+      try {
+        await learnFromDashboardReply({ core, wa, llm, model, log }, { ...p, jacobText });
+      } catch (err) {
+        log.error({ err: String(err), waId }, "dashboard_learn_failed");
+      }
+    }
+  })();
+}
+
 function revalidateJacob(waId: string): void {
   revalidatePath("/admin/jacob");
   revalidatePath(`/admin/conversations/${waId}`);
@@ -693,6 +729,7 @@ export async function jacobReplyAction(waId: string, formData: FormData): Promis
     if (!text) back(`⚠️ Aucun fichier envoyé. ${files.echecs.join(" · ")}`, false);
   }
 
+  learnInBackground(waId, text, pendingQuestionsFor(core, waId));
   treatClient(core, waId, text || `[${files.envoyes.length} fichier(s) envoyé(s)]`);
   logDecision(log, "jacob_reply_sent_and_treated", { waId, fichiers: files.envoyes.length });
   revalidateJacob(waId);

@@ -524,3 +524,23 @@ export async function handleDirectorReply(deps: DirectorDeps, input: DirectorRep
   );
   return { handled: true, escalationId: esc.id, entryId: outcome.entryId, delivered };
 }
+
+/**
+ * Apprentissage depuis le DASHBOARD : Jacob répond à une demande en attente (onglet Jacob ou
+ * conversation) → même structuration et même mémorisation que pour une réponse WhatsApp
+ * (doublon = formulation ajoutée, précision = mise à jour, contradiction = Jacob prime).
+ * N'envoie rien au client ni à Jacob : le message est déjà parti depuis le dashboard.
+ */
+export async function learnFromDashboardReply(
+  deps: DirectorDeps,
+  input: { question: string; jacobText: string; categorie: string; contexte?: string; hasPhoto?: boolean; escalationId?: number | null },
+): Promise<{ entryId: number | null; action: string }> {
+  const k = await structure(deps, input.question, input.jacobText, input.categorie, false, input.contexte ?? "", !!input.hasPhoto);
+  if (k.memoriser === false) {
+    logDecision(deps.log, "dashboard_reply_not_memorized", { question: input.question.slice(0, 80) });
+    return { entryId: null, action: "non mémorisé (réponse propre à ce cas)" };
+  }
+  const outcome = await learn(deps, k, { question: input.question, jacobText: input.jacobText, escalationId: input.escalationId ?? null, source: "jacob" });
+  logDecision(deps.log, "dashboard_reply_learned", { entryId: outcome.entryId, action: outcome.action });
+  return outcome;
+}

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { FAQ, FORMATIONS, WA_GENERAL, type Offre } from "../data";
 import { Wa } from "../wa-icon";
 
-export const BASE = "/preview-v2";
+export const BASE = "";
 
 export function slugOf(o: Offre): string {
   return o.titre
@@ -18,7 +18,7 @@ export function slugOf(o: Offre): string {
 export const formationBySlug = (s: string): Offre | undefined => FORMATIONS.find((o) => slugOf(o) === s);
 
 export const MENU: Array<[string, string]> = [
-  [BASE, "ACCUEIL"],
+  ["/", "ACCUEIL"],
   [`${BASE}/formations`, "FORMATIONS"],
   [`${BASE}/societe`, "CRÉER UNE SOCIÉTÉ"],
   [`${BASE}/sourcing`, "FOURNISSEURS / SOURCING"],
@@ -60,7 +60,7 @@ export function Header() {
         </svg>
         <span>MON COMPTE</span>
       </Link>
-      <Link href={BASE} className="v2-logo" aria-label="ARBI JACOB — accueil">
+      <Link href="/" className="v2-logo" aria-label="ARBI JACOB — accueil">
         <img src="/vitrine/logo.webp" alt="ARBI JACOB" />
       </Link>
     </header>
@@ -163,7 +163,7 @@ export function Faq() {
 export function PageTop({ eyebrow, titre, intro }: { eyebrow: string; titre: React.ReactNode; intro?: string }) {
   return (
     <div className="v2-pagetop" data-reveal>
-      <Link href={BASE} className="v2-back">
+      <Link href="/" className="v2-back">
         ← ACCUEIL
       </Link>
       <p className="eyebrow">
@@ -177,7 +177,7 @@ export function PageTop({ eyebrow, titre, intro }: { eyebrow: string; titre: Rea
 
 export function Back() {
   return (
-    <Link href={BASE} className="v2-go v2-backtop">
+    <Link href="/" className="v2-go v2-backtop">
       ← ACCUEIL
     </Link>
   );

@@ -166,9 +166,9 @@ export function NavShell({
               ) : null}
             </Link>
           ))}
-          <a href="/preview-v2" target="_blank" rel="noopener" className="aj-navlink" style={{ color: "var(--aj-gray)" }}>
+          <a href="/" target="_blank" rel="noopener" className="aj-navlink" style={{ color: "var(--aj-gray)" }}>
             <Icon name="external" size={21} />
-            <span>Voir le site (Preview V2)</span>
+            <span>Voir le site</span>
           </a>
         </nav>
         <div className="aj-drawer-foot">

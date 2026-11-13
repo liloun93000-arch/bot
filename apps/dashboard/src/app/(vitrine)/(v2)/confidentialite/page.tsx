@@ -1,4 +1,4 @@
-import { LegalDraft } from "../legal";
+import { LegalDraft } from "../../legal";
 
 export default function Confidentialite() {
   return (

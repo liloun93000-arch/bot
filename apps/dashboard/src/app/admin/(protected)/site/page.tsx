@@ -150,8 +150,8 @@ export default async function SiteEditorPage({
         <a href="/" target="_blank" rel="noopener" className="btn btn-secondary">
           Voir le site ↗
         </a>
-        <a href="/preview-v2" target="_blank" rel="noopener" className="btn btn-primary">
-          Voir la Preview V2 ↗
+        <a href="/" target="_blank" rel="noopener" className="btn btn-primary">
+          Voir le site ↗
         </a>
       </div>
       <p className="text-sm text-neutral-500">

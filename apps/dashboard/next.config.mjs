@@ -33,12 +33,13 @@ const nextConfig = {
       ["/apercu", "/"],
       ["/apercu/conditions", "/conditions"],
       ["/apercu/confidentialite", "/confidentialite"],
-      ["/formations", "/#formations"],
-      ["/creation-llc-ltd", "/#llc"],
-      ["/comptes-snapchat", "/#snapchat"],
-      ["/graphisme-digital", "/#digital"],
-      ["/qui-suis-je", "/#qui"],
-      ["/contact", "/#contact"],
+      ["/preview-v2", "/"],
+      ["/preview-v2/:path*", "/:path*"],
+      ["/creation-llc-ltd", "/societe"],
+      ["/comptes-snapchat", "/snapchat"],
+      ["/graphisme-digital", "/ghost-studio"],
+      ["/qui-suis-je", "/a-propos"],
+      ["/contact", "/#rdv"],
     ].map(([source, destination]) => ({ source, destination, permanent: false }));
     return [
       ...legacy.map((source) => ({

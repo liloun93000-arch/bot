@@ -29,7 +29,7 @@ export default function Compte() {
         ))}
       </div>
       <p className="v2-muted v2-mt">En attendant, pour toute demande sur un achat : le secrétariat sur WhatsApp.</p>
-      <Link href={BASE} className="v2-go v2-mt">
+      <Link href="/" className="v2-go v2-mt">
         ← RETOUR À L&apos;ACCUEIL
       </Link>
     </section>

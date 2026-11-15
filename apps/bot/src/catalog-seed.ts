@@ -115,7 +115,7 @@ export function auditCasquettes(core: Core, log: Logger): void {
       connaissancesRetirees: retirees,
       connaissancesCasquettesRestantes: casq.map((e) => ({ id: e.id, extrait: JSON.stringify(e).slice(0, 300) })),
     },
-    "audit_casquettes",
+    `audit_casquettes catalogue18=${/environ 18 € la casquette/.test(cat)} retirees=${retirees.length}${retirees.length ? ` [${retirees.map((r) => `#${r.id} ${r.sujet}`).join(" | ")}]` : ""} restantes=${casq.length}${casq.length ? ` [${casq.map((e) => `#${e.id} ${e.sujet}: ${e.reponse.slice(0, 120)}`).join(" | ")}]` : ""}`,
   );
 }
 

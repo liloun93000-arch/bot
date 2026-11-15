@@ -5537,7 +5537,7 @@ CATALOGUE : http://hidden1to1.x.yupoo.com
 Mot de passe : ogwave007
 Le bot peut communiquer le lien ET le mot de passe au client qui demande ce qui est disponible chez le fournisseur casquettes.
 
-PRIX PRODUIT : environ 31 € la casquette à l'unité (hors expédition).
+PRIX PRODUIT : environ 18 € la casquette (hors expédition).
 
 PRIX DÉGRESSIF : le prix baisse avec la quantité. À partir de 50, 100 ou 250 pièces, des tarifs nettement plus intéressants sont négociables directement avec le fournisseur. Aucune quantité minimum : commande possible dès une pièce.
 

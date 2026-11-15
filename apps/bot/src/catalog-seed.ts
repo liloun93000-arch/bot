@@ -78,6 +78,21 @@ export async function installScript(core: Core, path: string, log: Logger): Prom
 }
 
 /**
+ * Correction ponctuelle demandée par Lilou (15/11/2026) : le fournisseur casquettes vend environ 18 €
+ * la casquette hors envoi, pas 31 €. Appliquée une seule fois au catalogue EN LIGNE (les autres
+ * modifications faites depuis le dashboard sont conservées).
+ */
+export function fixCasquettesPrice(core: Core, log: Logger): boolean {
+  const cur = core.catalogue.current().contenu;
+  const old = /PRIX PRODUIT : environ 31 € la casquette à l.unité \(hors expédition\)\./;
+  if (!old.test(cur)) return false;
+  if (!core.sends.claim("fix:casquettes:18eur")) return false;
+  core.catalogue.save(cur.replace(old, "PRIX PRODUIT : environ 18 € la casquette (hors expédition)."), "Correction : fournisseur casquettes ≈ 18 € la casquette hors envoi (au lieu de 31 €)");
+  log.info({}, "fix_casquettes_price_applied");
+  return true;
+}
+
+/**
  * Nettoyage : alertes / demandes Jacob ouvertes à cause d'une simple formule de conversation
  * (« salut ça va », « ça va et toi », « hmdl »…). Elles sont closes, le client n'est plus « en alerte »
  * et ses questions de ce type sortent de « sans réponse ». Idempotent (rejoué à chaque démarrage).

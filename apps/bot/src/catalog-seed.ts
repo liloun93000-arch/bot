@@ -93,6 +93,33 @@ export function fixCasquettesPrice(core: Core, log: Logger): boolean {
 }
 
 /**
+ * Vérification + nettoyage casquettes (rejoué à chaque démarrage, sans effet s'il n'y a rien) :
+ * toute connaissance apprise de Jacob qui donne 31 € pour les casquettes est retirée (historique gardé),
+ * et le journal confirme ce que le bot lit réellement sur les casquettes.
+ */
+export function auditCasquettes(core: Core, log: Logger): void {
+  const retirees: Array<{ id: number; sujet: string }> = [];
+  for (const e of core.knowledge.entries.active()) {
+    const t = JSON.stringify(e);
+    if (/casquette/i.test(t) && /\b31\s*(€|euros?\b)/i.test(t)) {
+      core.knowledge.entries.remove(e.id, "admin", "Prix casquettes faux (31 €) — le bon prix est d'environ 18 € hors envoi");
+      retirees.push({ id: e.id, sujet: String(e.sujet) });
+    }
+  }
+  const cat = core.catalogue.current().contenu;
+  const casq = core.knowledge.entries.active().filter((e) => /casquette/i.test(JSON.stringify(e)));
+  log.info(
+    {
+      catalogue18: /environ 18 € la casquette/.test(cat),
+      catalogue31: /31 € la casquette/.test(cat),
+      connaissancesRetirees: retirees,
+      connaissancesCasquettesRestantes: casq.map((e) => ({ id: e.id, extrait: JSON.stringify(e).slice(0, 300) })),
+    },
+    "audit_casquettes",
+  );
+}
+
+/**
  * Nettoyage : alertes / demandes Jacob ouvertes à cause d'une simple formule de conversation
  * (« salut ça va », « ça va et toi », « hmdl »…). Elles sont closes, le client n'est plus « en alerte »
  * et ses questions de ce type sortent de « sans réponse ». Idempotent (rejoué à chaque démarrage).

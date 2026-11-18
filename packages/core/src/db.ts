@@ -655,6 +655,20 @@ export function createCore(options: CreateCoreOptions) {
         .prepare(`UPDATE questions SET repondue = 1 WHERE repondue = 0 AND wa_id = (SELECT wa_id FROM alerts WHERE id = ?)`)
         .run(id);
     },
+    /**
+     * Retire une alerte injustifiée sans la supprimer (historique conservé).
+     * Ne touche qu'aux alertes encore ouvertes ; renvoie false sinon.
+     */
+    retire(id: number, note: string): boolean {
+      const res = sqlite
+        .prepare(`UPDATE alerts SET statut = 'retiree', treated_at = ?, cloture_note = ? WHERE id = ? AND statut = 'ouverte'`)
+        .run(now(), note.slice(0, 300), id) as { changes?: number };
+      if (!res.changes) return false;
+      sqlite
+        .prepare(`UPDATE questions SET repondue = 1 WHERE repondue = 0 AND wa_id = (SELECT wa_id FROM alerts WHERE id = ?)`)
+        .run(id);
+      return true;
+    },
     listFor(waId: string) {
       return db
         .select()

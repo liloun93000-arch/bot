@@ -3,6 +3,7 @@ import {
   classifyIntent,
   detectTone,
   FINE_CATEGORIES,
+  isSubjectlessRequest,
   fineCategory,
   normalizeText,
   resolveService,
@@ -29,6 +30,13 @@ export interface Analysis {
    * échange de politesse ne doit pas déclencher d'appel LLM supplémentaire.
    */
   progressed: boolean;
+  /**
+   * Le client n'a pas encore dit ce qu'il cherche (« j'aimerais des informations »).
+   * Ce n'est jamais un motif d'alerte : le bot doit qualifier le besoin lui-même.
+   */
+  subjectUnknown: boolean;
+  /** Nombre d'échanges consécutifs sans avancée sur ce sujet (0 = le client avance). */
+  stalledRounds: number;
 }
 
 const BUDGET_RE = /(?:budget|autour de|environ|max|maximum|jusqu'?a)\s*(?:de\s*)?(\d[\d\s]{0,8})\s*(?:€|euros?)/iu;
@@ -130,10 +138,23 @@ export function analyzeInbound(
   } else if (intent === "demande_humain") {
     route = "niveau4";
     motif = "le client demande un humain";
-  } else if (state.sansProgression >= alertThreshold) {
-    route = "alerte_directe";
-    motif = `${alertThreshold} échanges sans progression`;
   }
+  // Un client qui reste vague ou qui n'avance pas n'est PAS un blocage : plus aucune alerte
+  // automatique pour « échanges sans progression ». Le bot qualifie le besoin lui-même
+  // (voir `subjectUnknown` / `stalledRounds`) ; une alerte exige un vrai motif (question sans
+  // réponse, décision de Jacob, réclamation, difficulté réelle).
+  void alertThreshold;
 
-  return { intent, serviceKey: state.serviceEnCours, categorie, route, motif, combinedText, progressed };
+  const subjectUnknown = !state.serviceEnCours && isSubjectlessRequest(combinedText);
+  return {
+    intent,
+    serviceKey: state.serviceEnCours,
+    categorie,
+    route,
+    motif,
+    combinedText,
+    progressed,
+    subjectUnknown,
+    stalledRounds: state.sansProgression,
+  };
 }

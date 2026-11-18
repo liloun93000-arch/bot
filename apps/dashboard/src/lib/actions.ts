@@ -3,6 +3,7 @@
 import {
   buildStyleGuide,
   checkOutboundMedia,
+  clearAuditedAlerts,
   classifyQuestionTopics,
   deterministicRejectReason,
   deterministicRejectReasonQuestion,
@@ -683,6 +684,26 @@ function revalidateJacob(waId: string): void {
 }
 
 /** « Marquer traité » depuis l'onglet Jacob (questions inconnues comme alertes). */
+/**
+ * Retire les alertes que l'audit juge injustifiées (client resté vague, « Blocage : aucun »,
+ * question déjà traitée). L'historique est conservé et AUCUN message n'est envoyé aux clients.
+ */
+export async function clearFalseAlertsAction(): Promise<void> {
+  await requireSession();
+  const { core, log } = getRuntime();
+  const { cleared } = clearAuditedAlerts(core);
+  logDecision(log, "alerts_audit_cleared", { cleared });
+  revalidatePath("/admin/jacob");
+  revalidatePath("/admin");
+  redirect(
+    `/admin/jacob?msg=${encodeURIComponent(
+      cleared > 0
+        ? `✅ ${cleared} fausse(s) alerte(s) retirée(s). Elles restent visibles dans l'historique.`
+        : "Aucune fausse alerte à retirer.",
+    )}`,
+  );
+}
+
 export async function markClientTreatedAction(waId: string): Promise<void> {
   await requireSession();
   const { core, log } = getRuntime();

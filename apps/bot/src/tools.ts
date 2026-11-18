@@ -1,6 +1,7 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import {
   isRealQuestion,
+  isSubjectlessRequest,
   describeOffer,
   logDecision,
   triggerAlert,
@@ -12,6 +13,10 @@ import {
 } from "@arbi/core";
 import { z } from "zod";
 import { escalateAndAck, isPaymentStage } from "./escalation";
+
+/** Réponse d'outil quand le modèle veut alerter alors que le client n'a pas encore dit ce qu'il cherche. */
+const QUALIFY_INSTEAD =
+  "PAS D'ALERTE : le client n'a pas encore dit ce qu'il cherche, ce n'est pas un blocage. Réponds chaleureusement et pose UNE question simple pour identifier son besoin (fournisseurs, formations, création de société, autre service). Ne dis jamais que tu transmets à Jacob.";
 
 export const NIVEAU4_BUTTONS = [
   { id: "btn_rapide", title: "⚡ Réponse rapide" },
@@ -302,6 +307,10 @@ export async function executeTool(
     }
 
     case "raise_alert": {
+      if (!ctx.state.serviceEnCours && isSubjectlessRequest(ctx.lastClientMessage)) {
+        logDecision(log, "alert_refused_subject_unknown", { waId });
+        return QUALIFY_INSTEAD;
+      }
       const parsed = motifSchema.safeParse(input);
       const motif = parsed.success ? parsed.data.motif : "non précisé";
       const categorie = parsed.success && parsed.data.categorie ? parsed.data.categorie : "Autre";
@@ -321,6 +330,10 @@ export async function executeTool(
     case "ask_director": {
       const parsed = askDirectorSchema.safeParse(input);
       if (!parsed.success) return "Erreur : `question` manquante.";
+      if (!ctx.state.serviceEnCours && isSubjectlessRequest(ctx.lastClientMessage)) {
+        logDecision(log, "alert_refused_subject_unknown", { waId });
+        return QUALIFY_INSTEAD;
+      }
       // Formule de politesse / small talk (« hmdl et toi », « Al Hamdûlilah », « ok merci ») :
       // ce n'est pas une demande, aucune alerte — on répond naturellement.
       {

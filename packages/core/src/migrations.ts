@@ -62,7 +62,8 @@ CREATE TABLE IF NOT EXISTS alerts (
   statut          TEXT NOT NULL DEFAULT 'ouverte',
   notified_via    TEXT NOT NULL DEFAULT '',
   created_at      INTEGER NOT NULL,
-  treated_at      INTEGER
+  treated_at      INTEGER,
+  cloture_note    TEXT NOT NULL DEFAULT ''
 );
 CREATE INDEX IF NOT EXISTS idx_alerts_statut ON alerts (statut, created_at);
 
@@ -477,6 +478,12 @@ export function migrate(db: BetterSqlite3.Database): void {
     db.exec(`ALTER TABLE escalations ADD COLUMN media_file TEXT NOT NULL DEFAULT ''`);
     db.exec(`ALTER TABLE escalations ADD COLUMN media_mime TEXT NOT NULL DEFAULT ''`);
     db.exec(`ALTER TABLE escalations ADD COLUMN contexte TEXT NOT NULL DEFAULT ''`);
+  }
+
+  // Audit des alertes : motif de retrait d'une fausse alerte (historique conservé).
+  const alertCols = tableColumns(db, "alerts");
+  if (alertCols.size > 0 && !alertCols.has("cloture_note")) {
+    db.exec(`ALTER TABLE alerts ADD COLUMN cloture_note TEXT NOT NULL DEFAULT ''`);
   }
 
   db.pragma("user_version = 2");

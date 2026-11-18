@@ -417,7 +417,7 @@ export function createHandler(deps: HandlerDeps) {
     const repondue = result.text !== null && !result.alertFired && !result.niveau4Sent && !result.escalated;
     // Une question restée sans réponse ne doit JAMAIS rester invisible : alerte ouverte → le client est
     // « en alerte » et la conversation reste dans celles que Jacob doit traiter.
-    if (!repondue && isRealQuestion(lastText) && !core.alerts.hasOpenFor(waId) && !core.knowledge.escalations.openFor(waId)) {
+    if (!repondue && !analysis.subjectUnknown && isRealQuestion(lastText) && !core.alerts.hasOpenFor(waId) && !core.knowledge.escalations.openFor(waId)) {
       await triggerAlert(deps.alertDeps, {
         waId,
         motif: "question restée sans réponse du bot",

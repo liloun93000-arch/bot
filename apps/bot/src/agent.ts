@@ -17,6 +17,7 @@ import {
   type Core,
   type Logger,
   type WhatsAppClient,
+  qualificationHint,
 } from "@arbi/core";
 import type { Analysis } from "./brain";
 import { buildDynamicContext, buildStaticPrompt } from "./prompt";
@@ -405,7 +406,7 @@ export class SalesAgent {
       this.managerContext(waId, analysis),
     ) + (core.alerts.hasOpenFor(waId)
       ? "\n- ALERTE DÉJÀ OUVERTE pour ce client : Jacob est prévenu et va reprendre la conversation ici. Ne recrée pas d'alerte et ne répète pas l'annonce ; continue sur ce que tu peux traiter."
-      : "");
+      : "") + (analysis.subjectUnknown ? `\n\n${qualificationHint(analysis.stalledRounds)}` : "");
     const system: Anthropic.Messages.TextBlockParam[] = [
       { type: "text", text: this.staticPrompt, cache_control: { type: "ephemeral" } },
       { type: "text", text: dynamicContext },
@@ -582,7 +583,7 @@ export class SalesAgent {
       // Le bot ANNONCE qu'il transmet à Jacob (« je transmets ta demande à Jacob », « je fais remonter »…)
       // sans avoir appelé l'outil d'alerte : on crée l'alerte nous-mêmes. Aucune annonce ne doit rester
       // sans demande visible dans l'onglet Jacob.
-      if (!guarded.blocked && !flags.alertFired && isRealQuestion(analysis.combinedText) && claimsHandoffToJacob(guarded.text) && !core.alerts.hasOpenFor(waId)) {
+      if (!guarded.blocked && !flags.alertFired && !analysis.subjectUnknown && isRealQuestion(analysis.combinedText) && claimsHandoffToJacob(guarded.text) && !core.alerts.hasOpenFor(waId)) {
         logDecision(log, "handoff_claim_without_alert", { waId });
         await escalateAndAck(
           { core, wa: this.deps.wa, llm: this.deps.alertDeps.llm, model: this.deps.alertDeps.model, log, readMedia: this.deps.readBotFile, alertDeps: this.deps.alertDeps },
@@ -593,7 +594,7 @@ export class SalesAgent {
 
       // Un « je n'ai pas l'information » n'est pas une réponse : vraie escalade interne, un seul
       // message client, aucun numéro.
-      if (!guarded.blocked && isRealQuestion(analysis.combinedText) && (looksLikeNoAnswer(guarded.text) || guarded.text.length === 0)) {
+      if (!guarded.blocked && !analysis.subjectUnknown && isRealQuestion(analysis.combinedText) && (looksLikeNoAnswer(guarded.text) || guarded.text.length === 0)) {
         logDecision(log, "no_answer_reply_converted_to_escalation", { waId });
         const alertMode = core.settings.get("escalation_mode") !== "question";
         await escalateAndAck(

@@ -173,7 +173,7 @@ describe("déclencheurs du routeur", () => {
     core.close();
   });
 
-  it("3 échanges sans progression → alerte directe", () => {
+  it("échanges sans progression → AUCUNE alerte (le bot qualifie le besoin)", () => {
     const core = testCore();
     core.contacts.upsert(WA_ID);
     const state = core.state.get(WA_ID);
@@ -183,8 +183,9 @@ describe("déclencheurs du routeur", () => {
     last = analyzeInbound(core, state, ["hmm"], 3);
     last = analyzeInbound(core, state, ["hmm"], 3);
     expect(state.sansProgression).toBeGreaterThanOrEqual(3);
-    expect(last.route).toBe("alerte_directe");
-    expect(last.motif).toContain("sans progression");
+    expect(last.route).toBe("agent");
+    expect(last.motif).toBe("");
+    expect(last.stalledRounds).toBeGreaterThanOrEqual(3);
     core.close();
   });
 });

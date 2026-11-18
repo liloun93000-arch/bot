@@ -54,11 +54,13 @@ export const alerts = sqliteTable("alerts", {
   motif: text("motif").notNull(),
   resume: text("resume").notNull().default(""),
   dernierMessage: text("dernier_message").notNull().default(""),
-  /** ouverte | traitee */
+  /** ouverte | traitee | retiree (fausse alerte retirée après audit, historique conservé) */
   statut: text("statut").notNull().default("ouverte"),
   notifiedVia: text("notified_via").notNull().default(""),
   createdAt: integer("created_at").notNull(),
   treatedAt: integer("treated_at"),
+  /** Pourquoi l'alerte a été retirée (audit) ; vide sinon. */
+  clotureNote: text("cloture_note").notNull().default(""),
 });
 
 export const conversationState = sqliteTable("conversation_state", {

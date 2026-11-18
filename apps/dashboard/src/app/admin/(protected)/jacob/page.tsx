@@ -2,8 +2,8 @@ import Link from "next/link";
 import { requireSession } from "@/lib/auth";
 import { getRuntime } from "@/lib/core";
 import { jacobHistory, jacobPending, waitingLabel, type JacobItem } from "@/lib/jacob";
-import { jacobReplyAction, markClientTreatedAction } from "@/lib/actions";
-import { OUTBOUND_MEDIA_ACCEPT } from "@arbi/core";
+import { clearFalseAlertsAction, jacobReplyAction, markClientTreatedAction } from "@/lib/actions";
+import { auditOpenAlerts, OUTBOUND_MEDIA_ACCEPT } from "@arbi/core";
 import { ScrollMemory } from "../back-nav";
 import { FilePicker, SendButton } from "../file-picker";
 import { Icon, idx } from "../icons";
@@ -75,6 +75,9 @@ export default async function JacobPage({ searchParams }: { searchParams: Promis
   const { core } = getRuntime();
   const pending = jacobPending(core);
   const history = vue === "historique" ? jacobHistory(core, 40) : [];
+  // Audit : alertes ouvertes qui ne demandent aucune intervention de Jacob (rien n'est retiré sans clic).
+  const audit = vue !== "historique" ? auditOpenAlerts(core) : [];
+  const removable = audit.filter((a) => a.verdict !== "a_garder");
 
   return (
     <div className="aj-page">
@@ -99,6 +102,30 @@ export default async function JacobPage({ searchParams }: { searchParams: Promis
           Historique
         </Link>
       </div>
+
+      {removable.length > 0 && (
+        <details className="card text-sm" open>
+          <summary className="cursor-pointer font-semibold">
+            🧹 {removable.length} alerte(s) semblent injustifiées — vérifier et nettoyer
+          </summary>
+          <ul className="mt-2 space-y-1 text-neutral-600">
+            {removable.map((a) => (
+              <li key={a.id}>
+                <Link href={`/admin/conversations/${a.waId}?from=${encodeURIComponent("/admin/jacob")}`} className="underline">
+                  +{a.waId}
+                </Link>{" "}
+                — {a.raison}
+              </li>
+            ))}
+          </ul>
+          <form action={clearFalseAlertsAction} className="mt-3">
+            <button type="submit" className="btn btn-primary">
+              Retirer ces {removable.length} alerte(s)
+            </button>
+            <span className="ml-2 text-xs text-neutral-500">L&apos;historique est conservé, aucun message n&apos;est envoyé aux clients.</span>
+          </form>
+        </details>
+      )}
 
       {vue !== "historique" ? (
         pending.length === 0 ? (

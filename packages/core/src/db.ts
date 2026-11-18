@@ -162,6 +162,8 @@ export const SETTINGS_DEFAULTS = {
    * des connaissances marquées « visibles pour les clients » sont ajoutés au contexte du bot. Désactivé par défaut.
    */
   kb_clients_actif: false as boolean,
+  /** Dernières idées IA de la page « Analyse & Suggestions » (une seule période mémorisée). */
+  analyse_ia_idees: { cle: "", texte: "", ts: 0 } as { cle: string; texte: string; ts: number },
   /** Guide de style appris, régénérable depuis le back-office (§6), injecté après « Personnalité ». */
   style_guide_appris: "",
   /**

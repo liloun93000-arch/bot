@@ -1,6 +1,9 @@
 "use server";
 
+import type Anthropic from "@anthropic-ai/sdk";
+
 import {
+  REASONING_HEADROOM,
   buildStyleGuide,
   checkOutboundMedia,
   clearAuditedAlerts,
@@ -12,6 +15,9 @@ import {
   extractText,
   flattenTemplateParam,
   formatAlertText,
+  aiIdeasPrompt,
+  resolvePeriod,
+  analyze,
   isRealQuestion,
   kbUpdate,
   learnFromDashboardReply,
@@ -1976,4 +1982,42 @@ export async function toggleKnowledgeSharingAction(formData: FormData): Promise<
   const { core } = getRuntime();
   core.settings.set("kb_clients_actif", formData.get("kb_clients_actif") === "on");
   revalidatePath("/admin/connaissances");
+}
+
+// ── Analyse & Suggestions IA ──
+
+/**
+ * Idées rédigées par l'IA (TikTok, Snapchat, formations…) — UN appel, uniquement sur clic, à partir des
+ * chiffres réels de la période. Le texte est mémorisé pour la période affichée ; aucun prix ni catalogue n'est modifié.
+ */
+export async function generateAiIdeasAction(formData: FormData): Promise<void> {
+  await requireSession();
+  const { core, llm, model, log } = getRuntime();
+  const periode = String(formData.get("p") ?? "7d");
+  const from = String(formData.get("from") ?? "");
+  const to = String(formData.get("to") ?? "");
+  const period = resolvePeriod(periode, from, to);
+  const analysis = analyze(core, period);
+  const back = `/admin/analyse?p=${encodeURIComponent(periode)}${periode === "custom" ? `&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}` : ""}`;
+  if (analysis.messagesClients === 0) redirect(back);
+  const { system, user } = aiIdeasPrompt(analysis);
+  let texte = "";
+  try {
+    const response = await llm.messages.create({
+      model,
+      max_tokens: REASONING_HEADROOM + 900,
+      system,
+      messages: [{ role: "user", content: user }],
+    });
+    texte = response.content
+      .filter((b): b is Anthropic.Messages.TextBlock => b.type === "text")
+      .map((b) => b.text)
+      .join("\n")
+      .trim();
+  } catch (err) {
+    log.error({ err: String(err) }, "analysis_ai_ideas_failed");
+  }
+  core.settings.set("analyse_ia_idees", { cle: `${periode}|${from}|${to}`, texte: texte || "Génération impossible pour le moment : réessaie dans un instant.", ts: Date.now() });
+  revalidatePath("/admin/analyse");
+  redirect(back);
 }

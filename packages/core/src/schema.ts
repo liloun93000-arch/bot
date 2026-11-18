@@ -37,6 +37,10 @@ export const leads = sqliteTable("leads", {
   /** nouveau | en_cours | devis_envoye | gagne | perdu */
   statut: text("statut").notNull().default("nouveau"),
   ts: integer("ts").notNull(),
+  /** Qui a posé le statut actuel : "" (jamais changé) | ia | humain. */
+  statutOrigine: text("statut_origine").notNull().default(""),
+  /** Date du dernier changement de statut : l'IA ne tient compte que de ce qui est POSTÉRIEUR. */
+  statutTs: integer("statut_ts"),
 });
 
 export const handoffs = sqliteTable("handoffs", {

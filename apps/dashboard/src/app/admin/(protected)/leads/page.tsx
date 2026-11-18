@@ -2,6 +2,7 @@ import Link from "next/link";
 import { LEAD_STATUTS } from "@/lib/constants";
 import { requireSession } from "@/lib/auth";
 import { getRuntime } from "@/lib/core";
+import { evaluateAllLeads, leadStatusHistory } from "@arbi/core";
 import { StatutSelect } from "./statut-select";
 
 export const dynamic = "force-dynamic";
@@ -25,6 +26,12 @@ export default async function LeadsPage({
   await requireSession();
   const { statut: filtre = "" } = await searchParams;
   const { core } = getRuntime();
+  // Mise à jour automatique des statuts (règles déterministes, sans IA ni message au client).
+  try {
+    evaluateAllLeads(core);
+  } catch {
+    /* l'affichage ne doit jamais dépendre de l'automatisation */
+  }
   const tous = core.leads.list();
   const leads = filtre ? tous.filter((lead) => lead.statut === filtre) : tous;
   const compte = (valeur: string) => tous.filter((lead) => lead.statut === valeur).length;
@@ -95,6 +102,24 @@ export default async function LeadsPage({
                 <StatutSelect leadId={lead.id} statut={lead.statut} options={OPTIONS} />
               </div>
               <p className="aj-lead-date">Fiche créée le {new Date(lead.ts).toLocaleDateString("fr-FR", { timeZone: "Europe/Paris" })}</p>
+              <details className="aj-lead-history text-xs text-neutral-500">
+                <summary className="cursor-pointer">
+                  {lead.statutOrigine === "ia" ? "🤖 Statut mis à jour automatiquement" : lead.statutOrigine === "humain" ? "✍️ Statut défini par un administrateur" : "Historique du statut"}
+                </summary>
+                <ul className="mt-1 space-y-1">
+                  {leadStatusHistory(core, lead.id).map((h) => (
+                    <li key={h.id}>
+                      {new Date(h.ts).toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris" })}
+                      {" · "}
+                      {STATUT_LABEL[h.ancien] ?? h.ancien} → <b>{STATUT_LABEL[h.nouveau] ?? h.nouveau}</b>
+                      {" · "}
+                      {h.origine === "ia" ? "IA" : "Humain"} — {h.motif}
+                      {h.preuve ? <em> (« {h.preuve.slice(0, 80)} »)</em> : null}
+                    </li>
+                  ))}
+                  {leadStatusHistory(core, lead.id).length === 0 && <li>Aucun changement : fiche encore « Nouveau ».</li>}
+                </ul>
+              </details>
             </article>
           );
         })}

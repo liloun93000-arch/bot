@@ -1,6 +1,7 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import {
   billingStatus,
+  evaluateLeadsFor,
   isRealQuestion,
   extractClientFacts,
   handleDirectorReply,
@@ -169,6 +170,19 @@ const PURE_ACK_RE =
  */
 export function createHandler(deps: HandlerDeps) {
   return async function handleBatch(waId: string, items: InboundItem[]): Promise<void> {
+    try {
+      await processBatch(waId, items);
+    } finally {
+      // Statuts commerciaux : règles déterministes, aucun appel IA, aucun envoi au client.
+      try {
+        evaluateLeadsFor(deps.core, waId);
+      } catch (err) {
+        deps.log.error({ waId, err: String(err) }, "lead_status_eval_failed");
+      }
+    }
+  };
+
+  async function processBatch(waId: string, items: InboundItem[]): Promise<void> {
     const { core, wa, agent, log } = deps;
     const startedAt = Date.now();
 
@@ -444,5 +458,5 @@ export function createHandler(deps: HandlerDeps) {
       scheduleFactsExtraction(core, deps.llm, deps.model, log, waId, analysis);
       scheduleSummaryRefresh(core, deps.llm, deps.model, log, waId);
     }
-  };
+  }
 }

@@ -41,8 +41,23 @@ CREATE TABLE IF NOT EXISTS leads (
   delai  TEXT,
   score  INTEGER,
   statut TEXT NOT NULL DEFAULT 'nouveau',
-  ts     INTEGER NOT NULL
+  ts     INTEGER NOT NULL,
+  statut_origine TEXT NOT NULL DEFAULT '',
+  statut_ts      INTEGER
 );
+
+CREATE TABLE IF NOT EXISTS lead_status_history (
+  id      INTEGER PRIMARY KEY AUTOINCREMENT,
+  lead_id INTEGER NOT NULL,
+  wa_id   TEXT NOT NULL,
+  ancien  TEXT NOT NULL,
+  nouveau TEXT NOT NULL,
+  ts      INTEGER NOT NULL,
+  origine TEXT NOT NULL,
+  motif   TEXT NOT NULL DEFAULT '',
+  preuve  TEXT NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS idx_lead_history_lead ON lead_status_history (lead_id, id);
 
 CREATE TABLE IF NOT EXISTS handoffs (
   id    INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -479,6 +494,26 @@ export function migrate(db: BetterSqlite3.Database): void {
     db.exec(`ALTER TABLE escalations ADD COLUMN media_mime TEXT NOT NULL DEFAULT ''`);
     db.exec(`ALTER TABLE escalations ADD COLUMN contexte TEXT NOT NULL DEFAULT ''`);
   }
+
+  // Statuts commerciaux automatiques : origine et date du dernier changement.
+  const leadCols = tableColumns(db, "leads");
+  if (leadCols.size > 0 && !leadCols.has("statut_origine")) {
+    db.exec(`ALTER TABLE leads ADD COLUMN statut_origine TEXT NOT NULL DEFAULT ''`);
+    db.exec(`ALTER TABLE leads ADD COLUMN statut_ts INTEGER`);
+  }
+  // Statuts posés à la main AVANT l'automatisation : on les historise comme humains, datés de
+  // maintenant, pour que l'IA ne les réécrive pas a posteriori (elle ne lit que ce qui suit).
+  db.exec(
+    `INSERT INTO lead_status_history (lead_id, wa_id, ancien, nouveau, ts, origine, motif, preuve)
+     SELECT id, wa_id, 'nouveau', statut, ${Date.now()}, 'humain', 'Statut défini avant l''automatisation', ''
+     FROM leads
+     WHERE statut <> 'nouveau' AND statut_origine = ''
+       AND NOT EXISTS (SELECT 1 FROM lead_status_history h WHERE h.lead_id = leads.id)`,
+  );
+  db.exec(
+    `UPDATE leads SET statut_origine = 'humain', statut_ts = ${Date.now()}
+     WHERE statut <> 'nouveau' AND statut_origine = ''`,
+  );
 
   // Audit des alertes : motif de retrait d'une fausse alerte (historique conservé).
   const alertCols = tableColumns(db, "alerts");

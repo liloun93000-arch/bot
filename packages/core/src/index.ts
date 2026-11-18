@@ -9,6 +9,7 @@ export * from "./director";
 export * from "./documents";
 export * from "./intents";
 export * from "./knowledge";
+export * from "./lead-status";
 export * from "./learning";
 export * from "./llm";
 export * from "./logger";

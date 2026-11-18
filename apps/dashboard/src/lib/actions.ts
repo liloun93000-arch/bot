@@ -18,10 +18,12 @@ import {
   maskAmounts,
   pollStripePayments,
   safeMediaName,
+  setLeadStatusHuman,
   summarizeConversation,
   validateE164,
   type AdminNumber,
   type Core,
+  type LeadStatut,
 } from "@arbi/core";
 import { randomUUID } from "node:crypto";
 import { mkdir, unlink, writeFile } from "node:fs/promises";
@@ -841,7 +843,8 @@ export async function deleteHumanMessageAction(messageId: number, waId: string):
 export async function setLeadStatusAction(leadId: number, statut: string): Promise<void> {
   await requireSession();
   if (!(LEAD_STATUTS as readonly string[]).includes(statut)) return;
-  getRuntime().core.leads.setStatut(leadId, statut);
+  // Correction humaine : historisée (origine « humain ») et respectée par l'automatisation.
+  setLeadStatusHuman(getRuntime().core, leadId, statut as LeadStatut);
   revalidatePath("/admin/leads");
   revalidatePath("/admin");
   revalidatePath("/admin/conversations", "layout");

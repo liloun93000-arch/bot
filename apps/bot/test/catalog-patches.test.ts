@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { applyLlcSection, applyMotosSection, LLC_MARKER, MOTOS_MARKER, patchCatalogue } from "../src/catalog-patches";
+import { buildStaticPrompt } from "../src/prompt";
 import { testCore } from "./helpers";
 
 const FILE = readFileSync(join(__dirname, "../../../data/catalogue.md"), "utf8");
@@ -82,5 +83,14 @@ describe("discours LLC / LTD et motos dans le catalogue", () => {
     expect(patchCatalogue(core, silent)).toBe(false);
     expect(core.catalogue.versions(50)).toHaveLength(avant + 1);
     core.close();
+  });
+
+  it("le prompt réellement envoyé à l'IA contient les trois formules, la règle Basique et la priorité LLC", () => {
+    const prompt = buildStaticPrompt(FILE, []);
+    expect(prompt).toContain("AUCUNE ouverture de compte professionnel");
+    expect(prompt).toMatch(/ULTIME[\s\S]*?Shopify OU WordPress/);
+    expect(prompt).toContain("LTD HONG KONG : 1 500 €");
+    expect(prompt).toContain("VIN ≠ une homologation routière");
+    expect(prompt).not.toContain("Le bot doit rester général sur les sujets juridiques/fiscaux et ne pas donner de conseil personnalisé.");
   });
 });

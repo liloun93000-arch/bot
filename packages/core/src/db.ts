@@ -157,6 +157,11 @@ export const SETTINGS_DEFAULTS = {
   relance_auto_template_hors_fenetre: true as boolean,
   /** Texte personnalisé par l'IA (1 appel par relance réellement envoyée) ; sinon modèle fixe. */
   relance_auto_personnaliser: true as boolean,
+  /**
+   * Partage de la base de connaissances avec le manager principal : quand c'est activé, les extraits PERTINENTS
+   * des connaissances marquées « visibles pour les clients » sont ajoutés au contexte du bot. Désactivé par défaut.
+   */
+  kb_clients_actif: false as boolean,
   /** Guide de style appris, régénérable depuis le back-office (§6), injecté après « Personnalité ». */
   style_guide_appris: "",
   /**

@@ -1,0 +1,795 @@
+BASE DE CONNAISSANCES À INTÉGRER — LLC AMÉRICAINE
+
+A. Définition et fonctionnement
+
+LLC signifie Limited Liability Company.
+
+Il s’agit d’une structure juridique organisée selon les lois d’un État américain.
+
+Une LLC peut notamment :
+
+* Être détenue par un seul associé : Single-Member LLC.
+* Être détenue par plusieurs associés : Multi-Member LLC.
+* Être détenue par des personnes physiques ou d’autres sociétés.
+* Être créée par des entrepreneurs non-résidents américains.
+* Conclure des contrats.
+* Émettre des factures.
+* Détenir des actifs.
+* Exercer une activité professionnelle.
+* Demander l’ouverture de comptes financiers.
+
+Les propriétaires sont appelés Members.
+
+La gestion peut être assurée par les membres ou par des managers désignés.
+
+Une LLC ne nécessite généralement pas de capital social minimum comparable à certaines structures européennes.
+
+Elle permet de limiter la responsabilité personnelle de ses associés dans certaines circonstances, à condition notamment de respecter la séparation entre les patrimoines personnel et professionnel.
+
+Elle ne protège pas automatiquement contre les garanties personnelles, les actes frauduleux ou certaines fautes de gestion.
+
+La création d’une LLC ne donne ni visa américain, ni droit de résidence, ni droit automatique de travailler physiquement aux États-Unis.
+
+B. Différences entre Wyoming et New Mexico
+
+Wyoming
+
+Connaissances à retenir :
+
+* État couramment utilisé pour la création de LLC.
+* Frais officiels de constitution généralement de 100 USD, hors éventuels frais techniques.
+* Déclaration annuelle obligatoire.
+* Redevance annuelle minimale de 60 USD, pouvant augmenter selon certains actifs situés et utilisés dans l’État.
+* Échéance du rapport annuel liée au mois anniversaire de création.
+* Absence d’impôt étatique général sur le revenu des particuliers et des sociétés.
+* Obligation de conserver un Registered Agent.
+* Certaines informations relatives aux propriétaires ne figurent pas nécessairement dans les documents publics de constitution.
+
+New Mexico
+
+Connaissances à retenir :
+
+* Frais officiels de constitution généralement de 50 USD.
+* Pas de rapport annuel ordinaire auprès du Secretary of State pour les LLC classiques.
+* Absence de frais annuels étatiques généraux de déclaration de LLC.
+* Obligation de conserver un Registered Agent.
+* Les obligations fiscales fédérales restent applicables.
+* Des obligations fiscales propres à l’État peuvent exister, notamment en présence d’une activité économique locale.
+* Possibilité d’une certaine confidentialité dans les documents publics de constitution.
+
+Le New Mexico peut être intéressant pour les entrepreneurs qui souhaitent réduire les frais administratifs de constitution et de maintien.
+
+Le Wyoming peut être intéressant selon le projet, les besoins juridiques et les préférences du client.
+
+Ne pas affirmer qu’un État garantit davantage l’acceptation bancaire que l’autre.
+
+Ne jamais confondre les frais gouvernementaux américains avec les tarifs commerciaux ARBI JACOB.
+
+C. Documents importants d’une LLC
+
+Le futur agent doit connaître et savoir expliquer chacun de ces documents.
+
+Articles of Organization
+
+Document déposé auprès de l’État pour constituer juridiquement la LLC.
+
+Certificate of Organization / documents d’enregistrement
+
+Documents délivrés ou validés par l’administration de l’État attestant de la constitution de la société, selon l’État et la procédure.
+
+Operating Agreement
+
+Document organisant le fonctionnement interne de la LLC.
+
+Il peut notamment préciser :
+
+* Les associés.
+* Les parts détenues.
+* Les pouvoirs.
+* Les modalités de gestion.
+* La distribution des bénéfices.
+* L’entrée ou la sortie d’associés.
+* Les règles de dissolution.
+
+EIN
+
+Employer Identification Number.
+
+Identifiant fiscal fédéral délivré par l’IRS.
+
+Il permet notamment d’identifier la société auprès de certaines administrations et institutions financières.
+
+Il ne doit pas être confondu avec :
+
+* Un SSN.
+* Un ITIN.
+* Une licence commerciale.
+* Une autorisation de séjour.
+* Une preuve de conformité fiscale complète.
+
+Formulaire SS-4
+
+Formulaire utilisé pour demander l’EIN.
+
+Les entrepreneurs étrangers peuvent obtenir un EIN sans nécessairement disposer d’un SSN ou ITIN, selon leur situation et les modalités autorisées par l’IRS.
+
+CP 575 / lettre de confirmation EIN
+
+Document de confirmation de l’attribution de l’EIN.
+
+Lettre 147C
+
+Document permettant généralement d’obtenir une confirmation de l’EIN auprès de l’IRS lorsque nécessaire.
+
+Certificate of Good Standing
+
+Document attestant, selon les règles de l’État, que l’entreprise est en règle concernant son inscription administrative.
+
+Cela ne garantit pas que toutes ses obligations fiscales sont remplies.
+
+Registered Agent
+
+Personne ou société désignée pour recevoir les notifications officielles et certains documents juridiques au nom de la LLC.
+
+Il doit disposer d’une adresse conforme aux exigences de l’État.
+
+Son adresse ne doit pas être automatiquement présentée comme une adresse opérationnelle de l’entreprise.
+
+Apostille
+
+Certification pouvant être demandée pour utiliser certains documents américains à l’étranger.
+
+Elle n’est pas nécessaire dans toutes les situations.
+
+Les coûts éventuels et la disponibilité de ces documents dans nos propres formules doivent être confirmés dans notre catalogue.
+
+D. Informations généralement nécessaires à la création
+
+Selon le dossier :
+
+* Nom et prénom.
+* Pièce d’identité valide.
+* Adresse de résidence réelle.
+* Pays de résidence.
+* Coordonnées.
+* Nom souhaité pour la société.
+* Description de l’activité.
+* Nombre d’associés.
+* Répartition des parts.
+* Informations relatives aux dirigeants et bénéficiaires effectifs.
+
+Ne demander que les documents nécessaires.
+
+Privilégier un espace sécurisé pour les justificatifs sensibles.
+
+Ne jamais conseiller de fournir une fausse adresse, un faux associé, un faux justificatif ou une fausse identité.
+
+E. Déroulement général d’une création de LLC
+
+Le futur agent doit comprendre le parcours :
+
+1. Qualification du projet.
+2. Choix de l’État.
+3. Choix de la formule commerciale.
+4. Vérification du nom de société.
+5. Collecte sécurisée des informations nécessaires.
+6. Dépôt de la création auprès de l’État.
+7. Obtention des documents de constitution.
+8. Demande d’EIN.
+9. Transmission des documents au client.
+10. Accompagnement financier si la formule le prévoit.
+11. Configuration de la boutique si la formule Ultime est choisie.
+12. Information sur les obligations de maintien applicables.
+
+Ne pas inventer les délais de traitement ARBI JACOB.
+
+Les délais de l’administration américaine et des établissements financiers peuvent varier.
+
+F. Fiscalité fédérale américaine
+
+Une LLC est une forme juridique. Son traitement fiscal dépend de plusieurs éléments.
+
+Single-Member LLC
+
+Par défaut, une LLC américaine détenue par un seul associé est généralement considérée comme une Disregarded Entity pour l’impôt fédéral sur le revenu, sauf option fiscale différente.
+
+Cela signifie qu’elle n’est généralement pas imposée séparément de son propriétaire pour cet impôt.
+
+Cela ne signifie pas qu’elle est exonérée de toute obligation fiscale ou déclarative.
+
+Multi-Member LLC
+
+Par défaut, une LLC américaine détenue par plusieurs associés est généralement traitée comme une Partnership pour l’impôt fédéral, sauf option différente.
+
+Elle peut notamment être concernée par :
+
+* Form 1065.
+* Schedule K-1.
+* Certaines retenues et déclarations liées aux associés étrangers.
+
+Option pour une imposition comme Corporation
+
+Une LLC peut, sous certaines conditions, choisir un traitement fiscal différent, notamment via le Form 8832.
+
+Une C-Corporation est généralement soumise à un taux fédéral d’impôt sur les sociétés de 21 %, auquel peuvent s’ajouter d’autres obligations.
+
+Le régime S-Corporation est soumis à des conditions spécifiques et ne permet généralement pas la présence d’associés étrangers non-résidents au sens fiscal américain.
+
+ECI — Effectively Connected Income
+
+Revenus effectivement liés à une activité commerciale ou professionnelle exercée aux États-Unis.
+
+Ils peuvent entraîner une imposition et des déclarations américaines.
+
+FDAP
+
+Certains revenus de source américaine, notamment certains intérêts, dividendes, loyers ou redevances, peuvent relever d’un régime de retenue à la source, généralement de 30 % sauf exception ou taux conventionnel applicable.
+
+Entrepreneur non-résident exerçant hors des États-Unis
+
+Une LLC détenue par un non-résident et exerçant réellement son activité hors des États-Unis peut, selon sa classification fiscale, la nature et la provenance de ses revenus et l’absence de revenus imposables aux États-Unis, ne pas devoir d’impôt fédéral américain sur certains bénéfices.
+
+Il faut néanmoins analyser chaque situation.
+
+L’absence de bureau ou de salarié américain ne suffit pas toujours à conclure à une absence d’imposition.
+
+La localisation des stocks, des agents, des prestations, des opérations commerciales et les conventions fiscales peuvent modifier le résultat.
+
+Et surtout, l’absence éventuelle d’impôt américain ne signifie pas l’absence d’impôt dans le pays de résidence du propriétaire.
+
+G. Form 5472 et déclaration pro forma Form 1120
+
+Point essentiel pour les LLC américaines détenues par des étrangers.
+
+Une LLC américaine à associé unique étranger, relevant du régime Disregarded Entity, peut devoir déposer :
+
+* Un Form 5472.
+* Un Form 1120 pro forma associé.
+
+Cette obligation dépend notamment de l’existence de transactions déclarables avec des parties liées.
+
+Les transactions concernées peuvent inclure :
+
+* Apports de fonds.
+* Retraits de fonds.
+* Certaines opérations entre le propriétaire et la LLC.
+* Certaines dépenses réglées par le propriétaire.
+* Transactions liées à la création ou à la dissolution.
+
+Une société sans chiffre d’affaires peut donc malgré tout être soumise à cette déclaration.
+
+Pour une société dont l’exercice correspond à l’année civile, l’échéance normale est généralement le 15 avril de l’année suivante, sous réserve des règles applicables.
+
+Une prolongation peut être demandée avec le Form 7004 lorsqu’elle est applicable.
+
+Le défaut de dépôt peut entraîner une pénalité initiale de 25 000 USD, avec d’éventuelles pénalités supplémentaires.
+
+Cette obligation doit être clairement distinguée des frais annuels de l’État de constitution.
+
+H. Autres formulaires et obligations à connaître
+
+Le futur agent doit maîtriser le rôle général des documents suivants :
+
+* Form 1040-NR : déclaration personnelle de certains non-résidents.
+* Form 1065 : déclaration d’une Partnership.
+* Schedule K-1 : répartition de certains éléments fiscaux entre associés.
+* Form 1120 : déclaration des sociétés imposées comme Corporations.
+* Form 8832 : choix de classification fiscale.
+* Form 7004 : prolongation de certains délais de déclaration.
+* Form W-8BEN : certification du statut étranger de certaines personnes physiques.
+* Form W-8BEN-E : certification du statut étranger de certaines entités.
+* Form W-9 : certification fiscale des personnes ou entités américaines concernées.
+* Form W-8ECI : relatif à certains revenus effectivement liés à une activité américaine.
+* Forms 8804, 8805 et 8813 : certaines obligations relatives aux associés étrangers d’une Partnership.
+* FBAR / FinCEN Form 114 : déclaration potentiellement applicable à certaines entités américaines disposant de comptes financiers hors des États-Unis.
+
+Le formulaire approprié dépend du statut réel du titulaire, du bénéficiaire et de la situation fiscale.
+
+Ne pas recommander automatiquement le même formulaire à tous les clients.
+
+I. BOI — FinCEN
+
+Attention : les règles ont évolué.
+
+À la date de référence du 18 novembre 2026, les entités constituées aux États-Unis sont exemptées des obligations de déclaration BOI prévues par le Corporate Transparency Act, conformément à la réglementation FinCEN actualisée.
+
+La règle définitive publiée en août 2026 confirme cette exemption pour les sociétés américaines.
+
+Certaines entités étrangères enregistrées pour exercer aux États-Unis peuvent néanmoins rester concernées.
+
+Ne pas reprendre automatiquement d’anciennes consignes BOI devenues obsolètes.
+
+Cette exemption ne supprime pas :
+
+* Les vérifications bancaires.
+* Les obligations fiscales.
+* Les obligations de fournir ses véritables bénéficiaires effectifs lorsque cela est requis.
+* Les obligations de lutte contre le blanchiment.
+
+J. Confidentialité d’une LLC
+
+Le Wyoming et le New Mexico peuvent offrir une certaine confidentialité concernant les informations accessibles publiquement.
+
+Cependant, une LLC n’est pas une société permettant de devenir invisible auprès des administrations ou des établissements financiers.
+
+Il faut distinguer :
+
+* Confidentialité vis-à-vis du public.
+* Identification auprès des autorités.
+* KYC bancaire.
+* Identification du bénéficiaire effectif.
+* Obligations fiscales.
+
+Ne jamais employer le terme « anonyme » comme une garantie d’impossibilité d’identifier le propriétaire.
+
+K. Comptes professionnels et solutions de paiement
+
+Le futur agent doit comprendre parfaitement la différence entre :
+
+* Un compte professionnel.
+* Une banque.
+* Une fintech.
+* Un prestataire de services de paiement.
+* Une passerelle de paiement e-commerce.
+
+Stripe
+
+Solution permettant notamment d’accepter des paiements en ligne.
+
+L’ouverture nécessite des informations professionnelles et personnelles conformes.
+
+Peuvent être demandés :
+
+* EIN.
+* Documents d’entreprise.
+* Identité des responsables.
+* Adresse professionnelle.
+* Informations fiscales personnelles.
+* Compte bancaire compatible.
+* Description de l’activité.
+* Site internet.
+* Justificatifs complémentaires.
+
+La possession d’une LLC ne garantit pas l’acceptation d’un compte Stripe.
+
+PayPal Business
+
+Compte destiné aux paiements et transactions professionnels.
+
+PayPal peut demander des justificatifs concernant :
+
+* La société.
+* Le dirigeant.
+* L’adresse.
+* L’activité.
+* Les bénéficiaires effectifs.
+* Les coordonnées bancaires.
+
+Les conditions dépendent notamment du pays d’ouverture.
+
+Wise Business
+
+Solution financière professionnelle permettant notamment des transferts internationaux et des opérations multidevises selon les pays et services disponibles.
+
+L’adresse d’enregistrement et l’adresse réelle d’exploitation peuvent être vérifiées séparément.
+
+Les activités et pays pris en charge doivent être vérifiés.
+
+Mercury
+
+Solution financière destinée notamment aux entreprises américaines.
+
+Les fondateurs non-résidents peuvent être éligibles, sous réserve des conditions applicables.
+
+Mercury demande notamment des documents de constitution, une identification des responsables, une adresse réelle d’exploitation et des opérations américaines existantes ou envisagées conformes à ses critères.
+
+Une simple adresse de Registered Agent ne suffit pas comme adresse opérationnelle.
+
+Payoneer Business
+
+Solution de réception et de transfert de paiements professionnels internationaux.
+
+Les disponibilités, justificatifs et fonctionnalités dépendent notamment de l’activité et du pays de résidence.
+
+Shopify Payments
+
+Solution de paiement intégrée à Shopify.
+
+L’activation aux États-Unis dépend notamment :
+
+* De l’éligibilité de l’entreprise.
+* De son adresse opérationnelle.
+* Des informations d’identification.
+* Des informations fiscales requises.
+* D’un compte bancaire compatible.
+* Du respect des conditions de Shopify Payments.
+
+Une LLC et un EIN ne suffisent pas nécessairement à activer Shopify Payments.
+
+Les exigences concernant le SSN, l’ITIN et l’identification doivent être vérifiées selon le profil du demandeur.
+
+Règles générales concernant tous les comptes
+
+Le bot doit savoir expliquer :
+
+* Le KYC.
+* Le KYB.
+* L’identification des bénéficiaires effectifs.
+* Les restrictions d’activité.
+* Les justificatifs de provenance des fonds.
+* Les réserves de paiement.
+* Les litiges.
+* Les chargebacks.
+* Les suspensions et fermetures.
+* Les demandes de vérification complémentaires.
+
+L’objectif de l’accompagnement est de préparer des dossiers complets et conformes.
+
+Ne jamais contourner les restrictions d’un établissement ou utiliser de faux documents.
+
+L. Obligations de maintien d’une LLC
+
+Le futur agent doit connaître :
+
+* Maintien du Registered Agent.
+* Renouvellements éventuels des services inclus.
+* Déclarations annuelles au niveau de l’État lorsque nécessaires.
+* Déclarations fiscales fédérales.
+* Comptabilité.
+* Conservation des justificatifs.
+* Mise à jour des informations administratives.
+* Séparation entre les finances personnelles et professionnelles.
+* Licences commerciales éventuellement nécessaires.
+* Enregistrement dans d’autres États si l’activité l’impose.
+* Obligations liées à la Sales Tax selon le nexus et les règles de chaque État.
+
+Ne pas confondre absence de rapport annuel au New Mexico et absence totale d’obligations.
+
+Ne pas supposer que les renouvellements ou la comptabilité sont inclus dans nos offres commerciales sans confirmation.
+
+M. LLC, e-commerce et commerce international
+
+Connaître les usages possibles d’une LLC pour :
+
+* Shopify.
+* WordPress / WooCommerce.
+* Vente en ligne.
+* Import-export.
+* Consulting.
+* Marketing digital.
+* Prestations de services.
+* Création de contenu.
+* Affiliation.
+* Commerce international.
+
+La LLC n’est pas une dispense de conformité commerciale.
+
+Selon l’activité, le client peut être concerné par :
+
+* Taxes sur les ventes.
+* TVA européenne.
+* OSS et IOSS.
+* Douanes.
+* Droits d’importation.
+* Conformité des produits.
+* Protection des consommateurs.
+* Obligations locales d’enregistrement.
+
+N. LLC américaine et résidence fiscale française
+
+Point important pour notre clientèle francophone.
+
+La création d’une LLC américaine ne change pas automatiquement la résidence fiscale du client.
+
+Une personne fiscalement résidente en France peut rester imposable en France sur les revenus relevant de ses obligations françaises.
+
+Il faut notamment examiner :
+
+* La résidence fiscale personnelle.
+* La direction effective de la société.
+* Le lieu d’exercice de l’activité.
+* L’existence éventuelle d’un établissement stable.
+* La qualification juridique et fiscale de la LLC en France.
+* La nature des revenus.
+* Les distributions de bénéfices.
+* Les rémunérations.
+* Les obligations sociales.
+* Les déclarations de comptes étrangers lorsqu’elles sont applicables.
+* La convention fiscale franco-américaine.
+
+La transparence fiscale américaine d’une LLC n’est pas automatiquement reconnue de manière identique en France.
+
+Ne pas donner de conclusion fiscale personnalisée sans informations suffisantes.
+
+Pour les situations complexes, recommander une validation par un professionnel compétent.
+
+O. Modification et fermeture d’une LLC
+
+Intégrer les connaissances générales relatives à :
+
+* Changement de Registered Agent.
+* Changement d’adresse.
+* Changement de nom.
+* Ajout ou retrait d’un associé.
+* Modification de l’Operating Agreement.
+* Modification administrative auprès de l’État.
+* Mise à jour des établissements financiers.
+* Dissolution officielle.
+* Déclarations fiscales finales.
+* Clôture des comptes professionnels.
+* Conservation des archives.
+
+Une LLC ne disparaît pas nécessairement simplement parce qu’elle n’est plus utilisée.
+
+
+
+BASE DE CONNAISSANCES À INTÉGRER — LTD HONGKONGAISE
+
+P. Définition et fonctionnement
+
+Une LTD hongkongaise est généralement une Private Company Limited by Shares.
+
+Il s’agit d’une société de capitaux constituée selon le droit de Hong Kong.
+
+Elle possède une personnalité juridique distincte.
+
+Elle peut être utilisée pour :
+
+* Le commerce international.
+* L’import-export.
+* Les relations avec des fournisseurs asiatiques.
+* L’e-commerce.
+* Les prestations internationales.
+* Les activités de sourcing.
+* Certaines activités de conseil.
+
+Les étrangers peuvent généralement détenir une société hongkongaise sans être résidents de Hong Kong, sous réserve des règles applicables.
+
+Il est généralement possible de détenir 100 % des parts.
+
+La création peut être réalisée à distance selon les procédures du prestataire.
+
+Q. Structure d’une LTD hongkongaise
+
+La société doit notamment disposer :
+
+* D’au moins un actionnaire.
+* D’au moins un directeur personne physique.
+* D’un secrétariat de société : Company Secretary.
+* D’une adresse de siège enregistrée à Hong Kong.
+
+Le directeur peut généralement être non-résident.
+
+Le Company Secretary doit répondre aux conditions locales :
+
+* Personne physique résidant habituellement à Hong Kong.
+* Ou société disposant d’une présence professionnelle conforme à Hong Kong.
+
+Le directeur unique ne peut pas également être le Company Secretary.
+
+Il n’existe généralement pas de capital minimum légal élevé imposé pour ce type de société.
+
+Le capital doit être structuré de manière adaptée au projet.
+
+R. Documents importants d’une LTD hongkongaise
+
+Certificate of Incorporation — CI
+
+Certificat officiel attestant de la constitution de la société.
+
+Business Registration Certificate — BRC
+
+Certificat d’enregistrement commercial délivré dans le cadre de l’enregistrement auprès des autorités fiscales.
+
+Il doit être renouvelé selon sa période de validité.
+
+Articles of Association
+
+Statuts organisant le fonctionnement de la société.
+
+NNC1
+
+Formulaire de constitution d’une société hongkongaise limitée par actions.
+
+NAR1
+
+Déclaration annuelle de la société.
+
+Elle contient notamment des informations actualisées sur la société, ses dirigeants et actionnaires.
+
+Share Certificates
+
+Certificats représentant les actions détenues.
+
+Register of Members
+
+Registre des actionnaires.
+
+Register of Directors
+
+Registre des directeurs.
+
+Significant Controllers Register — SCR
+
+Registre permettant d’identifier les personnes exerçant un contrôle significatif sur la société.
+
+Company Chop
+
+Tampon de société pouvant être utilisé dans certaines démarches commerciales.
+
+Son utilisation ne remplace pas les signatures et autorisations légalement requises.
+
+Résolutions et procès-verbaux
+
+Documents permettant d’enregistrer certaines décisions officielles des dirigeants et actionnaires.
+
+S. Fiscalité hongkongaise
+
+Hong Kong applique principalement un système de taxation territoriale.
+
+Cela signifie que l’imposition des bénéfices dépend notamment de leur origine et des activités génératrices de ces bénéfices.
+
+Profits Tax
+
+Pour les sociétés éligibles au régime à deux tranches :
+
+* 8,25 % sur les deux premiers millions de HKD de bénéfices imposables.
+* 16,5 % sur la partie des bénéfices imposables dépassant ce seuil.
+
+Le taux normal des sociétés est de 16,5 %.
+
+L’application du régime réduit dépend de certaines conditions, notamment en présence de sociétés liées.
+
+Il s’agit de taux sur les bénéfices imposables, et non sur le chiffre d’affaires.
+
+Revenus offshore
+
+Certains bénéfices réellement générés hors de Hong Kong peuvent ne pas être imposables localement selon les circonstances.
+
+Cependant :
+
+* Le régime offshore n’est pas automatique.
+* Il ne suffit pas d’avoir des clients étrangers pour être exonéré.
+* L’administration peut examiner les opérations réellement effectuées.
+* Des documents et justificatifs peuvent être nécessaires.
+* Une analyse de la provenance des bénéfices est indispensable.
+
+Connaître également le régime FSIE — Foreign-Sourced Income Exemption — applicable à certaines catégories de revenus étrangers dans certaines situations, notamment pour les groupes multinationaux.
+
+Ne pas résumer le fonctionnement fiscal de Hong Kong à « 0 % d’impôt ».
+
+T. TVA et autres caractéristiques fiscales de Hong Kong
+
+Hong Kong ne possède pas de TVA générale comparable à celle de la France.
+
+Il n’existe généralement pas d’impôt distinct sur les dividendes reçus ni de taxe générale sur les plus-values en capital, sous réserve notamment de la qualification des revenus et des régimes spécifiques applicables.
+
+Certaines opérations peuvent néanmoins être soumises à d’autres taxes, notamment des droits de timbre.
+
+L’absence de TVA hongkongaise ne dispense pas une société :
+
+* De la TVA applicable dans les pays où elle vend.
+* Des obligations douanières.
+* Des obligations fiscales internationales.
+* Des taxes éventuelles sur les importations.
+
+U. Obligations annuelles d’une LTD hongkongaise
+
+Le futur agent doit maîtriser :
+
+* Renouvellement du Business Registration Certificate.
+* Maintien du Company Secretary.
+* Maintien de l’adresse enregistrée.
+* Dépôt de l’Annual Return NAR1.
+* Comptabilité annuelle.
+* Préparation des états financiers.
+* Audit légal généralement applicable aux sociétés actives.
+* Déclaration de Profits Tax.
+* Mise à jour des registres.
+* Conservation des justificatifs.
+
+L’Annual Return d’une société privée locale est généralement à déposer dans les 42 jours suivant l’anniversaire de sa constitution.
+
+Les documents comptables doivent généralement être conservés au moins sept ans.
+
+Une société sans activité peut conserver des obligations administratives.
+
+Il ne faut pas confondre une société simplement inactive avec une société ayant officiellement obtenu le statut de Dormant Company.
+
+Ne pas affirmer automatiquement qu’une société sans chiffre d’affaires n’a pas besoin d’audit ou de déclaration.
+
+V. Banques et solutions de paiement à Hong Kong
+
+Le futur agent doit connaître les solutions susceptibles d’être étudiées, notamment :
+
+* HSBC Hong Kong.
+* Hang Seng Bank.
+* Standard Chartered Hong Kong.
+* Bank of China Hong Kong.
+* Airwallex.
+* Statrys.
+* Wise Business selon l’éligibilité.
+* Payoneer.
+* Stripe Hong Kong.
+* PayPal Business.
+* Autres prestataires compatibles avec le profil du client.
+
+Cette liste constitue une base documentaire et non une liste de comptes garantis ou inclus dans nos prestations.
+
+Les conditions dépendent notamment :
+
+* Du pays de résidence des dirigeants.
+* De l’activité.
+* De la provenance des fonds.
+* Des bénéficiaires effectifs.
+* De la présence économique.
+* Des justificatifs commerciaux.
+* Des politiques propres aux établissements.
+
+Le futur agent doit pouvoir expliquer la différence entre une véritable banque et une solution financière ou de paiement.
+
+W. LTD hongkongaise et résidence fiscale française
+
+Une société hongkongaise détenue ou dirigée depuis la France peut soulever des obligations fiscales françaises.
+
+Il faut examiner notamment :
+
+* La résidence fiscale du dirigeant.
+* La direction effective de la société.
+* Le lieu réel d’exercice de l’activité.
+* L’éventuel établissement stable.
+* Les rémunérations et distributions.
+* Les obligations déclaratives françaises.
+* La convention fiscale entre la France et Hong Kong.
+* Les dispositifs anti-abus susceptibles de s’appliquer.
+
+Ne jamais présenter la société hongkongaise comme un moyen automatique d’échapper à toute imposition française.
+
+X. Fermeture et modifications d’une LTD hongkongaise
+
+Connaître les procédures générales relatives à :
+
+* Changement de directeur.
+* Changement d’actionnaires.
+* Transfert d’actions.
+* Modification des coordonnées.
+* Changement de Company Secretary.
+* Changement d’adresse enregistrée.
+* Modification du capital.
+* Mise à jour des registres.
+* Deregistration.
+* Liquidation.
+* Clôture fiscale.
+* Clôture des comptes financiers.
+
+Une Deregistration est soumise à des conditions spécifiques, notamment concernant les dettes, l’activité et les obligations fiscales.
+
+Ne jamais conseiller d’abandonner une société sans effectuer les démarches nécessaires.
+
+
+
+COMPARAISON LLC AMÉRICAINE ET LTD HONGKONGAISE
+
+Le futur agent doit pouvoir établir une comparaison claire et personnalisée prenant en compte :
+
+* Le coût de constitution.
+* Les frais récurrents.
+* Les formalités administratives.
+* La fiscalité.
+* La résidence du client.
+* L’activité réelle.
+* Les pays de commercialisation.
+* Les fournisseurs.
+* Les besoins bancaires.
+* Les solutions de paiement.
+* Les obligations comptables.
+* Les obligations déclaratives.
+* La facilité de gestion.
+* La confidentialité publique.
+* Les possibilités de développement international.
+
+Commercialement, privilégier la LLC américaine lorsque celle-ci correspond réellement au besoin.
+
+La LTD hongkongaise doit également être maîtrisée en profondeur, notamment pour les projets orientés vers le commerce asiatique.
+
+

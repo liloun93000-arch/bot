@@ -35,6 +35,7 @@ COPY --from=build /app/apps/dashboard/public ./dashboard/apps/dashboard/public
 # Seed du catalogue HORS de /app/data : le volume Railway masque ce chemin
 COPY data/catalogue.md ./seed/catalogue.md
 COPY data/catalogues ./seed/catalogues
+COPY data/knowledge ./seed/knowledge
 COPY scripts/start-all.mjs ./start-all.mjs
 # Le volume Railway est monté root : on reste root dans ce conteneur isolé
 RUN mkdir -p /app/data

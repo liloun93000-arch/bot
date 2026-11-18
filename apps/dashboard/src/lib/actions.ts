@@ -13,6 +13,7 @@ import {
   flattenTemplateParam,
   formatAlertText,
   isRealQuestion,
+  kbUpdate,
   learnFromDashboardReply,
   logDecision,
   maskAmounts,
@@ -1940,4 +1941,39 @@ export async function decideBookingAction(id: number, decision: "approuve" | "re
   revalidatePath("/admin/jacob");
   revalidatePath("/admin");
   redirect(`/admin/rendez-vous?msg=${encodeURIComponent(msg)}`);
+}
+
+// ── Base de connaissances spécialisée (LLC / LTD…) ──
+
+export async function saveKnowledgeDocAction(id: number, formData: FormData): Promise<void> {
+  await requireSession();
+  const { core } = getRuntime();
+  const contenu = String(formData.get("contenu") ?? "").trim();
+  const titre = String(formData.get("titre") ?? "").trim();
+  if (!contenu || !titre) return;
+  const verifie = formData.get("verifie") === "on";
+  kbUpdate(
+    core,
+    id,
+    {
+      titre,
+      contenu,
+      conditions: String(formData.get("conditions") ?? "").trim(),
+      source: String(formData.get("source") ?? "").trim(),
+      sourceUrl: String(formData.get("source_url") ?? "").trim(),
+      statut: formData.get("obsolete") === "on" ? "obsolete" : "actif",
+      visibleClient: formData.get("visible_client") === "on",
+      ...(verifie ? { verifieLe: Date.now(), fiabilite: "officielle_verifiee" as const } : {}),
+    },
+    String(formData.get("motif") ?? "Modification depuis le back-office").slice(0, 300),
+    "humain",
+  );
+  revalidatePath("/admin/connaissances");
+}
+
+export async function toggleKnowledgeSharingAction(formData: FormData): Promise<void> {
+  await requireSession();
+  const { core } = getRuntime();
+  core.settings.set("kb_clients_actif", formData.get("kb_clients_actif") === "on");
+  revalidatePath("/admin/connaissances");
 }

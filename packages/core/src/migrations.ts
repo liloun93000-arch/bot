@@ -67,6 +67,40 @@ CREATE TABLE IF NOT EXISTS auto_relances (
 CREATE UNIQUE INDEX IF NOT EXISTS idx_auto_relances_situation ON auto_relances (wa_id, base_msg_id);
 CREATE INDEX IF NOT EXISTS idx_auto_relances_statut ON auto_relances (statut, scheduled_for);
 
+CREATE TABLE IF NOT EXISTS kb_docs (
+  id             INTEGER PRIMARY KEY AUTOINCREMENT,
+  slug           TEXT NOT NULL UNIQUE,
+  titre          TEXT NOT NULL,
+  contenu        TEXT NOT NULL,
+  categorie      TEXT NOT NULL,
+  juridiction    TEXT NOT NULL DEFAULT '',
+  nature         TEXT NOT NULL DEFAULT 'reglementaire',
+  source         TEXT NOT NULL DEFAULT '',
+  source_url     TEXT NOT NULL DEFAULT '',
+  verifie_le     INTEGER,
+  version        INTEGER NOT NULL DEFAULT 1,
+  conditions     TEXT NOT NULL DEFAULT '',
+  fiabilite      TEXT NOT NULL DEFAULT 'a_verifier',
+  statut         TEXT NOT NULL DEFAULT 'actif',
+  revue_jours    INTEGER NOT NULL DEFAULT 180,
+  visible_client INTEGER NOT NULL DEFAULT 0,
+  origine        TEXT NOT NULL DEFAULT 'manager',
+  modifie_humain INTEGER NOT NULL DEFAULT 0,
+  created_at     INTEGER NOT NULL,
+  updated_at     INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_kb_docs_cat ON kb_docs (categorie, statut);
+CREATE TABLE IF NOT EXISTS kb_versions (
+  id       INTEGER PRIMARY KEY AUTOINCREMENT,
+  doc_id   INTEGER NOT NULL,
+  version  INTEGER NOT NULL,
+  titre    TEXT NOT NULL,
+  contenu  TEXT NOT NULL,
+  ts       INTEGER NOT NULL,
+  motif    TEXT NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS idx_kb_versions_doc ON kb_versions (doc_id, version);
+
 CREATE TABLE IF NOT EXISTS lead_status_history (
   id      INTEGER PRIMARY KEY AUTOINCREMENT,
   lead_id INTEGER NOT NULL,

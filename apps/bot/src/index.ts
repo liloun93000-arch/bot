@@ -18,6 +18,7 @@ import {
 import { readFile } from "node:fs/promises";
 import { cleanupSmallTalkAlerts, installCatalogues, installScript, fixCasquettesPrice, auditCasquettes } from "./catalog-seed";
 import { patchCatalogue } from "./catalog-patches";
+import { seedKnowledgeBase } from "./kb-seed";
 import { relanceTick } from "./relance";
 import { dirname, join } from "node:path";
 import { SalesAgent } from "./agent";
@@ -41,6 +42,7 @@ async function main(): Promise<void> {
   await installScript(core, config.CATALOGUE_PATH, log);
   fixCasquettesPrice(core, log);
   patchCatalogue(core, log);
+  seedKnowledgeBase(core, join(dirname(config.CATALOGUE_PATH), "knowledge", "llc-ltd-source.txt"), log);
   auditCasquettes(core, log);
   cleanupSmallTalkAlerts(core, log);
   await installCatalogues(core, join(dirname(config.CATALOGUE_PATH), "catalogues"), config.MEDIA_DIR, log);

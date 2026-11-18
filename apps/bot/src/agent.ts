@@ -8,6 +8,7 @@ import {
   formatKnowledgeForPrompt,
   thresholdsFrom,
   findForeignPrices,
+  kbContext,
   logDecision,
   registerMarkers,
   triggerAlert,
@@ -217,6 +218,15 @@ export class SalesAgent {
       parts.push(
         `# Demande en attente chez Jacob\nUne demande est DÉJÀ ouverte chez Jacob pour ce client (« ${pending.question.slice(0, 200)} ») et le client a déjà été prévenu automatiquement. Ne la reposte pas, n'appelle pas ask_director pour la même question, et N'ENVOIE AUCUN message d'attente ni de relance à ce sujet. Réponds uniquement aux AUTRES questions que tu maîtrises. Si le client te demande explicitement où ça en est, une seule phrase courte suffit (Jacob a été prévenu, tu reviens dès que tu as sa réponse) — sans numéro.`,
       );
+    }
+    // Base spécialisée (LLC / LTD…) : uniquement les extraits pertinents, uniquement ceux que Jacob a rendus visibles aux clients.
+    if (core.settings.get("kb_clients_actif") === true) {
+      const kb = kbContext(core, analysis.combinedText, { clientOnly: true, maxChars: 1800, limit: 3 });
+      if (kb) {
+        parts.push(
+          `# Base de connaissances spécialisée (information générale, jamais un conseil personnalisé)\nCite-la prudemment, sans promesse fiscale ni garantie ; en cas de doute, renvoie vers un professionnel ou vers Jacob. Ne la contredis pas avec le catalogue : pour les prix, le catalogue prime.\n\n${kb}`,
+        );
+      }
     }
     return parts.join("\n\n");
   }

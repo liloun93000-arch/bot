@@ -7,6 +7,7 @@ import {
   handleDirectorReply,
   isDirector,
   logDecision,
+  onClientMessage,
   summarizeConversation,
   normalizeText,
   triggerAlert,
@@ -171,6 +172,12 @@ const PURE_ACK_RE =
 export function createHandler(deps: HandlerDeps) {
   return async function handleBatch(waId: string, items: InboundItem[]): Promise<void> {
     try {
+      // Relance automatique : le client a écrit → annule celles en attente et rattache sa réponse.
+      try {
+        onClientMessage(deps.core, waId);
+      } catch (err) {
+        deps.log.error({ waId, err: String(err) }, "relance_cancel_failed");
+      }
       await processBatch(waId, items);
     } finally {
       // Statuts commerciaux : règles déterministes, aucun appel IA, aucun envoi au client.

@@ -144,6 +144,19 @@ export const SETTINGS_DEFAULTS = {
     "Salut, est-ce que tu as pu regarder de ton côté ?",
     "Salut, je reste dispo si tu veux qu'on avance sur ton projet.",
   ] as string[],
+  /**
+   * Relance automatique après silence du client (livrée DÉSACTIVÉE : Jacob l'active dans Réglages).
+   * Une seule relance par situation ; annulée si le client répond ; jamais la nuit.
+   */
+  relance_auto_actif: false as boolean,
+  relance_auto_delai_h: 12 as number,
+  relance_auto_heure_debut: 9 as number,
+  relance_auto_heure_fin: 20 as number,
+  relance_auto_fuseau: "Europe/Paris" as string,
+  /** Hors fenêtre 24 h : relance par template approuvé (si « relance_template_name » est renseigné). Sinon, aucune relance. */
+  relance_auto_template_hors_fenetre: true as boolean,
+  /** Texte personnalisé par l'IA (1 appel par relance réellement envoyée) ; sinon modèle fixe. */
+  relance_auto_personnaliser: true as boolean,
   /** Guide de style appris, régénérable depuis le back-office (§6), injecté après « Personnalité ». */
   style_guide_appris: "",
   /**

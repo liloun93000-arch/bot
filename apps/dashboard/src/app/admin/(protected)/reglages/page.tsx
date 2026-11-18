@@ -401,17 +401,46 @@ export default async function ReglagesPage({
               className="input"
             />
           </div>
+        </div>
+        <div className="rounded-lg border border-slate-200 p-3 space-y-3">
           <div>
-            <label className="label">Seuil d&apos;alerte (échanges sans progression)</label>
-            <input
-              name="alert_threshold"
-              type="number"
-              min={1}
-              max={10}
-              defaultValue={core.settings.get("alert_threshold")}
-              className="input"
-            />
+            <b>Relance automatique des clients silencieux</b>
+            <p className="text-xs text-slate-500">
+              Une seule relance par situation, annulée dès que le client répond. Jamais si le client a dit STOP, refusé,
+              payé, si la fiche est perdue, si une alerte attend Jacob ou si tu as repris la conversation.
+              Hors fenêtre WhatsApp de 24 h, le template de relance est utilisé (s&apos;il est renseigné plus bas), sinon rien n&apos;est envoyé.
+            </p>
           </div>
+          <label className="flex items-center gap-2">
+            <input type="checkbox" name="relance_auto_actif" defaultChecked={core.settings.get("relance_auto_actif") === true} />
+            <span>Activer la relance automatique (désactivée par défaut)</span>
+          </label>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div>
+              <label className="label">Relancer après (heures)</label>
+              <input name="relance_auto_delai_h" type="number" min={1} max={168} defaultValue={core.settings.get("relance_auto_delai_h")} className="input" />
+            </div>
+            <div>
+              <label className="label">Pas avant (heure)</label>
+              <input name="relance_auto_heure_debut" type="number" min={0} max={23} defaultValue={core.settings.get("relance_auto_heure_debut")} className="input" />
+            </div>
+            <div>
+              <label className="label">Pas après (heure)</label>
+              <input name="relance_auto_heure_fin" type="number" min={0} max={24} defaultValue={core.settings.get("relance_auto_heure_fin")} className="input" />
+            </div>
+          </div>
+          <div>
+            <label className="label">Fuseau horaire des heures calmes</label>
+            <input name="relance_auto_fuseau" defaultValue={core.settings.get("relance_auto_fuseau")} className="input" placeholder="Europe/Paris" />
+          </div>
+          <label className="flex items-center gap-2">
+            <input type="checkbox" name="relance_auto_template_hors_fenetre" defaultChecked={core.settings.get("relance_auto_template_hors_fenetre") !== false} />
+            <span>Hors fenêtre 24 h : relancer avec le template approuvé</span>
+          </label>
+          <label className="flex items-center gap-2">
+            <input type="checkbox" name="relance_auto_personnaliser" defaultChecked={core.settings.get("relance_auto_personnaliser") !== false} />
+            <span>Personnaliser le texte avec l&apos;IA (1 appel par relance réellement envoyée)</span>
+          </label>
         </div>
         <div>
           <label className="label">Autonomie du bot</label>

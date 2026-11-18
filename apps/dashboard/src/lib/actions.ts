@@ -1291,9 +1291,28 @@ export async function saveGeneralSettingsAction(formData: FormData): Promise<voi
   if (Number.isFinite(delay) && delay >= 1 && delay <= 168) {
     core.settings.set("reactivation_delay_h", delay);
   }
-  const threshold = Number.parseInt(String(formData.get("alert_threshold") ?? "3"), 10);
-  if (Number.isFinite(threshold) && threshold >= 1 && threshold <= 10) {
-    core.settings.set("alert_threshold", threshold);
+  // Relance automatique (livrée désactivée).
+  core.settings.set("relance_auto_actif", formData.get("relance_auto_actif") === "on");
+  core.settings.set("relance_auto_template_hors_fenetre", formData.get("relance_auto_template_hors_fenetre") === "on");
+  core.settings.set("relance_auto_personnaliser", formData.get("relance_auto_personnaliser") === "on");
+  const intIn = (name: string, min: number, max: number): number | null => {
+    const v = Number.parseInt(String(formData.get(name) ?? ""), 10);
+    return Number.isFinite(v) && v >= min && v <= max ? v : null;
+  };
+  const relDelai = intIn("relance_auto_delai_h", 1, 168);
+  if (relDelai !== null) core.settings.set("relance_auto_delai_h", relDelai);
+  const relDebut = intIn("relance_auto_heure_debut", 0, 23);
+  if (relDebut !== null) core.settings.set("relance_auto_heure_debut", relDebut);
+  const relFin = intIn("relance_auto_heure_fin", 0, 24);
+  if (relFin !== null) core.settings.set("relance_auto_heure_fin", relFin === 24 ? 0 : relFin);
+  const fuseau = String(formData.get("relance_auto_fuseau") ?? "").trim();
+  try {
+    if (fuseau) {
+      new Intl.DateTimeFormat("en-GB", { timeZone: fuseau });
+      core.settings.set("relance_auto_fuseau", fuseau);
+    }
+  } catch {
+    /* fuseau inconnu : on garde l'ancien */
   }
   const autonomie = String(formData.get("bot_autonomie") ?? "");
   // Liste fermée : une valeur inattendue laisserait le prompt sans consigne

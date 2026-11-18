@@ -46,6 +46,27 @@ CREATE TABLE IF NOT EXISTS leads (
   statut_ts      INTEGER
 );
 
+CREATE TABLE IF NOT EXISTS auto_relances (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  wa_id         TEXT NOT NULL,
+  base_msg_id   INTEGER NOT NULL,
+  base_ts       INTEGER NOT NULL,
+  scheduled_for INTEGER NOT NULL,
+  statut        TEXT NOT NULL DEFAULT 'planifiee',
+  motif         TEXT NOT NULL DEFAULT '',
+  texte         TEXT NOT NULL DEFAULT '',
+  canal         TEXT NOT NULL DEFAULT '',
+  msg_id        INTEGER,
+  wamid         TEXT,
+  created_at    INTEGER NOT NULL,
+  sent_at       INTEGER,
+  closed_at     INTEGER,
+  reply_at      INTEGER,
+  reply_msg_id  INTEGER
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_auto_relances_situation ON auto_relances (wa_id, base_msg_id);
+CREATE INDEX IF NOT EXISTS idx_auto_relances_statut ON auto_relances (statut, scheduled_for);
+
 CREATE TABLE IF NOT EXISTS lead_status_history (
   id      INTEGER PRIMARY KEY AUTOINCREMENT,
   lead_id INTEGER NOT NULL,

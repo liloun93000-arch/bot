@@ -18,6 +18,7 @@ import {
 import { readFile } from "node:fs/promises";
 import { cleanupSmallTalkAlerts, installCatalogues, installScript, fixCasquettesPrice, auditCasquettes } from "./catalog-seed";
 import { patchCatalogue } from "./catalog-patches";
+import { relanceTick } from "./relance";
 import { dirname, join } from "node:path";
 import { SalesAgent } from "./agent";
 import { loadConfig } from "./config";
@@ -236,6 +237,12 @@ async function main(): Promise<void> {
     })();
   }, 15 * 60 * 1000);
 
+  // Relance automatique des clients silencieux (désactivée par défaut, réglée dans Réglages).
+  const relanceTimer = setInterval(() => {
+    void relanceTick({ core, wa, llm, model: config.ANTHROPIC_MODEL, log });
+  }, 5 * 60 * 1000);
+  relanceTimer.unref?.();
+
   let stripeTimer: NodeJS.Timeout | undefined;
   if (config.STRIPE_SECRET_KEY) {
     const key = config.STRIPE_SECRET_KEY;
@@ -261,6 +268,7 @@ async function main(): Promise<void> {
   const shutdown = async (signal: string) => {
     log.info({ signal }, "Arrêt en cours");
     clearInterval(releaseTimer);
+    clearInterval(relanceTimer);
     clearInterval(learningTimer);
     if (stripeTimer) clearInterval(stripeTimer);
     await app.close();

@@ -28,6 +28,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
     { href: "/admin", label: "Vue d'ensemble", icon: "home" },
     { href: "/admin/conversations", label: "Conversations", icon: "chat", badge: aRepondre, tone: "red" },
     { href: "/admin/leads", label: "Clients prêts à acheter", icon: "target", badge: nouveauxLeads, tone: "amber" },
+    { href: "/admin/relances", label: "Relances", icon: "chat" },
     { href: "/admin/questions", label: "Questions", icon: "help" },
     { href: "/admin/apprentissage", label: "Apprentissage", icon: "cap" },
     { href: "/admin/jacob", label: "Demandes de Jacob", icon: "headset", badge: jacobCount, tone: "red" },

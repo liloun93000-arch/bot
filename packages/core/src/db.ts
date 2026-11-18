@@ -16,6 +16,7 @@ import { and, asc, desc, eq, ne, sql } from "drizzle-orm";
 import { drizzle, type BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname } from "node:path";
+import { createDelivery } from "./delivery";
 import { normalizeText } from "./intents";
 import { createKnowledge } from "./knowledge";
 import { migrate } from "./migrations";
@@ -1387,6 +1388,7 @@ export function createCore(options: CreateCoreOptions) {
     facts: factsRepo,
     examples: examplesRepo,
     knowledge: createKnowledge(sqlite as RawDb, now),
+    delivery: createDelivery(sqlite as RawDb, now),
     /**
      * Verrou d'idempotence des messages système envoyés aux clients.
      * `claim` renvoie true UNE SEULE FOIS par clé ; `release` annule le verrou

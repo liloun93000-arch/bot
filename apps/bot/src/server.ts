@@ -1,4 +1,5 @@
 import {
+  isDeliveryStatus,
   logDecision,
   mediaPlaceholder,
   verifySignature,
@@ -62,6 +63,43 @@ const webhookMessageSchema = z.looseObject({
     .optional(),
 });
 
+/** Accusé Meta d'un message sortant : sent | delivered | read | failed. */
+const webhookStatusSchema = z.looseObject({
+  id: z.string().optional(),
+  status: z.string().optional(),
+  timestamp: z.union([z.string(), z.number()]).optional(),
+  recipient_id: z.string().optional(),
+  errors: z
+    .array(z.looseObject({ code: z.number().optional(), title: z.string().optional(), message: z.string().optional() }))
+    .optional(),
+});
+
+/**
+ * Enregistre les accusés réellement remontés par WhatsApp. Un statut inconnu
+ * (ex. « deleted », « warning ») est ignoré : on n'invente jamais une coche.
+ */
+export function recordStatuses(
+  core: Pick<Core, "delivery">,
+  statuses: z.infer<typeof webhookStatusSchema>[],
+): number {
+  let recorded = 0;
+  for (const s of statuses) {
+    if (!s.id || !isDeliveryStatus(s.status)) continue;
+    const seconds = Number(s.timestamp);
+    const err = s.errors?.[0];
+    core.delivery.record({
+      wamid: s.id,
+      status: s.status,
+      ts: Number.isFinite(seconds) && seconds > 0 ? seconds * 1000 : Date.now(),
+      ...(s.recipient_id ? { waId: s.recipient_id } : {}),
+      ...(err?.code !== undefined ? { errorCode: err.code } : {}),
+      ...(err ? { errorMessage: (err.message ?? err.title ?? "").slice(0, 300) } : {}),
+    });
+    recorded++;
+  }
+  return recorded;
+}
+
 const webhookSchema = z.looseObject({
   object: z.string(),
   entry: z
@@ -81,7 +119,7 @@ const webhookSchema = z.looseObject({
                   )
                   .optional(),
                 messages: z.array(webhookMessageSchema).optional(),
-                statuses: z.array(z.unknown()).optional(),
+                statuses: z.array(webhookStatusSchema).optional(),
               }),
             }),
           )
@@ -216,7 +254,13 @@ export function buildServer(deps: ServerDeps): FastifyInstance {
       for (const change of entry.changes) {
         const value = change.value;
         if (value.statuses?.length) {
-          log.debug({ count: value.statuses.length }, "statuses_received");
+          try {
+            const recorded = recordStatuses(core, value.statuses);
+            log.debug({ count: value.statuses.length, recorded }, "statuses_received");
+          } catch (err) {
+            // Un accusé non enregistré ne doit jamais faire échouer le webhook.
+            log.error({ err: String(err) }, "statuses_record_failed");
+          }
         }
         if (!value.messages?.length) continue;
 

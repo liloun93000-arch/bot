@@ -336,6 +336,20 @@ CREATE TABLE IF NOT EXISTS learned_examples (
 );
 CREATE INDEX IF NOT EXISTS idx_learned_examples_statut ON learned_examples (statut, id);
 CREATE INDEX IF NOT EXISTS idx_learned_examples_message ON learned_examples (message_id);
+
+-- Accusés WhatsApp (coches) des messages sortants, alimentés par les événements
+-- « statuses » de Meta. Indexé par wamid : l'événement peut précéder l'insertion du message.
+CREATE TABLE IF NOT EXISTS message_delivery (
+  wamid         TEXT PRIMARY KEY,
+  wa_id         TEXT NOT NULL DEFAULT '',
+  status        TEXT NOT NULL,
+  sent_at       INTEGER,
+  delivered_at  INTEGER,
+  read_at       INTEGER,
+  error_code    INTEGER,
+  error_message TEXT NOT NULL DEFAULT '',
+  updated_at    INTEGER NOT NULL
+);
 `;
 
 function tableColumns(db: BetterSqlite3.Database, table: string): Set<string> {

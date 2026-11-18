@@ -24,6 +24,8 @@ import { getRuntime } from "@/lib/core";
 import { formatDuration } from "@/lib/time";
 import { ChatMedia } from "./chat-media";
 import { ChatScroll } from "./chat-scroll";
+import { DeliveryAutoRefresh } from "./delivery-refresh";
+import { DeliveryTicks } from "./delivery-ticks";
 import { BackLink } from "../../back-nav";
 import { FilePicker, SendButton } from "../../file-picker";
 import { SummaryAutoRefresh } from "./summary-refresh";
@@ -53,6 +55,14 @@ export default async function ConversationDetailPage({
   if (!contact) notFound();
 
   const transcript = core.messages.fullTranscript(waId);
+  // Accusés WhatsApp des messages sortants (bot, Jacob, relances) : uniquement ce que Meta a remonté.
+  const delivery = core.delivery.many(transcript.filter((m) => m.role !== "user" && m.wamid).map((m) => m.wamid as string));
+  const DAY = 24 * 60 * 60 * 1000;
+  const ticksPending = transcript.some((m) => {
+    if (m.role === "user" || !m.wamid || Date.now() - m.ts > DAY) return false;
+    const st = delivery.get(m.wamid)?.status;
+    return st !== "read" && st !== "failed";
+  });
   const state = core.state.get(waId);
   const alerts = core.alerts.listFor(waId);
   const openAlerts = alerts.filter((a) => a.statut === "ouverte");
@@ -194,6 +204,7 @@ export default async function ConversationDetailPage({
             </p>
           </div>
 
+          <DeliveryAutoRefresh active={ticksPending} />
           <ChatScroll className="card max-h-140 space-y-2 overflow-y-auto">
             {transcript.map((message) => {
               const style = ROLE_STYLE[message.role] ?? ROLE_STYLE.user!;
@@ -247,6 +258,9 @@ export default async function ConversationDetailPage({
                       >
                         {displayText}
                       </div>
+                    )}
+                    {message.role !== "user" && (
+                      <DeliveryTicks wamid={message.wamid} info={message.wamid ? delivery.get(message.wamid) : undefined} />
                     )}
                     {isHuman && String(confirmDelete) === String(message.id) && (
                       <div className="mt-2 space-y-1 rounded-lg border border-red-200 bg-red-50 p-2 text-xs">

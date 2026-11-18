@@ -194,7 +194,7 @@ export function createHandler(deps: HandlerDeps) {
         const sendResult = await wa.sendText(waId, part);
         logDecision(log, "reply_dispatched", { waId, sent: sendResult.sent, reason: sendResult.reason, part: i + 1, of: parts.length });
         if (!sendResult.sent) break;
-        core.messages.insert(waId, "assistant", part);
+        core.messages.insert(waId, "assistant", part, sendResult.messageId ?? null);
         if (!any && coveredMessageId) core.state.setReplied(waId, coveredMessageId);
         any = true;
       }
@@ -305,7 +305,7 @@ export function createHandler(deps: HandlerDeps) {
       const ackKey = `alert-ack:${alertResult.alertId}:${waId}`;
       if (core.sends.claim(ackKey)) {
         const ackResult = await wa.sendText(waId, ack);
-        if (ackResult.sent) core.messages.insert(waId, "assistant", ack);
+        if (ackResult.sent) core.messages.insert(waId, "assistant", ack, ackResult.messageId ?? null);
         else core.sends.release(ackKey);
       }
       logDecision(log, "button_alert", { waId, notified });
@@ -315,7 +315,7 @@ export function createHandler(deps: HandlerDeps) {
       const contact = core.settings.get("contact_direct");
       const message = `Parfait 👍 Écris directement à Jacob au ${contact} — réponse rapide garantie.`;
       const result = await wa.sendText(waId, message);
-      if (result.sent) core.messages.insert(waId, "assistant", message);
+      if (result.sent) core.messages.insert(waId, "assistant", message, result.messageId ?? null);
       logDecision(log, "button_fast", { waId });
       return;
     }

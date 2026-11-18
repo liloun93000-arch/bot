@@ -40,13 +40,13 @@ export async function sendNiveau4(
   const message = renderNiveau4Message(core);
   const result = await wa.sendButtons(waId, message, [...NIVEAU4_BUTTONS]);
   if (result.sent) {
-    core.messages.insert(waId, "assistant", `${message}\n[Boutons : ⚡ Réponse rapide · 🔔 Laisser une alerte]`);
+    core.messages.insert(waId, "assistant", `${message}\n[Boutons : ⚡ Réponse rapide · 🔔 Laisser une alerte]`, result.messageId ?? null);
     return true;
   }
   // Repli sans boutons (ex. si l'interactif est refusé) : texte seul.
   const fallback = await wa.sendText(waId, message);
   if (fallback.sent) {
-    core.messages.insert(waId, "assistant", message);
+    core.messages.insert(waId, "assistant", message, fallback.messageId ?? null);
     return true;
   }
   return false;

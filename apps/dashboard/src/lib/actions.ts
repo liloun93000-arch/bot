@@ -121,9 +121,9 @@ const TEMPLATE_PARAM_MAX = 800;
 
 type RelanceOutcome =
   /** Le texte de Jacob est parti tel quel, porté par la variable du template. */
-  | { status: "sent_with_text" }
+  | { status: "sent_with_text"; messageId?: string }
   /** Le template est parti, mais sans le texte (template sans variable). */
-  | { status: "sent_template_only" }
+  | { status: "sent_template_only"; messageId?: string }
   /** Aucun template de relance configuré dans Réglages. */
   | { status: "unavailable" }
   | { status: "failed"; reason?: string };
@@ -150,18 +150,18 @@ async function sendViaRelanceTemplate(
       parameters: [{ type: "text", text: flattenTemplateParam(text, TEMPLATE_PARAM_MAX) }],
     },
   ]);
-  if (withText.sent) return { status: "sent_with_text" };
+  if (withText.sent) return { status: "sent_with_text", ...(withText.messageId ? { messageId: withText.messageId } : {}) };
 
   // Nombre de paramètres refusé (132000) parce que le template n'a pas de
   // variable : on retente la relance nue.
   const plain = await wa.sendTemplate(waId, templateName, lang);
-  if (plain.sent) return { status: "sent_template_only" };
+  if (plain.sent) return { status: "sent_template_only", ...(plain.messageId ? { messageId: plain.messageId } : {}) };
   return { status: "failed", reason: withText.reason ?? plain.reason };
 }
 
 /** Trace commune à tout message effectivement délivré à la main par Jacob. */
-function recordHumanMessage(core: Core, waId: string, text: string): void {
-  const messageId = core.messages.insert(waId, "human", text);
+function recordHumanMessage(core: Core, waId: string, text: string, wamid?: string | null): void {
+  const messageId = core.messages.insert(waId, "human", text, wamid ?? null);
   core.contacts.setModeHumain(waId, true);
   captureLearnedExample(core, waId, text, messageId);
 }
@@ -180,7 +180,7 @@ export async function sendHumanMessageAction(waId: string, formData: FormData): 
   const result = await wa.sendText(waId, text, { manual: true });
   if (result.sent) {
     learnInBackground(waId, text, pendingQuestionsFor(core, waId));
-    recordHumanMessage(core, waId, text);
+    recordHumanMessage(core, waId, text, result.messageId);
     revalidatePath(`/admin/conversations/${waId}`);
     // Redirect explicite (comme deleteHumanMessageAction) : sans lui, l'URL
     // garde un éventuel ancien `?msg=...&draft=...` d'un échec précédent, et
@@ -197,7 +197,7 @@ export async function sendHumanMessageAction(waId: string, formData: FormData): 
       fallback: fallback.status,
     });
     if (fallback.status === "sent_with_text") {
-      recordHumanMessage(core, waId, text);
+      recordHumanMessage(core, waId, text, fallback.messageId);
       revalidatePath(`/admin/conversations/${waId}`);
       const msg = encodeURIComponent(
         "✅ Fenêtre 24 h fermée : ton message est parti via le template de relance.",
@@ -205,7 +205,7 @@ export async function sendHumanMessageAction(waId: string, formData: FormData): 
       redirect(`/admin/conversations/${waId}?msg=${msg}`);
     }
     if (fallback.status === "sent_template_only") {
-      core.messages.insert(waId, "human", "[Template de relance envoyé — fenêtre 24 h fermée]");
+      core.messages.insert(waId, "human", "[Template de relance envoyé — fenêtre 24 h fermée]", fallback.messageId ?? null);
       core.contacts.setModeHumain(waId, true);
       revalidatePath(`/admin/conversations/${waId}`);
       const msg = encodeURIComponent(
@@ -410,7 +410,7 @@ export async function sendHumanReplyAction(waId: string, formData: FormData): Pr
     redirect(`/admin/conversations/${waId}?msg=${msg}&draft=${draft}`);
   }
   learnInBackground(waId, text, pendingQuestionsFor(core, waId));
-  recordHumanMessage(core, waId, text);
+  recordHumanMessage(core, waId, text, result.messageId);
   const { envoyes, echecs } = await sendFilesToClient(waId, fichiers, "");
   revalidatePath(`/admin/conversations/${waId}`);
   if (echecs.length === 0) {
@@ -442,7 +442,7 @@ export async function sendQuickRelanceAction(waId: string, index: number): Promi
   // consommer un template payant.
   const direct = await wa.sendText(waId, texte, { manual: true });
   if (direct.sent) {
-    recordHumanMessage(core, waId, texte);
+    recordHumanMessage(core, waId, texte, direct.messageId);
     revalidatePath(`/admin/conversations/${waId}`);
     redirect(`/admin/conversations/${waId}`);
   }
@@ -450,12 +450,12 @@ export async function sendQuickRelanceAction(waId: string, index: number): Promi
   const fallback = await sendViaRelanceTemplate(core, wa, waId, texte);
   logDecision(log, "quick_relance", { waId, index, fallback: fallback.status });
   if (fallback.status === "sent_with_text") {
-    recordHumanMessage(core, waId, texte);
+    recordHumanMessage(core, waId, texte, fallback.messageId);
     revalidatePath(`/admin/conversations/${waId}`);
     redirect(`/admin/conversations/${waId}?msg=${encodeURIComponent("✅ Relance envoyée.")}`);
   }
   if (fallback.status === "sent_template_only") {
-    core.messages.insert(waId, "human", "[Relance envoyée — fenêtre 24 h fermée]");
+    core.messages.insert(waId, "human", "[Relance envoyée — fenêtre 24 h fermée]", fallback.messageId ?? null);
     core.contacts.setModeHumain(waId, true);
     revalidatePath(`/admin/conversations/${waId}`);
     mediaRedirect(
@@ -709,18 +709,22 @@ export async function jacobReplyAction(waId: string, formData: FormData): Promis
 
   // 1) Le texte (s'il y en a)
   let texteParti = !text;
+  let texteWamid: string | null = null;
   if (text) {
     const result = await wa.sendText(waId, text, { manual: true });
-    if (result.sent) texteParti = true;
-    else if (result.reason === "outside_24h_window") {
+    if (result.sent) {
+      texteParti = true;
+      texteWamid = result.messageId ?? null;
+    } else if (result.reason === "outside_24h_window") {
       const fallback = await sendViaRelanceTemplate(core, wa, waId, text);
       texteParti = fallback.status === "sent_with_text";
+      if (fallback.status === "sent_with_text") texteWamid = fallback.messageId ?? null;
     }
     if (!texteParti) {
       logDecision(log, "jacob_reply_failed", { waId, reason: result.reason });
       back(`⚠️ Message NON envoyé : ${blockedSendMessage(result.reason)}`, true);
     }
-    recordHumanMessage(core, waId, text);
+    recordHumanMessage(core, waId, text, texteWamid);
   }
 
   // 2) Les pièces jointes (même envoi que depuis la conversation)
@@ -1869,14 +1873,18 @@ export async function decideBookingAction(id: number, decision: "approuve" | "re
   if (decision === "approuve") {
     const text = approvalMessage(b, "+33 7 78 78 37 01");
     let sent = false;
+    let sentWamid: string | null = null;
     const r = await wa.sendText(b.waId, text, { manual: true });
-    if (r.sent) sent = true;
-    else if (r.reason === "outside_24h_window") {
+    if (r.sent) {
+      sent = true;
+      sentWamid = r.messageId ?? null;
+    } else if (r.reason === "outside_24h_window") {
       const f = await sendViaRelanceTemplate(core, wa, b.waId, text);
       sent = f.status === "sent_with_text";
+      if (f.status === "sent_with_text") sentWamid = f.messageId ?? null;
     }
     if (sent) {
-      core.messages.insert(b.waId, "assistant", text);
+      core.messages.insert(b.waId, "assistant", text, sentWamid);
       msg = "✅ Rendez-vous approuvé : le client a reçu la confirmation sur WhatsApp.";
     } else {
       msg = "✅ Rendez-vous approuvé, mais la confirmation WhatsApp n'a pas pu partir (fenêtre de 24 h fermée et modèle de relance indisponible). Préviens le client à la main.";

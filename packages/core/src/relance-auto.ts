@@ -1,4 +1,5 @@
 import type { Core } from "./db";
+import { categoryOfText } from "./demandes";
 import { isExplicitRefusal } from "./lead-status";
 import { SERVICE_WINDOW_MS } from "./whatsapp";
 
@@ -110,7 +111,8 @@ export type RelanceSkip =
   | "pas_encore"
   | "trop_ancienne"
   | "deja_relancee"
-  | "inactif";
+  | "inactif"
+  | "sans_interet";
 
 export interface RelanceCandidate {
   waId: string;
@@ -122,6 +124,51 @@ export interface RelanceVerdict {
   ok: boolean;
   reason?: RelanceSkip;
   candidate?: RelanceCandidate;
+}
+
+export interface RelanceContext {
+  pertinent: boolean;
+  /** Pourquoi la relance est (ou n'est pas) pertinente — lisible dans le suivi. */
+  raison: string;
+  /** « question » = notre dernière question de qualification est restée sans réponse ; « interet » = intérêt déjà montré. */
+  type: "question" | "interet" | "aucun";
+  service: string | null;
+  statutLead: string | null;
+  derniersEchanges: Array<{ role: "user" | "assistant" | "human"; texte: string }>;
+  dernierClient: string;
+  dernierNous: string;
+  questionEnAttente: string | null;
+  faits: string[];
+  relancesPrecedentes: string[];
+}
+
+/**
+ * Analyse déterministe (sans IA) de la conversation : sujet, avancement, dernière question posée, intérêt.
+ * Sert au filtre de pertinence ET de matière au texte personnalisé.
+ */
+export function relanceContext(core: Core, waId: string): RelanceContext {
+  const hist = core.messages.history(waId, 14) as Array<{ role: string; contenu: string; id: number }>;
+  const skip = relanceMsgIds(core, waId);
+  const real = hist.filter((m) => !skip.has(m.id) && !/^\[Relance automatique/i.test(m.contenu));
+  const echanges = real.map((m) => ({ role: m.role as "user" | "assistant" | "human", texte: String(m.contenu).slice(0, 400) }));
+  const clientMsgs = real.filter((m) => m.role === "user");
+  const dernierClient = clientMsgs.length ? String(clientMsgs[clientMsgs.length - 1]!.contenu) : "";
+  const nous = real.filter((m) => m.role !== "user");
+  const dernierNous = nous.length ? String(nous[nous.length - 1]!.contenu) : "";
+  const service = core.state.get(waId).serviceEnCours ?? null;
+  const lead = core.sqlite.prepare(`SELECT statut FROM leads WHERE wa_id = ? ORDER BY id DESC LIMIT 1`).get(waId) as { statut: string } | undefined;
+  const statutLead = lead?.statut ?? null;
+  const questionEnAttente = dernierNous.includes("?") ? dernierNous.slice(Math.max(0, dernierNous.lastIndexOf("?", dernierNous.length) - 220), dernierNous.lastIndexOf("?") + 1).trim() : null;
+  const interet = Boolean(statutLead) || Boolean(service) || clientMsgs.some((m) => categoryOfText(String(m.contenu)) !== null);
+  const type: RelanceContext["type"] = interet ? "interet" : questionEnAttente ? "question" : "aucun";
+  const faits = core.facts.actifs(waId, 10).map((f) => f.fait.slice(0, 200));
+  const precedentes = core.sqlite.prepare(`SELECT texte FROM auto_relances WHERE wa_id = ? AND texte <> '' ORDER BY id DESC LIMIT 3`).all(waId) as Array<{ texte: string }>;
+  return {
+    pertinent: type !== "aucun",
+    raison: type === "interet" ? "Intérêt déjà montré (sujet, fiche ou demande précise)" : type === "question" ? "Notre dernière question de qualification est restée sans réponse" : "Aucun intérêt ni question en attente",
+    type, service, statutLead, derniersEchanges: echanges, dernierClient, dernierNous, questionEnAttente, faits,
+    relancesPrecedentes: precedentes.map((r) => r.texte),
+  };
 }
 
 /** Ids de messages qui SONT des relances automatiques envoyées (pour ne jamais les prendre pour une base). */
@@ -170,6 +217,9 @@ export function evaluateRelanceEligibility(core: Core, waId: string, now: number
   if (isExplicitRefusal(lastUser.contenu, true)) return { ok: false, reason: "refus_client" };
   // Le client a clos l'échange (« merci ») et notre dernier message n'attendait aucune réponse.
   if (isClosingMessage(lastUser.contenu) && !last.contenu.includes("?")) return { ok: false, reason: "conversation_terminee" };
+
+  // Pertinence : on ne relance que s'il y a un intérêt montré ou une question de qualification restée sans réponse.
+  if (!relanceContext(core, waId).pertinent) return { ok: false, reason: "sans_interet" };
 
   const silence = now - last.ts;
   if (silence < cfg.delaiMs) return { ok: false, reason: "pas_encore" };
@@ -315,6 +365,7 @@ export function motifOf(reason: RelanceSkip | undefined): string {
     case "trop_ancienne": return "Conversation trop ancienne pour être relancée automatiquement";
     case "deja_relancee": return "Déjà relancé pour cette situation";
     case "inactif": return "Relance automatique désactivée";
+    case "sans_interet": return "Aucun intérêt commercial ni question en attente : relance inutile";
     default: return "Non éligible";
   }
 }

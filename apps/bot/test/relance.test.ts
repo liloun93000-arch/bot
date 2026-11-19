@@ -1,6 +1,6 @@
 import { closeRelance, listRelances, onClientMessage, relanceStats, setLeadStatusHuman } from "@arbi/core";
 import { describe, expect, it } from "vitest";
-import { fallbackRelanceText, isAcceptableRelance, relanceTick } from "../src/relance";
+import { isAcceptableRelance, relanceTick } from "../src/relance";
 import { testCore } from "./helpers";
 
 const WA = "33611112222";
@@ -27,10 +27,23 @@ function fakeWa(opts: { text?: { sent: boolean; reason?: string }; template?: { 
     } as never,
   };
 }
-// IA indisponible : le texte de secours est utilisé (aucun crédit consommé).
-const llm = { messages: { create: async () => { throw new Error("pas d'IA en test"); } } } as never;
+// Faux modèle : aucun crédit consommé. Il enregistre les invites reçues pour vérifier le contexte transmis.
+const prompts: string[] = [];
+let reply: string | Error = "Salut Karim, tu as pu avancer sur ta LLC pour ton e-commerce ? Dis-moi s'il te manque une info 🙂";
+const llm = {
+  messages: {
+    create: async (req: { messages: Array<{ content: string }> }) => {
+      prompts.push(String(req.messages[0]?.content));
+      if (reply instanceof Error) throw reply;
+      return { stop_reason: "end_turn", content: [{ type: "text", text: reply }] };
+    },
+  },
+} as never;
+
+function reset() { prompts.length = 0; reply = "Salut Karim, tu as pu avancer sur ta LLC pour ton e-commerce ? Dis-moi s'il te manque une info 🙂"; }
 
 function setup(extra: Record<string, unknown> = { relance_auto_actif: true }) {
+  reset();
   const core = testCore();
   for (const [k, v] of Object.entries(extra)) core.settings.set(k, v);
   core.contacts.upsert(WA, "Karim Benali");
@@ -206,16 +219,94 @@ describe("relance automatique après 12 h", () => {
 });
 
 describe("texte de relance", () => {
-  it("le texte de secours est personnel et sans prix", () => {
-    const t = fallbackRelanceText("Karim Benali", "LLC Wyoming");
-    expect(t).toContain("Karim");
-    expect(isAcceptableRelance(t)).toBe(true);
-  });
-  it("rejette un texte IA avec prix, lien, pression ou trop long", () => {
-    expect(isAcceptableRelance("Salut, la LLC est à 799 € !")).toBe(false);
-    expect(isAcceptableRelance("Regarde https://exemple.com")).toBe(false);
-    expect(isAcceptableRelance("Dernière chance, urgent !")).toBe(false);
-    expect(isAcceptableRelance("a".repeat(400))).toBe(false);
+  it("rejette un texte IA avec prix, lien, pression, sans question ou trop long", () => {
+    expect(isAcceptableRelance("Salut, la LLC est à 799 € ?")).toBe(false);
+    expect(isAcceptableRelance("Regarde https://exemple.com ?")).toBe(false);
+    expect(isAcceptableRelance("Dernière chance, urgent ?")).toBe(false);
+    expect(isAcceptableRelance("Je reviens vers toi.")).toBe(false);
+    expect(isAcceptableRelance("a".repeat(400) + " ?")).toBe(false);
+    expect(isAcceptableRelance("AUCUNE")).toBe(false);
     expect(isAcceptableRelance("Salut Karim, tu as pu avancer sur ton projet ?")).toBe(true);
+  });
+  it("rejette une relance qui répète notre dernier message ou une relance précédente", () => {
+    expect(isAcceptableRelance("Top ! Tu vends déjà quelque chose aujourd'hui ?", { dernierNous: "Top ! Tu vends déjà quelque chose aujourd'hui ?" })).toBe(false);
+    expect(isAcceptableRelance("Tu as pu avancer sur ta LLC ?", { precedentes: ["Tu as pu avancer sur ta LLC ?"] })).toBe(false);
+  });
+});
+
+describe("relance contextuelle : pertinence et personnalisation (sans texte générique)", () => {
+  it("transmet au modèle le vrai contexte : sujet, dernière question, derniers messages", async () => {
+    const core = setup();
+    await tick(core, fakeWa(), T0 + 12.5 * H);
+    expect(prompts).toHaveLength(1);
+    expect(prompts[0]).toContain("créer une LLC pour mon e-commerce");
+    expect(prompts[0]).toContain("Tu vends déjà quelque chose aujourd'hui ?");
+    expect(prompts[0]).toContain("Karim");
+    core.close();
+  });
+
+  it("IA indisponible : AUCUN message envoyé (pas de texte de secours), motif tracé", async () => {
+    const core = setup();
+    const w = fakeWa();
+    reply = new Error("IA indisponible");
+    const out = await relanceTick({ core, wa: w.wa, llm, model: "m", log: silent }, T0 + 12.5 * H);
+    expect(out).toEqual({ sent: 0, failed: 0 });
+    expect(w.calls).toHaveLength(0);
+    expect(listRelances(core)[0]).toMatchObject({ statut: "ignoree" });
+    expect(listRelances(core)[0]?.motif).toContain("rien n'est envoyé");
+    core.close();
+  });
+
+  it("le modèle répond AUCUNE ou un texte non conforme (prix) : rien n'est envoyé", async () => {
+    for (const bad of ["AUCUNE", "Ta LLC est à 799 € ?", "Salut ! Je reviens vers toi."]) {
+      const core = setup();
+      const w = fakeWa();
+      reply = bad;
+      await relanceTick({ core, wa: w.wa, llm, model: "m", log: silent }, T0 + 12.5 * H);
+      expect(w.calls, bad).toHaveLength(0);
+      expect(listRelances(core)[0]?.statut, bad).toBe("ignoree");
+      core.close();
+    }
+  });
+
+  it("conversation sans intérêt ni question en attente : aucune relance, aucun appel IA", async () => {
+    reset();
+    const core = testCore();
+    core.settings.set("relance_auto_actif", true);
+    core.contacts.upsert(WA, "Léa");
+    core.messages.insert(WA, "user", "salut", null, T0 - 3 * H);
+    core.messages.insert(WA, "assistant", "Bonjour Léa, je reste à ta disposition.", null, T0);
+    const w = fakeWa();
+    await tick(core, w, T0 + 12.5 * H);
+    expect(w.calls).toHaveLength(0);
+    expect(prompts).toHaveLength(0);
+    expect(listRelances(core)).toHaveLength(0);
+    core.close();
+  });
+
+  it("question de qualification restée sans réponse : relance autorisée", async () => {
+    reset();
+    const core = testCore();
+    core.settings.set("relance_auto_actif", true);
+    core.contacts.upsert(WA, "Léa");
+    core.messages.insert(WA, "user", "salut", null, T0 - 3 * H);
+    core.messages.insert(WA, "assistant", "Bonjour Léa ! Tu cherches plutôt une société ou un site web ?", null, T0);
+    reply = "Léa, tu penchais plutôt pour une société ou pour un site web ?";
+    const w = fakeWa();
+    await tick(core, w, T0 + 12.5 * H);
+    expect(w.calls).toHaveLength(1);
+    expect(prompts[0]).toContain("question de qualification");
+    core.close();
+  });
+
+  it("hors fenêtre 24 h avec template : une seule variable (le texte personnalisé), jamais de repli sans variable", async () => {
+    const core = setup({ relance_auto_actif: true, relance_template_name: "relance_client" });
+    core.sqlite.prepare("UPDATE messages SET ts = ? WHERE role = 'user'").run(T0 - 17 * H);
+    const w = fakeWa({ template: { sent: false, reason: "http_400" } });
+    const out = await tick(core, w, T0 + 13 * H);
+    expect(out.failed).toBe(1);
+    expect(w.calls).toHaveLength(1); // pas de second essai non personnalisé
+    expect(w.calls[0]?.text).toContain("Karim");
+    core.close();
   });
 });

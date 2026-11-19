@@ -482,6 +482,18 @@ export function migrate(db: BetterSqlite3.Database): void {
   // Après l'ALTER, donc valable aussi bien pour une base neuve que migrée.
   db.exec(`CREATE INDEX IF NOT EXISTS idx_questions_sujet ON questions (sujet)`);
 
+  // v3 : une ligne n'est une « demande » comptée que si demande = 1. Les messages de politesse, les suites
+  // d'une demande déjà comptée et les doublons restent consultables mais sortent des statistiques.
+  // categorie_manuelle = 1 : catégorie corrigée par un administrateur (jamais recalculée).
+  const questionCols3 = tableColumns(db, "questions");
+  if (questionCols3.size > 0 && !questionCols3.has("demande")) {
+    db.exec(`ALTER TABLE questions ADD COLUMN demande INTEGER NOT NULL DEFAULT 1`);
+    db.exec(`ALTER TABLE questions ADD COLUMN raison TEXT NOT NULL DEFAULT ''`);
+    db.exec(`ALTER TABLE questions ADD COLUMN categorie_auto TEXT NOT NULL DEFAULT ''`);
+    db.exec(`ALTER TABLE questions ADD COLUMN categorie_manuelle INTEGER NOT NULL DEFAULT 0`);
+  }
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_questions_demande ON questions (demande, created_at)`);
+
   // v2.3 : le compte Telegram de contact n'existe plus. Un message de niveau 4
   // personnalisé qui y renvoie enverrait les clients dans le vide : on efface
   // la valeur stockée pour revenir au message par défaut (contact WhatsApp).

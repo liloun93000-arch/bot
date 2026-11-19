@@ -77,3 +77,8 @@ export function previousPeriod(p: Period): { from: number; to: number } {
   const len = p.to - p.from;
   return { from: p.from - len, to: p.from };
 }
+
+/** Paramètres d'URL qui recréent exactement cette période (pour les liens entre pages). */
+export function periodQuery(p: Period): string {
+  return p.key === "perso" ? `periode=perso&du=${p.du}&au=${p.au}` : `periode=${p.key}`;
+}

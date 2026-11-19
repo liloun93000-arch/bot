@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ScrollMemory } from "../back-nav";
+import { ExportButton } from "./export-button";
 import { cookies } from "next/headers";
 import { filterConversationsAction } from "@/lib/actions";
 import { CONV_FILTER_COOKIE } from "@/lib/constants";
@@ -123,6 +124,11 @@ export default async function ConversationsPage({
               Filtrer
             </button>
           </form>
+          <ExportButton
+            all={all.map((r) => ({ waId: r.waId, label: r.nom ? `${r.nom} (+${r.waId})` : `+${r.waId}` }))}
+            filtered={rows.map((r) => ({ waId: r.waId, label: r.nom || `+${r.waId}` }))}
+            filtreActif={Boolean(q || statut)}
+          />
           {(q || statut) && (
             // Soumis vide : efface aussi le filtre mémorisé, sinon il
             // reviendrait au prochain retour sur la liste.

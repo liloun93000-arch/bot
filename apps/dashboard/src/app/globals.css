@@ -1661,3 +1661,5 @@ body { overflow-x: clip; }
 @media (min-width: 768px) {
   .aj-header { left: 252px; background: linear-gradient(180deg, rgba(12, 12, 16, 0.96), rgba(10, 10, 13, 0.92)); }
 }
+.aj-kchart-legend { display: flex; gap: 14px; margin-top: 6px; font-size: 11px; color: #9aa0aa; }
+.aj-kchart-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }

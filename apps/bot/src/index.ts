@@ -14,6 +14,7 @@ import {
   WhatsAppClient,
   withUsageMetering,
   type AlertDeps,
+  reclassifyQuestions,
 } from "@arbi/core";
 import { readFile } from "node:fs/promises";
 import { cleanupSmallTalkAlerts, installCatalogues, installScript, fixCasquettesPrice, auditCasquettes } from "./catalog-seed";
@@ -42,6 +43,12 @@ async function main(): Promise<void> {
   await installScript(core, config.CATALOGUE_PATH, log);
   fixCasquettesPrice(core, log);
   patchCatalogue(core, log);
+  // Recalcul unique des anciennes demandes (catégories + exclusion des politesses), sans IA ni suppression.
+  if (core.settings.get("demandes_recalcul_v1") !== true) {
+    const r = reclassifyQuestions(core);
+    core.settings.set("demandes_recalcul_v1", true);
+    log.info(r, "demandes_reclassified");
+  }
   seedKnowledgeBase(core, join(dirname(config.CATALOGUE_PATH), "knowledge", "llc-ltd-source.txt"), log);
   auditCasquettes(core, log);
   cleanupSmallTalkAlerts(core, log);

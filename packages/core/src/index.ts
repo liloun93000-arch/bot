@@ -20,6 +20,7 @@ export * from "./qualification";
 export * from "./relance-auto";
 export * from "./knowledge-base";
 export * from "./analysis";
+export * from "./demandes";
 export { OBJECTIONS_SEED, PRICING_SEED, SYNONYMS_SEED, type PriceType, type PricingSeed } from "./pricing-data";
 export * from "./style";
 export * from "./vision";

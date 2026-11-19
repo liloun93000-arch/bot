@@ -164,6 +164,8 @@ export const SETTINGS_DEFAULTS = {
   kb_clients_actif: false as boolean,
   /** Dernières idées IA de la page « Analyse & Suggestions » (une seule période mémorisée). */
   analyse_ia_idees: { cle: "", texte: "", ts: 0 } as { cle: string; texte: string; ts: number },
+  /** Le recalcul unique des demandes (catégories / exclusions) a déjà été fait. */
+  demandes_recalcul_v1: false as boolean,
   /** Guide de style appris, régénérable depuis le back-office (§6), injecté après « Personnalité ». */
   style_guide_appris: "",
   /**
@@ -820,6 +822,9 @@ export function createCore(options: CreateCoreOptions) {
       alerteId?: number | null;
       /** Issue de CETTE question : résolue seule par le bot ou passée à Jacob. */
       issue?: "autonome" | "jacob";
+      /** Pointage « demande comptée » (défaut : oui). Une ligne exclue reste consultable, hors statistiques. */
+      demande?: boolean;
+      raison?: string;
     }): void {
       // « salam », « ??? », « ok merci »… ne sont pas des questions : jamais enregistrés.
       if (!isRealQuestion(input.texte)) return;
@@ -833,6 +838,9 @@ export function createCore(options: CreateCoreOptions) {
           repondue: input.repondue ? 1 : 0,
           alerteId: input.alerteId ?? null,
           issue: input.issue ?? "",
+          demande: input.demande === false ? 0 : 1,
+          raison: input.raison ?? "",
+          categorieAuto: input.categorie,
           createdAt: now(),
         })
         .run();

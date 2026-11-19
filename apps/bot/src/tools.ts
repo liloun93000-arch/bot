@@ -15,6 +15,10 @@ import { z } from "zod";
 import { escalateAndAck, isPaymentStage } from "./escalation";
 
 /** Réponse d'outil quand le modèle veut alerter alors que le client n'a pas encore dit ce qu'il cherche. */
+/** Le garde-fou a refusé l'alerte : le bot continue seul (réponse du catalogue ou question de qualification). */
+const NO_ALERT_NEEDED =
+  "Aucune alerte n'a été créée : rien ne nécessite Jacob pour le moment (sujet déjà couvert, demande déjà signalée ou client à qualifier). Continue la conversation toi-même : réponds avec le catalogue et la base de connaissances si tu as l'information, sinon pose UNE question de qualification naturelle (que cherche-t-il, pour quel projet, quel budget ou délai). N'annonce JAMAIS que Jacob est prévenu.";
+
 const QUALIFY_INSTEAD =
   "PAS D'ALERTE : le client n'a pas encore dit ce qu'il cherche, ce n'est pas un blocage. Réponds chaleureusement et pose UNE question simple pour identifier son besoin (fournisseurs, formations, création de société, autre service). Ne dis jamais que tu transmets à Jacob.";
 
@@ -278,6 +282,10 @@ export async function executeTool(
           { core, wa, llm: ctx.alertDeps.llm, model: ctx.alertDeps.model, log, readMedia: ctx.readBotFile, alertDeps: ctx.alertDeps },
           { waId, question: ctx.lastClientMessage || motif, categorie: parsed.success ? parsed.data.categorie : undefined, state: ctx.state },
         );
+        if (out.skipped) {
+          logDecision(log, "alert_refused_by_guard", { waId, raison: out.skipped });
+          return NO_ALERT_NEEDED;
+        }
         ctx.flags.alertFired = true;
         logDecision(log, "niveau4_redirected_to_escalation", { waId, motif, escalationId: out.escalationId, ackSent: out.ackSent });
         if (core.settings.get("escalation_mode") !== "question") return out.deduped ? "Une alerte est déjà ouverte pour ce client : Jacob est prévenu. Ne répète pas l'annonce ; réponds simplement à ce que le client vient de dire (s'il dit juste merci / ok, une réponse très courte suffit). Jamais son numéro." : "Alerte créée : Jacob est prévenu (question, contexte, photo éventuelle) et reprendra la conversation ici. Écris maintenant TOI-MÊME au client, comme le script l'indique (section 14) : ce que tu sais déjà + tu fais remonter à Jacob qui revient vers lui ici même + tu continues sur ce que tu peux traiter. Jamais son numéro.";
@@ -321,6 +329,10 @@ export async function executeTool(
         categorie,
         dernierMessage: ctx.lastClientMessage,
       });
+      if (result.skipped) {
+        logDecision(log, "alert_refused_by_guard", { waId, raison: result.skipped });
+        return NO_ALERT_NEEDED;
+      }
       ctx.flags.alertFired = true;
       return result.deduped
         ? "Une alerte est déjà ouverte pour ce client : Jacob est prévenu. Ne répète pas l'annonce ; réponds simplement à ce que le client vient de dire (s'il dit juste merci / ok, une réponse très courte suffit). Jamais son numéro."
@@ -351,6 +363,10 @@ export async function executeTool(
         { core, wa, llm: ctx.alertDeps.llm, model: ctx.alertDeps.model, log, readMedia: ctx.readBotFile, alertDeps: ctx.alertDeps },
         { waId, question: parsed.data.question, categorie: parsed.data.categorie, state: ctx.state },
       );
+      if (out.skipped) {
+        logDecision(log, "alert_refused_by_guard", { waId, raison: out.skipped });
+        return NO_ALERT_NEEDED;
+      }
       // La question reste « non répondue » côté statistiques tant que Jacob n'a pas répondu.
       ctx.flags.alertFired = true;
       if (core.settings.get("escalation_mode") !== "question") return out.deduped ? "Une alerte est déjà ouverte pour ce client : Jacob est prévenu. Ne répète pas l'annonce ; réponds simplement à ce que le client vient de dire (s'il dit juste merci / ok, une réponse très courte suffit). Jamais son numéro." : "Alerte créée : Jacob est prévenu (question, contexte, photo éventuelle) et reprendra la conversation ici. Écris maintenant TOI-MÊME au client, comme le script l'indique (section 14) : ce que tu sais déjà + tu fais remonter à Jacob qui revient vers lui ici même + tu continues sur ce que tu peux traiter. Jamais son numéro.";

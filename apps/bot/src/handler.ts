@@ -6,6 +6,7 @@ import {
   extractClientFacts,
   handleDirectorReply,
   isDirector,
+  classifyDemande,
   logDecision,
   onClientMessage,
   summarizeConversation,
@@ -316,6 +317,7 @@ export function createHandler(deps: HandlerDeps) {
         intention: state.lastIntent ?? "demande_humain",
         categorie: "Autre",
         dernierMessage: lastText.slice(0, 300),
+        explicite: true,
       });
       // Accusé véridique : on ne dit « Jacob est prévenu » que si un canal a marché.
       const notified = alertResult.notifiedVia !== "" && alertResult.notifiedVia !== "aucune";
@@ -352,12 +354,22 @@ export function createHandler(deps: HandlerDeps) {
       route: analysis.route,
     });
 
+    // Classement de la demande SANS IA : « Autre » n'est plus la catégorie par défaut, et une politesse ou la
+    // suite d'une demande déjà comptée n'entre pas dans les statistiques (elle reste consultable avec sa raison).
+    const demandeCls = classifyDemande(core, {
+      waId,
+      texte: analysis.combinedText.slice(0, 500),
+      ts: Date.now(),
+      serviceCategorie: core.state.get(waId).serviceEnCours ? analysis.categorie : null,
+    });
     const questionDraft = {
       waId,
       texte: analysis.combinedText.slice(0, 500),
       normalise: normalizeText(analysis.combinedText).slice(0, 300),
       intention: analysis.intent,
-      categorie: analysis.categorie,
+      categorie: demandeCls.categorie,
+      demande: demandeCls.demande,
+      raison: demandeCls.raison,
     };
 
     if (analysis.route === "alerte_directe") {

@@ -2,7 +2,8 @@ import Link from "next/link";
 import { requireSession } from "@/lib/auth";
 import { getRuntime } from "@/lib/core";
 import { jacobPendingCount } from "@/lib/jacob";
-import { parsePeriod, previousPeriod } from "@/lib/period";
+import { parsePeriod, periodQuery, previousPeriod } from "@/lib/period";
+import { categoryCounts } from "@arbi/core";
 import { visitStats } from "@/lib/visits";
 import { VisitChart } from "./visit-chart";
 import { clicksBySource, listSources } from "@/lib/tracking";
@@ -107,12 +108,11 @@ export default async function OverviewPage({
   const period = parsePeriod(await searchParams);
   const visites = visitStats(getRuntime().core, period.from, period.to + 1);
   const prev = previousPeriod(period);
-  const parCategorie = core.sqlite
-    .prepare(
-      `SELECT categorie, COUNT(*) AS n FROM questions WHERE created_at >= ? AND created_at < ? GROUP BY categorie ORDER BY n DESC`,
-    )
-    .all(period.from, period.to) as Array<{ categorie: string; n: number }>;
+  // Mêmes lignes que dans « Voir tout » et dans le détail d'une catégorie : demandes réellement comptées.
+  const toutesCategories = categoryCounts(core, period.from, period.to);
+  const parCategorie = toutesCategories.slice(0, 5);
   const maxCat = Math.max(1, ...parCategorie.map((c) => c.n));
+  const totalDemandes = toutesCategories.reduce((a, c) => a + c.n, 0);
   const sources = listSources(core);
   const clicks = clicksBySource(core, period.from, period.to);
   const clicksPrev = clicksBySource(core, prev.from, prev.to);
@@ -394,14 +394,23 @@ export default async function OverviewPage({
 
         <div className="grid gap-4 lg:grid-cols-2">
           <div className="card" id="periode">
-            <h2 className="mb-2 font-semibold">Demandes par catégorie</h2>
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <h2 className="font-semibold">Demandes par catégorie</h2>
+              <Link href={`/admin/categories?${periodQuery(period)}`} className="btn btn-secondary text-sm">
+                Voir tout{toutesCategories.length > 5 ? ` (${toutesCategories.length})` : ""}
+              </Link>
+            </div>
             <PeriodFilter period={period} />
             {parCategorie.length === 0 && (
               <p className="mt-3 text-sm text-neutral-500">Aucune demande sur cette période.</p>
             )}
             <div className="mt-3 space-y-2">
               {parCategorie.map((c) => (
-                <div key={c.categorie} className="flex items-center gap-2">
+                <Link
+                  key={c.categorie}
+                  href={`/admin/categories/detail?c=${encodeURIComponent(c.categorie)}&${periodQuery(period)}`}
+                  className="flex items-center gap-2 rounded hover:bg-neutral-50"
+                >
                   <span className="w-36 shrink-0 text-sm">{c.categorie}</span>
                   <div className="h-4 flex-1 overflow-hidden rounded bg-neutral-100">
                     <div
@@ -413,9 +422,14 @@ export default async function OverviewPage({
                     />
                   </div>
                   <span className="w-8 text-right text-sm font-semibold">{c.n}</span>
-                </div>
+                </Link>
               ))}
             </div>
+            {totalDemandes > 0 && (
+              <p className="mt-2 text-xs text-neutral-500">
+                {totalDemandes} demande{totalDemandes > 1 ? "s" : ""} au total sur la période. Les salutations, remerciements et suites d&apos;une demande déjà comptée n&apos;en font pas partie.
+              </p>
+            )}
           </div>
 
           <div className="card">

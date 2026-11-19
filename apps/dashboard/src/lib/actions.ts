@@ -20,6 +20,8 @@ import {
   analyze,
   isRealQuestion,
   kbUpdate,
+  reclassifyQuestions,
+  setQuestionCategory,
   learnFromDashboardReply,
   logDecision,
   maskAmounts,
@@ -1301,7 +1303,6 @@ export async function saveGeneralSettingsAction(formData: FormData): Promise<voi
   // Relance automatique (livrée désactivée).
   core.settings.set("relance_auto_actif", formData.get("relance_auto_actif") === "on");
   core.settings.set("relance_auto_template_hors_fenetre", formData.get("relance_auto_template_hors_fenetre") === "on");
-  core.settings.set("relance_auto_personnaliser", formData.get("relance_auto_personnaliser") === "on");
   const intIn = (name: string, min: number, max: number): number | null => {
     const v = Number.parseInt(String(formData.get(name) ?? ""), 10);
     return Number.isFinite(v) && v >= min && v <= max ? v : null;
@@ -2020,4 +2021,32 @@ export async function generateAiIdeasAction(formData: FormData): Promise<void> {
   core.settings.set("analyse_ia_idees", { cle: `${periode}|${from}|${to}`, texte: texte || "Génération impossible pour le moment : réessaie dans un instant.", ts: Date.now() });
   revalidatePath("/admin/analyse");
   redirect(back);
+}
+
+// ── Demandes par catégorie ──
+
+const safeBack = (v: FormDataEntryValue | null, fallback: string): string => {
+  const s = String(v ?? "");
+  return s.startsWith("/admin") && !s.startsWith("//") ? s : fallback;
+};
+
+/** Corrige la catégorie d'une demande (ou la déclare « pas une demande ») : les statistiques suivent aussitôt. */
+export async function setQuestionCategoryAction(id: number, formData: FormData): Promise<void> {
+  await requireSession();
+  const { core } = getRuntime();
+  const choix = String(formData.get("categorie") ?? "");
+  setQuestionCategory(core, id, choix === "__aucune" ? null : choix);
+  revalidatePath("/admin");
+  revalidatePath("/admin/categories");
+  redirect(safeBack(formData.get("retour"), "/admin/categories"));
+}
+
+/** Recalcule toutes les demandes à partir des textes conservés (sans IA, sans suppression). */
+export async function recalculerDemandesAction(formData: FormData): Promise<void> {
+  await requireSession();
+  const { core } = getRuntime();
+  reclassifyQuestions(core);
+  revalidatePath("/admin");
+  revalidatePath("/admin/categories");
+  redirect(safeBack(formData.get("retour"), "/admin/categories"));
 }

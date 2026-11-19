@@ -437,10 +437,9 @@ export default async function ReglagesPage({
             <input type="checkbox" name="relance_auto_template_hors_fenetre" defaultChecked={core.settings.get("relance_auto_template_hors_fenetre") !== false} />
             <span>Hors fenêtre 24 h : relancer avec le template approuvé</span>
           </label>
-          <label className="flex items-center gap-2">
-            <input type="checkbox" name="relance_auto_personnaliser" defaultChecked={core.settings.get("relance_auto_personnaliser") !== false} />
-            <span>Personnaliser le texte avec l&apos;IA (1 appel par relance réellement envoyée)</span>
-          </label>
+          <p className="text-xs text-neutral-500">
+            Chaque relance est rédigée par l&apos;IA d&apos;après la vraie conversation (1 appel par relance réellement envoyée). Sans intérêt ni question en attente, ou si aucun texte conforme n&apos;est possible, rien n&apos;est envoyé.
+          </p>
         </div>
         <div>
           <label className="label">Autonomie du bot</label>

@@ -37,7 +37,7 @@ export function recordVisit(core: Core, v: { path: string; vid: string; ts?: num
 export interface VisitStats {
   visiteurs: number;
   pages: number;
-  tranches: Array<{ label: string; visiteurs: number; pages: number }>;
+  tranches: Array<{ label: string; visiteurs: number; pages: number; detail: string }>;
   topPages: Array<{ path: string; n: number }>;
 }
 
@@ -54,21 +54,26 @@ export function visitStats(core: Core, from: number, to: number, now = Date.now(
   const total = count(core, from, to);
   const tranches: VisitStats["tranches"] = [];
   if (to - from <= 26 * 3_600_000) {
-    for (let t = from; t < Math.min(to, now); t += 3_600_000) {
-      const c = count(core, t, t + 3_600_000);
-      tranches.push({ label: new Date(t).toLocaleTimeString("fr-FR", { timeZone: "Europe/Paris", hour: "2-digit" }), visiteurs: c.v, pages: c.p });
+    // `t < to` (et non `< now`) : la tranche de l'heure en cours est incluse, sinon ses visites disparaissent du graphique.
+    for (let t = from; t < to - 1; t += 3_600_000) {
+      const c = count(core, t, Math.min(t + 3_600_000, to));
+      const h = new Date(t).toLocaleTimeString("fr-FR", { timeZone: "Europe/Paris", hour: "2-digit", hour12: false }).replace(/\D/g, "");
+      tranches.push({ label: `${h}h`, visiteurs: c.v, pages: c.p, detail: `${parisYmd(t).slice(8)}/${parisYmd(t).slice(5, 7)} à ${h}h` });
     }
   } else {
     let ymd = parisYmd(from);
     for (let i = 0; i < 400; i++) {
       const a = parisMidnight(ymd);
-      if (a >= to) break;
+      // `to - 1` : l'appelant passe « fin + 1 ms » ; sans cela, un jour fantôme vide s'ajoutait après chaque période terminée.
+      if (a >= to - 1) break;
       const b = parisMidnight(parisYmd(a + 36 * 3_600_000));
       const c = count(core, a, Math.min(b, to));
-      tranches.push({ label: `${ymd.slice(8)}/${ymd.slice(5, 7)}`, visiteurs: c.v, pages: c.p });
+      const jj = `${ymd.slice(8)}/${ymd.slice(5, 7)}`;
+      tranches.push({ label: jj, visiteurs: c.v, pages: c.p, detail: `${jj}/${ymd.slice(0, 4)}` });
       ymd = parisYmd(b);
     }
   }
+  void now;
   const topPages = core.sqlite
     .prepare(`SELECT path, COUNT(*) AS n FROM site_visits WHERE ts >= ? AND ts < ? GROUP BY path ORDER BY n DESC LIMIT 6`)
     .all(from, to) as Array<{ path: string; n: number }>;

@@ -128,7 +128,7 @@ export function themeCounts(core: Core, limit = 4): ThemeCount[] {
   return core.sqlite
     .prepare(
       `SELECT categorie AS nom, COUNT(DISTINCT wa_id) AS clients
-       FROM questions GROUP BY categorie ORDER BY clients DESC, nom ASC LIMIT ?`,
+       FROM questions WHERE demande = 1 GROUP BY categorie ORDER BY clients DESC, nom ASC LIMIT ?`,
     )
     .all(limit) as ThemeCount[];
 }

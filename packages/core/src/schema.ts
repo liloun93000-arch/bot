@@ -125,6 +125,13 @@ export const questions = sqliteTable("questions", {
   sujet: text("sujet").notNull().default(""),
   /** autonome (résolu par le bot) | jacob (intervention humaine) | "" (historique non classé). */
   issue: text("issue").notNull().default(""),
+  /** 1 = demande commerciale comptée ; 0 = exclue des statistiques (politesse, suite, doublon). */
+  demande: integer("demande").notNull().default(1),
+  /** Pourquoi la ligne n'est pas une demande comptée (vide si comptée). */
+  raison: text("raison").notNull().default(""),
+  /** Catégorie calculée par le système (avant correction manuelle). */
+  categorieAuto: text("categorie_auto").notNull().default(""),
+  categorieManuelle: integer("categorie_manuelle").notNull().default(0),
   createdAt: integer("created_at").notNull(),
 });
 

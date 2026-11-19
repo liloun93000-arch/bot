@@ -24,7 +24,7 @@ export function computeKpis(core: Core, sinceMs: number): PeriodKpis {
   ).n;
   const parCategorie = core.sqlite
     .prepare(
-      `SELECT categorie, COUNT(*) AS n FROM questions WHERE created_at >= ? GROUP BY categorie ORDER BY n DESC`,
+      `SELECT categorie, COUNT(*) AS n FROM questions WHERE demande = 1 AND created_at >= ? GROUP BY categorie ORDER BY n DESC`,
     )
     .all(since) as Array<{ categorie: string; n: number }>;
   // Autonomie par question : une question est « autonome » seulement si le bot y a vraiment répondu ;
@@ -59,6 +59,7 @@ export function groupQuestions(core: Core, limit = 1000): QuestionGroup[] {
       `SELECT normalise, MAX(texte) AS texte, COUNT(*) AS n,
               MAX(intention) AS intention, MAX(categorie) AS categorie
        FROM questions
+       WHERE demande = 1
        GROUP BY normalise
        ORDER BY n DESC, MAX(id) DESC
        LIMIT ?`,

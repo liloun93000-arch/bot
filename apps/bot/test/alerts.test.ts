@@ -45,6 +45,7 @@ describe("déclenchement d'alerte", () => {
       motif: "test repli",
       intention: "information",
       categorie: "Autre",
+      explicite: true,
       dernierMessage: "bonjour",
     });
 
@@ -66,7 +67,8 @@ describe("déclenchement d'alerte", () => {
       motif: "test échec",
       intention: "information",
       categorie: "Autre",
-      dernierMessage: "bonjour",
+      dernierMessage: "Quel délai exact pour un Surron en Belgique ?",
+      explicite: true,
     });
     expect(result.notifiedVia).toBe("aucune");
     core.close();
@@ -80,11 +82,11 @@ describe("déclenchement d'alerte", () => {
     const deps = testAlertDeps(core, wa);
 
     const first = await triggerAlert(deps, {
-      waId: WA_ID, motif: "premier", intention: "", categorie: "Autre", dernierMessage: "a",
+      waId: WA_ID, motif: "premier", intention: "", categorie: "Autre", dernierMessage: "Quel délai exact pour un Surron en Belgique ?", explicite: true,
     });
     const sentAfterFirst = wa.sent.length;
     const second = await triggerAlert(deps, {
-      waId: WA_ID, motif: "second", intention: "", categorie: "Autre", dernierMessage: "b",
+      waId: WA_ID, motif: "second", intention: "", categorie: "Autre", dernierMessage: "Et le prix du Surron ?", explicite: true,
     });
 
     expect(second.deduped).toBe(true);
@@ -186,6 +188,88 @@ describe("déclencheurs du routeur", () => {
     expect(last.route).toBe("agent");
     expect(last.motif).toBe("");
     expect(last.stalledRounds).toBeGreaterThanOrEqual(3);
+    core.close();
+  });
+});
+
+describe("garde-fou à la source : pas d'alerte sans vrai besoin humain", () => {
+  const input = (over: Partial<Parameters<typeof triggerAlert>[1]> = {}) => ({
+    waId: WA_ID,
+    motif: "le client hésite",
+    intention: "information",
+    categorie: "Autre",
+    dernierMessage: "Vous livrez les drones DJI en Belgique ?",
+    ...over,
+  });
+
+  it("client vague : aucune alerte, aucun message admin, aucun résumé payé", async () => {
+    const core = testCore("+33699999999");
+    core.contacts.upsert(WA_ID);
+    core.messages.insert(WA_ID, "user", "Salut, j'aimerais avoir des informations");
+    const wa = fakeWa();
+    const llm = fakeLlm("ne doit pas être appelé");
+    const r = await triggerAlert({ ...testAlertDeps(core, wa), llm: llm as never }, input({ dernierMessage: "Salut, j'aimerais avoir des informations" }));
+    expect(r.skipped).toBe("sujet_inconnu");
+    expect(core.alerts.open()).toHaveLength(0);
+    expect(wa.sent).toHaveLength(0);
+    core.close();
+  });
+
+  it("« échanges sans progression » ne crée jamais d'alerte", async () => {
+    const core = testCore("+33699999999");
+    core.contacts.upsert(WA_ID);
+    const r = await triggerAlert(testAlertDeps(core, fakeWa()), input({ motif: "5 échanges sans progression" }));
+    expect(r.skipped).toBe("echanges_sans_progression");
+    expect(core.alerts.open()).toHaveLength(0);
+    core.close();
+  });
+
+  it("le résumé indique « Blocage : aucun » : l'alerte n'est pas créée, et le contact ne passe pas en « alerte »", async () => {
+    const core = testCore("+33699999999");
+    core.contacts.upsert(WA_ID);
+    core.messages.insert(WA_ID, "user", "Vous livrez les drones DJI en Belgique ?");
+    const wa = fakeWa();
+    const llm = fakeLlm("Client : inconnu\nDemande : livraison\nÉtat : en cours\nBlocage : aucun\nÀ faire : répondre");
+    const r = await triggerAlert({ ...testAlertDeps(core, wa), llm: llm as never }, input());
+    expect(r.skipped).toBe("aucun_blocage");
+    expect(core.alerts.open()).toHaveLength(0);
+    expect(core.contacts.get(WA_ID)?.statut).not.toBe("alerte");
+    expect(wa.sent).toHaveLength(0);
+    core.close();
+  });
+
+  it("les VRAIES demandes restent alertées : demande de Jacob, réclamation, question précise sans réponse", async () => {
+    for (const over of [
+      { motif: "le client demande à parler à Jacob", dernierMessage: "Passe-moi Jacob" },
+      { motif: "réclamation ou problème", dernierMessage: "Mon colis n'est jamais arrivé" },
+      { motif: "Jacob doit reprendre la conversation : délai exact pour un Surron en Belgique", dernierMessage: "Quel délai exact pour un Surron en Belgique ?" },
+      { motif: "le client a demandé une alerte (bouton 🔔)", dernierMessage: "ok", explicite: true },
+    ]) {
+      const core = testCore("+33699999999");
+      core.contacts.upsert(WA_ID);
+      core.messages.insert(WA_ID, "user", over.dernierMessage);
+      // Même avec un résumé « Blocage : aucun », ces alertes sont conservées.
+      const llm = fakeLlm("Blocage : aucun");
+      const r = await triggerAlert({ ...testAlertDeps(core, fakeWa()), llm: llm as never }, input(over));
+      expect(r.skipped, over.motif).toBeUndefined();
+      expect(core.alerts.open()).toHaveLength(1);
+      core.close();
+    }
+  });
+
+  it("jamais deux alertes pour la même demande non résolue (même après traitement)", async () => {
+    const core = testCore("+33699999999");
+    core.contacts.upsert(WA_ID);
+    core.messages.insert(WA_ID, "user", "Quel délai exact pour un Surron en Belgique ?");
+    const deps = testAlertDeps(core, fakeWa());
+    const motif = "Jacob doit reprendre la conversation : délai exact";
+    const msg = "Quel délai exact pour un Surron en Belgique ?";
+    const first = await triggerAlert(deps, input({ motif, dernierMessage: msg }));
+    expect(first.alertId).toBeGreaterThan(0);
+    core.alerts.retire(first.alertId, "test");
+    const second = await triggerAlert(deps, input({ motif, dernierMessage: msg }));
+    expect(second.skipped).toBe("doublon");
+    expect(core.alerts.open()).toHaveLength(0);
     core.close();
   });
 });

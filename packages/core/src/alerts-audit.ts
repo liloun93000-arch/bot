@@ -20,12 +20,12 @@ export interface AlertAuditItem {
 }
 
 /** Motifs qui correspondent à un vrai besoin humain : jamais retirés automatiquement. */
-const PROTECTED_MOTIF_RE =
+export const PROTECTED_MOTIF_RE =
   /r[eé]clam|probl[eè]me|remboursement|litige|paiement|payer|virement|facture|parler [àa] jacob|demande (?:d'|à )?(?:un )?humain|n'a pas pu [êe]tre joint|rendez-vous|rdv|r[eé]servation|colis|commande|livraison|accord|d[eé]cision/i;
 
-const STALL_MOTIF_RE = /[ée]changes? sans progression/i;
+export const STALL_MOTIF_RE = /[ée]changes? sans progression/i;
 const UNANSWERED_MOTIF_RE = /question rest[ée]e sans r[ée]ponse/i;
-const NO_BLOCKAGE_RE = /Blocage\s*:\s*(?:aucun|n[ée]ant|rien|pas de blocage|—|-)(?:\b|\s|\.|$)/i;
+export const NO_BLOCKAGE_RE = /Blocage\s*:\s*(?:aucun|n[ée]ant|rien|pas de blocage|—|-)(?:\b|\s|\.|$)/i;
 
 interface Msg {
   id: number;

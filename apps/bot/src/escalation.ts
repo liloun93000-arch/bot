@@ -71,6 +71,8 @@ export interface EscalationOutcome {
   notified: boolean;
   /** Le message d'information a été envoyé au client PAR CET APPEL. */
   ackSent: boolean;
+  /** Le garde-fou n'a créé aucune alerte (rien ne bloque, sujet inconnu, doublon) : le bot doit poursuivre la conversation. */
+  skipped?: string;
 }
 
 export async function escalateAndAck(
@@ -110,6 +112,7 @@ export async function escalateAndAck(
       categorie: input.categorie ?? "Autre",
       dernierMessage: input.question.slice(0, 300),
     });
+    if (alert.skipped) return { escalationId: 0, deduped: false, notified: false, ackSent: false, skipped: alert.skipped };
     result = {
       escalationId: alert.alertId,
       deduped: alert.deduped,

@@ -237,7 +237,7 @@ export function analyze(core: Core, period: Period, now = Date.now()): Analysis 
   const unans = core.sqlite
     .prepare(
       `SELECT q.wa_id, q.texte, q.created_at AS ts, q.categorie, c.nom FROM questions q LEFT JOIN contacts c ON c.wa_id = q.wa_id
-       WHERE q.repondue = 0 AND q.created_at >= ? AND q.created_at < ?`,
+       WHERE q.repondue = 0 AND q.demande = 1 AND q.created_at >= ? AND q.created_at < ?`,
     )
     .all(period.from, period.to) as Array<{ wa_id: string; texte: string; ts: number; categorie: string; nom: string | null }>;
   const sansOffre = toInsights(

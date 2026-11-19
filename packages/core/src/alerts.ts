@@ -1,6 +1,9 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import type { AdminNumber, Core } from "./db";
+import { NO_BLOCKAGE_RE, PROTECTED_MOTIF_RE, STALL_MOTIF_RE } from "./alerts-audit";
+import { isRealQuestion } from "./categories";
 import { summarizeConversation } from "./llm";
+import { isSubjectlessRequest } from "./qualification";
 import type { Logger } from "./logger";
 import { logDecision } from "./logger";
 import type { WhatsAppClient } from "./whatsapp";
@@ -11,7 +14,11 @@ export interface AlertInput {
   intention: string;
   categorie: string;
   dernierMessage: string;
+  /** Demande EXPLICITE du client (bouton 🔔, « je veux parler à Jacob ») : jamais filtrée par le garde-fou. */
+  explicite?: boolean;
 }
+
+export type AlertSkipReason = "sujet_inconnu" | "echanges_sans_progression" | "doublon" | "aucun_blocage";
 
 export interface AlertDeps {
   core: Core;
@@ -83,6 +90,40 @@ async function sendEmailFallback(
   }
 }
 
+const SKIP_LOG: Record<AlertSkipReason, string> = {
+  sujet_inconnu: "le sujet du client n'est pas encore connu : question de qualification, pas d'alerte",
+  echanges_sans_progression: "échanges sans progression : jamais un blocage",
+  doublon: "même demande déjà signalée dans les dernières 24 h",
+  aucun_blocage: "le résumé indique qu'aucun blocage n'existe",
+};
+
+const norm = (t: string) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
+
+/** L'alerte correspond-elle à un vrai besoin humain (exigé par le client, ou information réellement manquante) ? */
+export function isAlertProtected(input: AlertInput): boolean {
+  if (input.explicite) return true;
+  if (PROTECTED_MOTIF_RE.test(input.motif)) return true;
+  // Le bot ne sait pas répondre à une VRAIE question précise : Jacob doit trancher.
+  return /^Jacob doit reprendre la conversation/i.test(input.motif) && isRealQuestion(input.dernierMessage) && !isSubjectlessRequest(input.dernierMessage);
+}
+
+/**
+ * Garde-fou AVANT toute création (aucun appel IA) : rien n'est créé si le client est resté vague, si la demande
+ * a déjà été signalée, ou si le motif est un simple « échanges sans progression ».
+ */
+export function precheckAlert(core: Core, input: AlertInput, now = Date.now()): AlertSkipReason | null {
+  const dup = core.sqlite
+    .prepare(`SELECT dernier_message AS dm, motif FROM alerts WHERE wa_id = ? AND created_at >= ? ORDER BY id DESC LIMIT 5`)
+    .all(input.waId, now - 24 * 3_600_000) as Array<{ dm: string; motif: string }>;
+  const last = norm(input.dernierMessage).slice(0, 120);
+  if (last && dup.some((d) => norm(d.dm ?? "").slice(0, 120) === last)) return "doublon";
+  if (isAlertProtected(input)) return null;
+  if (STALL_MOTIF_RE.test(input.motif)) return "echanges_sans_progression";
+  const serviceEnCours = core.state.get(input.waId).serviceEnCours;
+  if (!serviceEnCours && isSubjectlessRequest(input.dernierMessage)) return "sujet_inconnu";
+  return null;
+}
+
 /**
  * Déclenche une alerte : enregistrement, résumé automatique, notification
  * WhatsApp admin (template → texte libre → e-mail), bascule en attente.
@@ -91,13 +132,19 @@ async function sendEmailFallback(
 export async function triggerAlert(
   deps: AlertDeps,
   input: AlertInput,
-): Promise<{ alertId: number; notifiedVia: string; deduped: boolean }> {
+): Promise<{ alertId: number; notifiedVia: string; deduped: boolean; skipped?: AlertSkipReason }> {
   const { core, log } = deps;
 
   if (core.alerts.hasOpenFor(input.waId)) {
     const existing = core.alerts.open().find((a) => a.waId === input.waId);
     logDecision(log, "alert_deduped", { waId: input.waId, motif: input.motif });
     return { alertId: existing?.id ?? 0, notifiedVia: existing?.notifiedVia ?? "", deduped: true };
+  }
+
+  const skip = precheckAlert(core, input);
+  if (skip) {
+    logDecision(log, "alert_skipped", { waId: input.waId, raison: skip, detail: SKIP_LOG[skip], motif: input.motif });
+    return { alertId: 0, notifiedVia: "", deduped: false, skipped: skip };
   }
 
   const contact = core.contacts.get(input.waId);
@@ -107,6 +154,13 @@ export async function triggerAlert(
   // Ce résumé sert aussi au back-office : sans ça, Jacob ouvre la conversation
   // depuis l'alerte et déclenche aussitôt un second calcul quasi identique.
   core.state.setResume(input.waId, resume, core.messages.lastMessageId(input.waId));
+
+  // Cohérence résumé / motif / décision : si le résumé établi sur la conversation réelle dit lui-même qu'il n'y a
+  // aucun blocage, aucune intervention humaine n'est nécessaire → pas d'alerte (sauf demande explicite ou motif protégé).
+  if (!isAlertProtected(input) && NO_BLOCKAGE_RE.test(resume)) {
+    logDecision(log, "alert_skipped", { waId: input.waId, raison: "aucun_blocage", detail: SKIP_LOG.aucun_blocage, motif: input.motif });
+    return { alertId: 0, notifiedVia: "", deduped: false, skipped: "aucun_blocage" };
+  }
 
   const alertId = core.alerts.create({
     waId: input.waId,

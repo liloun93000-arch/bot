@@ -2,16 +2,29 @@ import Link from "next/link";
 import { PERIOD_OPTIONS, type Period } from "@/lib/period";
 
 /** Filtre de période (liens + dates personnalisées), sans JavaScript : la page se recalcule. */
-export function PeriodFilter({ period, base = "/admin", ancre = "periode" }: { period: Period; base?: string; ancre?: string }) {
+export function PeriodFilter({
+  period,
+  base = "/admin",
+  ancre = "periode",
+  extra = {},
+}: {
+  period: Period;
+  base?: string;
+  ancre?: string;
+  /** Paramètres à conserver quand on change de période (ex. la catégorie ouverte). */
+  extra?: Record<string, string>;
+}) {
+  const suffix = Object.entries(extra).map(([k, v]) => `&${k}=${encodeURIComponent(v)}`).join("");
   return (
     <div className="aj-period">
       {PERIOD_OPTIONS.filter((o) => o.key !== "perso").map((o) => (
-        <Link key={o.key} href={`${base}?periode=${o.key}#${ancre}`} className={period.key === o.key ? "is-on" : ""} scroll={false}>
+        <Link key={o.key} href={`${base}?periode=${o.key}${suffix}#${ancre}`} className={period.key === o.key ? "is-on" : ""} scroll={false}>
           {o.label}
         </Link>
       ))}
       <form action={base} method="get" className="aj-period-custom">
         <input type="hidden" name="periode" value="perso" />
+        {Object.entries(extra).map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
         <input type="date" name="du" defaultValue={period.du} className="input" aria-label="Date de début" />
         <input type="date" name="au" defaultValue={period.au} className="input" aria-label="Date de fin" />
         <button type="submit" className={`btn ${period.key === "perso" ? "btn-primary" : "btn-secondary"}`}>

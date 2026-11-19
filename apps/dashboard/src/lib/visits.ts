@@ -41,24 +41,19 @@ export interface VisitStats {
   topPages: Array<{ path: string; n: number }>;
 }
 
-function count(core: Core, from: number, to: number): { v: number; p: number } {
-  const r = core.sqlite
-    .prepare(`SELECT COUNT(DISTINCT vid) AS v, COUNT(*) AS p FROM site_visits WHERE ts >= ? AND ts < ?`)
-    .get(from, to) as { v: number; p: number };
-  return { v: r.v, p: r.p };
-}
-
-/** Statistiques d'une période : par heure si la période fait un jour, sinon par jour. */
+/**
+ * Statistiques d'une période : par heure si la période fait un jour, sinon par jour.
+ * Une seule lecture de la table (au lieu d'une requête par tranche) : bien plus rapide sur 30 jours ou plus.
+ */
 export function visitStats(core: Core, from: number, to: number, now = Date.now()): VisitStats {
   ensure(core);
-  const total = count(core, from, to);
-  const tranches: VisitStats["tranches"] = [];
+  // 1. Tranches (bornes de début/fin, libellés).
+  const bounds: Array<{ a: number; b: number; label: string; detail: string }> = [];
   if (to - from <= 26 * 3_600_000) {
-    // `t < to` (et non `< now`) : la tranche de l'heure en cours est incluse, sinon ses visites disparaissent du graphique.
+    // `t < to - 1` : la tranche de l'heure en cours est incluse, sans tranche fantôme après la fin.
     for (let t = from; t < to - 1; t += 3_600_000) {
-      const c = count(core, t, Math.min(t + 3_600_000, to));
       const h = new Date(t).toLocaleTimeString("fr-FR", { timeZone: "Europe/Paris", hour: "2-digit", hour12: false }).replace(/\D/g, "");
-      tranches.push({ label: `${h}h`, visiteurs: c.v, pages: c.p, detail: `${parisYmd(t).slice(8)}/${parisYmd(t).slice(5, 7)} à ${h}h` });
+      bounds.push({ a: t, b: Math.min(t + 3_600_000, to), label: `${h}h`, detail: `${parisYmd(t).slice(8)}/${parisYmd(t).slice(5, 7)} à ${h}h` });
     }
   } else {
     let ymd = parisYmd(from);
@@ -67,15 +62,39 @@ export function visitStats(core: Core, from: number, to: number, now = Date.now(
       // `to - 1` : l'appelant passe « fin + 1 ms » ; sans cela, un jour fantôme vide s'ajoutait après chaque période terminée.
       if (a >= to - 1) break;
       const b = parisMidnight(parisYmd(a + 36 * 3_600_000));
-      const c = count(core, a, Math.min(b, to));
       const jj = `${ymd.slice(8)}/${ymd.slice(5, 7)}`;
-      tranches.push({ label: jj, visiteurs: c.v, pages: c.p, detail: `${jj}/${ymd.slice(0, 4)}` });
+      bounds.push({ a, b: Math.min(b, to), label: jj, detail: `${jj}/${ymd.slice(0, 4)}` });
       ymd = parisYmd(b);
     }
   }
+  // 2. Une seule passe sur les visites, rangées par tranche (recherche dichotomique).
+  const sets = bounds.map(() => new Set<string>());
+  const pages = bounds.map(() => 0);
+  const all = new Set<string>();
+  let total = 0;
+  const rows = core.sqlite.prepare(`SELECT ts, vid FROM site_visits WHERE ts >= ? AND ts < ? ORDER BY ts`).all(from, to) as Array<{ ts: number; vid: string }>;
+  for (const r of rows) {
+    total++;
+    all.add(r.vid);
+    let lo = 0;
+    let hi = bounds.length - 1;
+    let idx = -1;
+    while (lo <= hi) {
+      const mid = (lo + hi) >> 1;
+      if (r.ts < bounds[mid]!.a) hi = mid - 1;
+      else if (r.ts >= bounds[mid]!.b) lo = mid + 1;
+      else { idx = mid; break; }
+    }
+    if (idx >= 0) {
+      pages[idx]!++;
+      sets[idx]!.add(r.vid);
+    }
+  }
+  const tranches: VisitStats["tranches"] = bounds.map((x, i) => ({ label: x.label, visiteurs: sets[i]!.size, pages: pages[i]!, detail: x.detail }));
+  const visitorsTotal = all.size;
   void now;
   const topPages = core.sqlite
     .prepare(`SELECT path, COUNT(*) AS n FROM site_visits WHERE ts >= ? AND ts < ? GROUP BY path ORDER BY n DESC LIMIT 6`)
     .all(from, to) as Array<{ path: string; n: number }>;
-  return { visiteurs: total.v, pages: total.p, tranches, topPages };
+  return { visiteurs: visitorsTotal, pages: total, tranches, topPages };
 }

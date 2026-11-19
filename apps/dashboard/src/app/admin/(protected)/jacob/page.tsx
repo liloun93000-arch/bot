@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireSession } from "@/lib/auth";
 import { getRuntime } from "@/lib/core";
 import { jacobHistory, jacobPending, waitingLabel, type JacobItem } from "@/lib/jacob";
+import { InstantForm } from "../instant-form";
 import { clearFalseAlertsAction, jacobReplyAction, markClientTreatedAction } from "@/lib/actions";
 import { auditOpenAlerts, OUTBOUND_MEDIA_ACCEPT } from "@arbi/core";
 import { ScrollMemory } from "../back-nav";
@@ -41,11 +42,9 @@ function Request({ r, i, draft = "" }: { r: JacobItem; i: number; draft?: string
           Voir la conversation
         </Link>
         {!r.resolu && (
-          <form action={markClientTreatedAction.bind(null, r.waId)}>
-            <button type="submit" className="btn btn-primary">
-              ✅ Marquer traité
-            </button>
-          </form>
+          <InstantForm action={markClientTreatedAction.bind(null, r.waId)} className="btn btn-primary" doneLabel="✅ Traité" hideClosest="article">
+            ✅ Marquer traité
+          </InstantForm>
         )}
       </footer>
       {!r.resolu && (

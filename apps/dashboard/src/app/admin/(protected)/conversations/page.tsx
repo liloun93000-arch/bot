@@ -64,7 +64,7 @@ function when(ts: number): string {
 export default async function ConversationsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; statut?: string }>;
+  searchParams: Promise<{ q?: string; statut?: string; n?: string }>;
 }) {
   await requireSession();
   const params = await searchParams;
@@ -95,6 +95,9 @@ export default async function ConversationsPage({
   if (statut === "humain") rows = rows.filter((r) => r.modeHumain === 1);
   if (statut === "bot") rows = rows.filter((r) => r.modeHumain === 0 && r.alertesOuvertes === 0);
   if (statut === "repondre") rows = rows.filter((r) => r.dernierRole === "user" && !r.optOut);
+  // Pagination : la liste complète (des centaines de conversations) rendait la page très lourde à charger.
+  const limit = Math.min(1000, Math.max(50, Number(params.n) || 50));
+  const shown = rows.slice(0, limit);
   const all = core.conversationOverview();
   const nbAlerte = all.filter((r) => r.alertesOuvertes > 0).length;
   const nbHumain = all.filter((r) => r.modeHumain === 1 && r.alertesOuvertes === 0).length;
@@ -156,7 +159,7 @@ export default async function ConversationsPage({
       </div>
 
       <div className="aj-cv-list" role="list">
-        {rows.map((row) => {
+        {shown.map((row) => {
           const label = row.nom || `+${row.waId}`;
           const kind = convKind(row);
           const aRepondre = row.dernierRole === "user" && !row.optOut;
@@ -193,6 +196,15 @@ export default async function ConversationsPage({
           );
         })}
         {rows.length === 0 && <div className="aj-empty">Aucune conversation.</div>}
+        {rows.length > shown.length && (
+          <Link
+            href={`/admin/conversations?${new URLSearchParams({ q, statut, n: String(limit + 50) }).toString()}`}
+            className="btn btn-secondary w-full text-center"
+            scroll={false}
+          >
+            Afficher plus ({rows.length - shown.length} restantes)
+          </Link>
+        )}
       </div>
     </div>
   );

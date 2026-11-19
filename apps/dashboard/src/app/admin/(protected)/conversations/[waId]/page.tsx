@@ -20,6 +20,7 @@ import {
   toggleFactAction,
 } from "@/lib/actions";
 import { requireSession } from "@/lib/auth";
+import { InstantForm } from "../../instant-form";
 import { getRuntime } from "@/lib/core";
 import { formatDuration } from "@/lib/time";
 import { ChatMedia } from "./chat-media";
@@ -114,17 +115,13 @@ export default async function ConversationDetailPage({
         </div>
         <div className="flex gap-2">
           {contact.modeHumain ? (
-            <form action={releaseToBotAction.bind(null, waId)}>
-              <button className="btn btn-secondary" type="submit">
-                🤖 Rendre la main au bot
-              </button>
-            </form>
+            <InstantForm key="release" action={releaseToBotAction.bind(null, waId)} doneLabel="✅ Main rendue au bot">
+              🤖 Rendre la main au bot
+            </InstantForm>
           ) : (
-            <form action={takeOverAction.bind(null, waId)}>
-              <button className="btn btn-primary" type="submit">
-                ✋ Reprendre la conversation
-              </button>
-            </form>
+            <InstantForm key="takeover" action={takeOverAction.bind(null, waId)} className="btn btn-primary" doneLabel="✅ Conversation reprise">
+              ✋ Reprendre la conversation
+            </InstantForm>
           )}
         </div>
       </div>
@@ -150,11 +147,9 @@ export default async function ConversationDetailPage({
                 {new Date(alert.createdAt).toLocaleString("fr-FR")}
               </div>
             </div>
-            <form action={markAlertTreatedAction.bind(null, alert.id, waId)}>
-              <button className="btn btn-secondary" type="submit">
-                ✅ Marquer traitée
-              </button>
-            </form>
+            <InstantForm action={markAlertTreatedAction.bind(null, alert.id, waId)} doneLabel="✅ Traitée" hideClosest=".card">
+              ✅ Marquer traitée
+            </InstantForm>
           </div>
         </div>
       ))}

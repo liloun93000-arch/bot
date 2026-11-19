@@ -1,4 +1,5 @@
 import type { Core } from "@arbi/core";
+import { parisMidnight, parisYmd } from "./period";
 
 /**
  * Liens de suivi invisibles (Snapchat, Telegram, Linktree, Site…) : /go/<source> compte le clic
@@ -98,3 +99,65 @@ export function slugify(nom: string): string {
 /** Aperçus de liens (Snapchat, Telegram, WhatsApp, Facebook…) : ce ne sont pas des clics humains. */
 export const BOT_UA_RE =
   /(bot|crawler|spider|preview|facebookexternalhit|whatsapp|telegrambot|snapchat.*(preview|bot)|twitterbot|slackbot|discordbot|linkedinbot|embedly|skypeuripreview|curl|wget|python|headless)/i;
+
+export interface ClickBucket {
+  label: string;
+  visiteurs: number;
+  /** Nombre de clics (champ nommé comme celui des visites pour réutiliser le même graphique). */
+  pages: number;
+  detail: string;
+}
+
+/**
+ * Clics d'une source (ou de toutes si `sourceId` est null) découpés par heure (≤ 26 h), par jour ou par mois.
+ * Données réelles uniquement : une tranche sans clic vaut 0.
+ */
+export function clickSeries(
+  core: Core,
+  sourceId: number | null,
+  from: number,
+  to: number,
+  gran: "jour" | "mois" = "jour",
+): ClickBucket[] {
+  ensureTracking(core);
+  const count = (a: number, b: number): number => {
+    const r = (sourceId === null
+      ? core.sqlite.prepare(`SELECT COUNT(*) AS n FROM tracking_clicks WHERE ts >= ? AND ts < ?`).get(a, b)
+      : core.sqlite.prepare(`SELECT COUNT(*) AS n FROM tracking_clicks WHERE source_id = ? AND ts >= ? AND ts < ?`).get(sourceId, a, b)) as { n: number };
+    return r.n;
+  };
+  const out: ClickBucket[] = [];
+  if (to - from <= 26 * 3_600_000) {
+    for (let t = from; t < to - 1; t += 3_600_000) {
+      const h = new Date(t).toLocaleTimeString("fr-FR", { timeZone: "Europe/Paris", hour: "2-digit", hour12: false }).replace(/\D/g, "");
+      out.push({ label: `${h}h`, visiteurs: 0, pages: count(t, Math.min(t + 3_600_000, to)), detail: `${parisYmd(t).slice(8)}/${parisYmd(t).slice(5, 7)} à ${h}h` });
+    }
+    return out;
+  }
+  if (gran === "mois") {
+    let y = Number(parisYmd(from).slice(0, 4));
+    let m = Number(parisYmd(from).slice(5, 7));
+    for (let i = 0; i < 60; i++) {
+      const a = parisMidnight(`${y}-${String(m).padStart(2, "0")}-01`);
+      if (a >= to - 1) break;
+      const ny = m === 12 ? y + 1 : y;
+      const nm = m === 12 ? 1 : m + 1;
+      const b = parisMidnight(`${ny}-${String(nm).padStart(2, "0")}-01`);
+      const label = `${String(m).padStart(2, "0")}/${String(y).slice(2)}`;
+      out.push({ label, visiteurs: 0, pages: count(Math.max(a, from), Math.min(b, to)), detail: `${String(m).padStart(2, "0")}/${y}` });
+      y = ny;
+      m = nm;
+    }
+    return out;
+  }
+  let ymd = parisYmd(from);
+  for (let i = 0; i < 400; i++) {
+    const a = parisMidnight(ymd);
+    if (a >= to - 1) break;
+    const b = parisMidnight(parisYmd(a + 36 * 3_600_000));
+    const jj = `${ymd.slice(8)}/${ymd.slice(5, 7)}`;
+    out.push({ label: jj, visiteurs: 0, pages: count(a, Math.min(b, to)), detail: `${jj}/${ymd.slice(0, 4)}` });
+    ymd = parisYmd(b);
+  }
+  return out;
+}

@@ -404,12 +404,13 @@ export default async function OverviewPage({
             {parCategorie.length === 0 && (
               <p className="mt-3 text-sm text-neutral-500">Aucune demande sur cette période.</p>
             )}
+            {parCategorie.length > 0 && <p className="mt-2 text-xs text-neutral-500">Touchez une catégorie pour voir le détail des demandes.</p>}
             <div className="mt-3 space-y-2">
               {parCategorie.map((c) => (
                 <Link
                   key={c.categorie}
                   href={`/admin/categories/detail?c=${encodeURIComponent(c.categorie)}&${periodQuery(period)}`}
-                  className="flex items-center gap-2 rounded hover:bg-neutral-50"
+                  className="flex items-center gap-2 rounded py-1 hover:bg-neutral-50"
                 >
                   <span className="w-36 shrink-0 text-sm">{c.categorie}</span>
                   <div className="h-4 flex-1 overflow-hidden rounded bg-neutral-100">
@@ -422,6 +423,7 @@ export default async function OverviewPage({
                     />
                   </div>
                   <span className="w-8 text-right text-sm font-semibold">{c.n}</span>
+                  <span aria-hidden className="text-neutral-500">›</span>
                 </Link>
               ))}
             </div>
@@ -442,7 +444,11 @@ export default async function OverviewPage({
                 const pct = totalClics ? Math.round((n / totalClics) * 100) : 0;
                 const evo = before ? Math.round(((n - before) / before) * 100) : null;
                 return (
-                  <div key={src.id} className="flex items-center gap-2">
+                  <Link
+                    key={src.id}
+                    href={`/admin/sources/detail?s=${encodeURIComponent(src.slug)}&${periodQuery(period)}`}
+                    className="flex items-center gap-2 rounded py-1 hover:bg-neutral-50"
+                  >
                     <span className="w-28 shrink-0 text-sm">{src.nom}</span>
                     <div className="h-4 flex-1 overflow-hidden rounded bg-neutral-100">
                       <div className="h-full rounded" style={{ width: `${pct}%`, background: "linear-gradient(90deg, #b3121f, #ff2d3d)" }} />
@@ -451,11 +457,13 @@ export default async function OverviewPage({
                       <b>{n}</b> · {pct} %
                       {evo !== null && <span className={evo >= 0 ? "text-green-500" : "text-red-500"}> {evo >= 0 ? "▲" : "▼"}{Math.abs(evo)} %</span>}
                     </span>
-                  </div>
+                    <span aria-hidden className="text-neutral-500">›</span>
+                  </Link>
                 );
               })}
             </div>
             <p className="mt-3 text-xs text-neutral-500">
+              Touchez une source pour voir son évolution dans le temps.<br />
               {totalClics} clic(s) sur les liens de suivi · {nouveauxContacts} nouveau(x) contact(s) WhatsApp sur la période, toutes
               origines confondues. Les clics ne sont pas des contacts : WhatsApp ne permet pas de savoir de façon fiable d&apos;où
               vient chaque client, donc aucune source n&apos;est attribuée individuellement.{" "}

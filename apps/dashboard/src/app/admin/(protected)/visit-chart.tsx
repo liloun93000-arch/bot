@@ -12,7 +12,8 @@ const PAD = { top: 8, right: 6, bottom: 24, left: 6 };
  * hauteur CSS, source d'erreurs d'affichage sur mobile). Toucher ou glisser le doigt pour lire chaque tranche ;
  * le nombre de dates affichées s'adapte à la largeur disponible.
  */
-export function VisitChart({ tranches }: { tranches: T[] }) {
+export function VisitChart({ tranches, mode = "visites" }: { tranches: T[]; mode?: "visites" | "clics" }) {
+  const clics = mode === "clics";
   const wrap = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(320);
   const [sel, setSel] = useState<number | null>(null);
@@ -66,7 +67,9 @@ export function VisitChart({ tranches }: { tranches: T[] }) {
           <>
             <span>{t.detail ?? t.label}</span>
             <b>
-              {t.visiteurs} visiteur{t.visiteurs > 1 ? "s" : ""} · {t.pages} page{t.pages > 1 ? "s" : ""} vue{t.pages > 1 ? "s" : ""}
+              {clics
+                ? `${t.pages} clic${t.pages > 1 ? "s" : ""}`
+                : `${t.visiteurs} visiteur${t.visiteurs > 1 ? "s" : ""} · ${t.pages} page${t.pages > 1 ? "s" : ""} vue${t.pages > 1 ? "s" : ""}`}
             </b>
           </>
         ) : (
@@ -79,7 +82,7 @@ export function VisitChart({ tranches }: { tranches: T[] }) {
           height={H}
           viewBox={`0 0 ${width} ${H}`}
           role="img"
-          aria-label={`Visiteurs et pages vues par ${n > 26 ? "jour" : "tranche"} (${total} pages vues au total)`}
+          aria-label={clics ? `Clics par ${n > 26 ? "jour" : "tranche"} (${total} au total)` : `Visiteurs et pages vues par ${n > 26 ? "jour" : "tranche"} (${total} pages vues au total)`}
           onPointerDown={(e) => pick(e.clientX)}
           onPointerMove={(e) => (e.pointerType === "mouse" ? e.buttons === 1 || pick(e.clientX) : pick(e.clientX))}
           style={{ display: "block", cursor: "crosshair" }}
@@ -93,8 +96,8 @@ export function VisitChart({ tranches }: { tranches: T[] }) {
             return (
               <g key={i}>
                 {on && <rect x={cx - slot / 2} y={PAD.top} width={slot} height={plotH} fill="#ffffff0d" />}
-                <rect x={cx - barW / 2} y={PAD.top + plotH - hp} width={barW} height={Math.max(x.pages > 0 ? 2 : 0, hp)} rx={2} fill={on ? "#f0142f66" : "#3b6cf055"} />
-                <rect x={cx - barW / 2} y={PAD.top + plotH - hv} width={barW} height={Math.max(x.visiteurs > 0 ? 2 : 0, hv)} rx={2} fill={on ? "#f0142f" : "#3b6cf0"} />
+                <rect x={cx - barW / 2} y={PAD.top + plotH - hp} width={barW} height={Math.max(x.pages > 0 ? 2 : 0, hp)} rx={2} fill={clics ? (on ? "#f0142f" : "#3b6cf0") : on ? "#f0142f66" : "#3b6cf055"} />
+                {!clics && <rect x={cx - barW / 2} y={PAD.top + plotH - hv} width={barW} height={Math.max(x.visiteurs > 0 ? 2 : 0, hv)} rx={2} fill={on ? "#f0142f" : "#3b6cf0"} />}
                 {showLabel(i) && (
                   <text x={cx} y={H - 7} textAnchor="middle" fontSize={10} fill={on ? "#ffffff" : "#8b909b"} fontWeight={on ? 700 : 400}>
                     {x.label}
@@ -106,8 +109,14 @@ export function VisitChart({ tranches }: { tranches: T[] }) {
         </svg>
       </div>
       <div className="aj-kchart-legend">
-        <span><i style={{ background: "#3b6cf0" }} /> Visiteurs uniques</span>
-        <span><i style={{ background: "#3b6cf055" }} /> Pages vues</span>
+        {clics ? (
+          <span><i style={{ background: "#3b6cf0" }} /> Clics</span>
+        ) : (
+          <>
+            <span><i style={{ background: "#3b6cf0" }} /> Visiteurs uniques</span>
+            <span><i style={{ background: "#3b6cf055" }} /> Pages vues</span>
+          </>
+        )}
       </div>
     </div>
   );

@@ -13,6 +13,7 @@ import type { Core, Logger } from "@arbi/core";
 
 export const LLC_MARKER = "ARBI:LLC-V10";
 export const MOTOS_MARKER = "ARBI:MOTOS-V10";
+export const OGF_MARKER = "ARBI:OGFACTORY-V1";
 
 const open = (key: string) => `<!-- ${key} -->`;
 const close = (key: string) => `<!-- /${key} -->`;
@@ -229,5 +230,47 @@ export function patchCatalogue(core: Core, log: Logger): boolean {
   if (next === current) return false;
   core.catalogue.save(next, "Discours LLC/LTD (3 formules, limites de la Basique) + motos électriques — novembre 2026");
   log.info({ chars: next.length, stamp }, "catalogue_llc_motos_patched");
+  return true;
+}
+
+export const OGF_SECTION = `==============================================================
+OG FACTORY (OGF / OGFACTORY) — REDIRECTION ET COORDONNÉES À JOUR
+==============================================================
+
+⚠️ CETTE SECTION PRIME sur toute coordonnée OG Factory plus ancienne du catalogue.
+
+Pour TOUTE demande qui concerne OG FACTORY (écrit aussi « OGF », « OGFACTORY », « OG Factory ») : produit à
+l'unité, catalogue, commande, suivi, question sur le revendeur… le bot redirige le client vers ses
+coordonnées, TOUTES à donner ensemble :
+• Telegram : @Ogfactoryshop_bot
+• Site : https://www.ogfactory.shop
+• Numéro (assistant personnel) : +33 7 80 96 29 20
+
+L'ancien identifiant Telegram d'OG Factory n'est plus utilisé : le bot ne le donne jamais.
+Si un client dit qu'il n'arrivait plus à les joindre : le bot répond simplement qu'OG Factory a un nouveau
+numéro et de nouvelles coordonnées, et les donne. Il n'explique aucune raison et ne parle d'aucun problème passé.
+Le bot ne prend pas la commande à leur place : il redirige, avec les trois coordonnées.
+`;
+
+export function applyOgFactory(content: string): string {
+  let out = content.replace(/@OGFactoryBot/g, "@Ogfactoryshop_bot");
+  const block = `${open(OGF_MARKER)}\n${OGF_SECTION}${close(OGF_MARKER)}`;
+  if (out.includes(open(OGF_MARKER))) return replaceBlock(out, OGF_MARKER, OGF_SECTION);
+  // Avant la bannière « FIN DU SCRIPT » quand elle existe, sinon à la fin.
+  const fin = /\n={10,}\nFIN DU SCRIPT[^\n]*\n={10,}\s*$/.exec(out);
+  if (fin) return `${out.slice(0, fin.index).trimEnd()}\n\n${block}\n${out.slice(fin.index)}`;
+  return `${out.trimEnd()}\n\n${block}\n`;
+}
+
+/** Coordonnées OG Factory à jour (Telegram + site + numéro) dans le catalogue en ligne. Idempotent. */
+export function patchOgFactory(core: Core, log: Logger): boolean {
+  const current = core.catalogue.current().contenu;
+  if (!current) return false;
+  const stamp = shortHash(OGF_SECTION);
+  if (!core.sends.claim(`patch:catalogue-ogfactory:${stamp}`)) return false;
+  const next = applyOgFactory(current);
+  if (next === current) return false;
+  core.catalogue.save(next, "OG Factory : nouveau Telegram @Ogfactoryshop_bot + site + numéro — novembre 2026");
+  log.info({ stamp }, "catalogue_ogfactory_patched");
   return true;
 }

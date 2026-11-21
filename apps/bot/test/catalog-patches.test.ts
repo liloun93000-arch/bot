@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { applyLlcSection, applyMotosSection, LLC_MARKER, MOTOS_MARKER, patchCatalogue } from "../src/catalog-patches";
+import { applyLlcSection, applyMotosSection, LLC_MARKER, MOTOS_MARKER, patchCatalogue, patchOgFactory } from "../src/catalog-patches";
 import { buildStaticPrompt } from "../src/prompt";
 import { testCore } from "./helpers";
 
@@ -94,3 +94,29 @@ describe("discours LLC / LTD et motos dans le catalogue", () => {
     expect(prompt).not.toContain("Le bot doit rester général sur les sujets juridiques/fiscaux et ne pas donner de conseil personnalisé.");
   });
 });
+
+describe("OG Factory : nouveau Telegram + site + numéro", () => {
+  it("le catalogue livré ne contient plus l'ancien identifiant et donne les trois coordonnées", () => {
+    expect(FILE).not.toContain("@OGFactoryBot");
+    expect(FILE).toContain("@Ogfactoryshop_bot");
+    expect(FILE).toContain("https://www.ogfactory.shop");
+    expect(FILE).toContain("+33 7 80 96 29 20");
+    expect(FILE.trimEnd().endsWith("FIN DU SCRIPT V9.2\n" + BAR)).toBe(true);
+    expect(FILE.split("<!-- ARBI:OGFACTORY-V1 -->")).toHaveLength(2);
+  });
+
+  it("met à jour le catalogue en ligne : Telegram conservé (nouvel identifiant) + site + numéro, sans doublon", () => {
+    const core = testCore();
+    core.catalogue.save("54. X\nContact : Telegram @OGFactoryBot\n\nTu peux voir @OGFactoryBot sur Telegram.\n", "test");
+    expect(patchOgFactoryOnce(core)).toBe(true);
+    const txt = core.catalogue.current().contenu;
+    expect(txt).not.toContain("@OGFactoryBot ");
+    expect(txt.match(/@Ogfactoryshop_bot/g)!.length).toBeGreaterThanOrEqual(3);
+    expect(txt).toContain("https://www.ogfactory.shop");
+    expect(txt).toContain("+33 7 80 96 29 20");
+    expect(patchOgFactoryOnce(core)).toBe(false);
+    expect(txt.split("<!-- ARBI:OGFACTORY-V1 -->")).toHaveLength(2);
+    core.close();
+  });
+});
+const patchOgFactoryOnce = (core: ReturnType<typeof testCore>) => patchOgFactory(core, silent);

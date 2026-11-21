@@ -552,14 +552,16 @@ export class SalesAgent {
       text = stripMarkdown(text);
 
       // Telegram (décision de Jacob) : aucun lien t.me / telegram.me, aucune mention de Telegram, SAUF la
-      // redirection des produits à l'unité vers le revendeur @OGFactoryBot (script, section 8).
+      // redirection des produits à l'unité vers le revendeur @Ogfactoryshop_bot (script, section 8).
       {
         const before = text;
+        // Ancien identifiant du revendeur : remplacé par le nouveau (le client reçoit toujours le bon contact).
+        text = text.replace(/@OGFactoryBot/gi, "@Ogfactoryshop_bot");
         text = text
           .split("\n")
           .filter((line) => {
             if (/\b(?:t|telegram)\.me\//i.test(line)) return false;
-            if (/telegram/i.test(line) && !/@OGFactoryBot/i.test(line)) return false;
+            if (/telegram/i.test(line) && !/@Ogfactoryshop_bot/i.test(line)) return false;
             return true;
           })
           .join("\n")

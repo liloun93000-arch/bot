@@ -18,7 +18,7 @@ import {
 } from "@arbi/core";
 import { readFile } from "node:fs/promises";
 import { cleanupSmallTalkAlerts, installCatalogues, installScript, fixCasquettesPrice, auditCasquettes } from "./catalog-seed";
-import { patchCatalogue } from "./catalog-patches";
+import { patchCatalogue, patchOgFactory } from "./catalog-patches";
 import { seedKnowledgeBase } from "./kb-seed";
 import { relanceTick } from "./relance";
 import { dirname, join } from "node:path";
@@ -43,6 +43,7 @@ async function main(): Promise<void> {
   await installScript(core, config.CATALOGUE_PATH, log);
   fixCasquettesPrice(core, log);
   patchCatalogue(core, log);
+  patchOgFactory(core, log);
   // Recalcul unique des anciennes demandes (catégories + exclusion des politesses), sans IA ni suppression.
   if (core.settings.get("demandes_recalcul_v1") !== true) {
     const r = reclassifyQuestions(core);

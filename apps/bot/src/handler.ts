@@ -21,7 +21,6 @@ import type { SalesAgent } from "./agent";
 import { analyzeInbound, type Analysis } from "./brain";
 import { sendNiveau4 } from "./tools";
 import { escalateAndAck } from "./escalation";
-import { mentionsOgf, ogfReply } from "./ogf";
 import { PACING, replyDelayMs, splitReply } from "./pacing";
 import type { InboundItem } from "./queue";
 
@@ -307,15 +306,6 @@ export function createHandler(deps: HandlerDeps) {
     }
 
     const lastText = items[items.length - 1]?.text ?? "";
-
-    // ── OG Factory : redirection directe vers leurs coordonnées à jour (site, numéro, Telegram) ──
-    // Pas d'IA, pas d'alerte : ces demandes ne sont pas à traiter par Jacob.
-    if (!items.some((i) => i.buttonId) && mentionsOgf(items.map((i) => i.text))) {
-      const reply = ogfReply(items.map((i) => i.text));
-      await deliver(reply, core.messages.lastMessageId(waId));
-      logDecision(log, "ogf_redirect", { waId });
-      return;
-    }
 
     // ── Boutons interactifs du niveau 4 ──
     const buttonItem = items.find((i) => i.buttonId);

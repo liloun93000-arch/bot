@@ -19,6 +19,9 @@ import { escalateAndAck, isPaymentStage } from "./escalation";
 const NO_ALERT_NEEDED =
   "Aucune alerte n'a été créée : rien ne nécessite Jacob pour le moment (sujet déjà couvert, demande déjà signalée ou client à qualifier). Continue la conversation toi-même : réponds avec le catalogue et la base de connaissances si tu as l'information, sinon pose UNE question de qualification naturelle (que cherche-t-il, pour quel projet, quel budget ou délai). N'annonce JAMAIS que Jacob est prévenu.";
 
+const OGF_NO_ALERT =
+  "Aucune alerte : OG Factory est un revendeur indépendant, ce n'est pas à Jacob de traiter cette demande (même une réclamation). Réponds toi-même : une phrase de compréhension si le client est mécontent, puis les TROIS coordonnées ensemble — site https://www.ogfactory.shop, numéro +33 7 80 96 29 20 (assistant personnel), Telegram @Ogfactoryshop_bot — en précisant qu'ils ont de nouvelles coordonnées. N'annonce JAMAIS que Jacob est prévenu et ne promets rien à leur place.";
+
 const QUALIFY_INSTEAD =
   "PAS D'ALERTE : le client n'a pas encore dit ce qu'il cherche, ce n'est pas un blocage. Réponds chaleureusement et pose UNE question simple pour identifier son besoin (fournisseurs, formations, création de société, autre service). Ne dis jamais que tu transmets à Jacob.";
 
@@ -284,7 +287,7 @@ export async function executeTool(
         );
         if (out.skipped) {
           logDecision(log, "alert_refused_by_guard", { waId, raison: out.skipped });
-          return NO_ALERT_NEEDED;
+          return out.skipped === "ogf" ? OGF_NO_ALERT : NO_ALERT_NEEDED;
         }
         ctx.flags.alertFired = true;
         logDecision(log, "niveau4_redirected_to_escalation", { waId, motif, escalationId: out.escalationId, ackSent: out.ackSent });
@@ -331,7 +334,7 @@ export async function executeTool(
       });
       if (result.skipped) {
         logDecision(log, "alert_refused_by_guard", { waId, raison: result.skipped });
-        return NO_ALERT_NEEDED;
+        return result.skipped === "ogf" ? OGF_NO_ALERT : NO_ALERT_NEEDED;
       }
       ctx.flags.alertFired = true;
       return result.deduped
@@ -365,7 +368,7 @@ export async function executeTool(
       );
       if (out.skipped) {
         logDecision(log, "alert_refused_by_guard", { waId, raison: out.skipped });
-        return NO_ALERT_NEEDED;
+        return out.skipped === "ogf" ? OGF_NO_ALERT : NO_ALERT_NEEDED;
       }
       // La question reste « non répondue » côté statistiques tant que Jacob n'a pas répondu.
       ctx.flags.alertFired = true;

@@ -18,7 +18,10 @@ export interface AlertInput {
   explicite?: boolean;
 }
 
-export type AlertSkipReason = "sujet_inconnu" | "echanges_sans_progression" | "doublon" | "aucun_blocage";
+export type AlertSkipReason = "sujet_inconnu" | "echanges_sans_progression" | "doublon" | "aucun_blocage" | "ogf";
+
+/** OG Factory (« OGF », « OGFACTORY ») : revendeur indépendant, jamais une alerte pour Jacob. */
+export const OGF_RE = /(?<![a-z0-9])(?:og[\s-]*factory|ogf)(?![a-z0-9])/i;
 
 export interface AlertDeps {
   core: Core;
@@ -94,6 +97,7 @@ const SKIP_LOG: Record<AlertSkipReason, string> = {
   sujet_inconnu: "le sujet du client n'est pas encore connu : question de qualification, pas d'alerte",
   echanges_sans_progression: "échanges sans progression : jamais un blocage",
   doublon: "même demande déjà signalée dans les dernières 24 h",
+  ogf: "OG Factory : revendeur indépendant, le bot redirige vers leurs coordonnées sans alerte",
   aucun_blocage: "le résumé indique qu'aucun blocage n'existe",
 };
 
@@ -117,6 +121,7 @@ export function precheckAlert(core: Core, input: AlertInput, now = Date.now()): 
     .all(input.waId, now - 24 * 3_600_000) as Array<{ dm: string; motif: string }>;
   const last = norm(input.dernierMessage).slice(0, 120);
   if (last && dup.some((d) => norm(d.dm ?? "").slice(0, 120) === last)) return "doublon";
+  if (input.explicite !== true && OGF_RE.test(`${input.dernierMessage} ${input.motif}`)) return "ogf";
   if (isAlertProtected(input)) return null;
   if (STALL_MOTIF_RE.test(input.motif)) return "echanges_sans_progression";
   const serviceEnCours = core.state.get(input.waId).serviceEnCours;

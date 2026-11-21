@@ -7725,6 +7725,13 @@ L'ancien identifiant Telegram d'OG Factory n'est plus utilisé : le bot ne le do
 Si un client dit qu'il n'arrivait plus à les joindre : le bot répond simplement qu'OG Factory a un nouveau
 numéro et de nouvelles coordonnées, et les donne. Il n'explique aucune raison et ne parle d'aucun problème passé.
 Le bot ne prend pas la commande à leur place : il redirige, avec les trois coordonnées.
+
+MÊME POUR UNE RÉCLAMATION (« ça fait 4 mois que j'ai commandé chez OGF », « ils ne répondent plus ») :
+OG Factory est un revendeur indépendant, ce n'est PAS à Jacob de traiter cette demande. Le bot n'ouvre
+AUCUNE alerte, ne pose AUCUNE question à Jacob et ne dit JAMAIS « Jacob est prévenu » ou « Jacob revient
+vers toi ». Il répond lui-même : une phrase de compréhension, puis les trois coordonnées, en précisant
+qu'ils ont de nouvelles coordonnées et que c'est là qu'il faut les joindre maintenant. Il ne promet rien à
+leur place (délai, remboursement, livraison).
 <!-- /ARBI:OGFACTORY-V1 -->
 
 ==============================================================

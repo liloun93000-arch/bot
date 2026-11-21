@@ -273,3 +273,19 @@ describe("garde-fou à la source : pas d'alerte sans vrai besoin humain", () => 
     core.close();
   });
 });
+
+describe("OG Factory : jamais d'alerte pour Jacob", () => {
+  it("une réclamation sur OGF ne crée aucune alerte (même motif « réclamation »), mais un bouton explicite oui", async () => {
+    const core = testCore("+33699999999");
+    core.contacts.upsert(WA_ID);
+    core.messages.insert(WA_ID, "user", "Ça fait 4 mois j'ai commandé chez ogf ?!");
+    const base = { waId: WA_ID, motif: "réclamation ou problème", intention: "reclamation", categorie: "Autre", dernierMessage: "Ça fait 4 mois j'ai commandé chez ogf ?!" };
+    const r = await triggerAlert(testAlertDeps(core, fakeWa()), base);
+    expect(r.skipped).toBe("ogf");
+    expect(core.alerts.open()).toHaveLength(0);
+    const r2 = await triggerAlert(testAlertDeps(core, fakeWa()), { ...base, explicite: true });
+    expect(r2.skipped).toBeUndefined();
+    expect(core.alerts.open()).toHaveLength(1);
+    core.close();
+  });
+});

@@ -477,3 +477,29 @@ it("top 10 : seulement de vraies questions", async () => {
   for (const t of ["je t'ai envoyé la photo", "c'est bon pour moi", "ok je regarde ça", "Et oui c'est bon", "merci beaucoup frère", "d'accord je vois"]) expect(looksLikeQuestion(t), t).toBe(false);
   for (const t of ["Combien le 18 Pro Max", "vous livrez en Belgique", "je cherche un fournisseur de sneakers", "c'est possible en 4 fois ?", "t'as des drones"]) expect(looksLikeQuestion(t), t).toBe(true);
 });
+
+describe("OG Factory : l'IA reçoit la consigne et le garde-fou la ramène aux coordonnées", () => {
+  it("le prompt contient la règle OG Factory avec les trois coordonnées", () => {
+    const p = buildStaticPrompt("cat", []);
+    expect(p).toContain("OG FACTORY");
+    expect(p).toContain("https://www.ogfactory.shop");
+    expect(p).toContain("+33 7 80 96 29 20");
+    expect(p).toContain("@Ogfactoryshop_bot");
+    expect(p).toMatch(/NI raise_alert NI ask_director/);
+  });
+
+  it("si le modèle tente raise_alert sur une réclamation OGF : aucune alerte, il est renvoyé vers les coordonnées", async () => {
+    const env = setup([
+      { tool: "raise_alert", input: { motif: "réclamation ou problème", categorie: "Autre" } },
+      { text: "Je comprends ton agacement 🙏 OG Factory a de nouvelles coordonnées : https://www.ogfactory.shop, +33 7 80 96 29 20 ou @Ogfactoryshop_bot." },
+    ]);
+    await clientSays(env, "Ça fait 4 mois j ai commandé chez ogf ?!");
+    expect(env.core.alerts.countOpen()).toBe(0);
+    const out = toClient(env).map((m) => m.text).join("\n");
+    expect(out).toContain("ogfactory.shop");
+    expect(out).not.toMatch(/Jacob/);
+    // le résultat de l'outil renvoyé au modèle lui rappelle les coordonnées
+    expect(JSON.stringify(env.llm.seen.at(-1)?.messages)).toContain("OG Factory est un revendeur indépendant");
+    env.core.close();
+  });
+});

@@ -486,6 +486,7 @@ describe("OG Factory : l'IA reçoit la consigne et le garde-fou la ramène aux c
     expect(p).toContain("+33 7 80 96 29 20");
     expect(p).toContain("@Ogfactoryshop_bot");
     expect(p).toMatch(/NI raise_alert NI ask_director/);
+    expect(p).toContain("soucis avec la justice en Chine");
   });
 
   it("si le modèle tente raise_alert sur une réclamation OGF : aucune alerte, il est renvoyé vers les coordonnées", async () => {

@@ -38,6 +38,8 @@ export async function resolveWabaId(e: MetaEnv): Promise<{ wabaId: string | null
     const scopes: Array<{ scope?: string; target_ids?: string[] }> = dbg.json?.data?.granular_scopes ?? [];
     const candidates = scopes.filter((s) => s.scope === "whatsapp_business_management").flatMap((s) => s.target_ids ?? []);
     if (candidates.length === 0) {
+      const viaBiz = await wabaViaMe(e);
+      if (viaBiz) return { wabaId: viaBiz, source: "découvert via les entreprises du jeton" };
       return { wabaId: null, source: "", error: `Aucun compte WhatsApp Business trouvé pour ce jeton (HTTP ${dbg.status}) : renseigner WABA_ID.` };
     }
     if (candidates.length === 1 || !e.phoneNumberId) return { wabaId: candidates[0]!, source: "découvert via le jeton" };
@@ -48,6 +50,30 @@ export async function resolveWabaId(e: MetaEnv): Promise<{ wabaId: string | null
     return { wabaId: candidates[0]!, source: "découvert via le jeton (premier compte)" };
   } catch (err) {
     return { wabaId: null, source: "", error: err instanceof Error ? err.message : String(err) };
+  }
+}
+
+/** Plan B : entreprises accessibles avec le jeton, puis leurs comptes WhatsApp (celui qui possède le numéro). */
+async function wabaViaMe(e: MetaEnv): Promise<string | null> {
+  try {
+    const direct = await getJson(e, `/me/owned_whatsapp_business_accounts?fields=id&limit=50`);
+    const ids: string[] = ((direct.json?.data ?? []) as Array<{ id?: string }>).flatMap((w) => (w.id ? [w.id] : []));
+    const biz = await getJson(e, `/me/businesses?fields=id&limit=50`);
+    for (const b of (biz.json?.data ?? []) as Array<{ id?: string }>) {
+      if (!b.id) continue;
+      const w = await wabasOfBusiness(e, b.id);
+      if (w) ids.push(w);
+    }
+    if (ids.length === 0) return null;
+    if (e.phoneNumberId) {
+      for (const id of ids) {
+        const nums = await getJson(e, `/${id}/phone_numbers?fields=id`);
+        if ((nums.json?.data ?? []).some((p: { id?: string }) => p.id === e.phoneNumberId)) return id;
+      }
+    }
+    return ids[0]!;
+  } catch {
+    return null;
   }
 }
 

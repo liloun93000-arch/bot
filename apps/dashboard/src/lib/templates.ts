@@ -4,6 +4,8 @@
  * Réglages quand `?check=1` est présent.
  */
 
+import { resolveWabaId } from "@arbi/core";
+
 export interface TemplateStatus {
   name: string;
   status: string;
@@ -17,14 +19,15 @@ export interface TemplateCheckResult {
 }
 
 export async function checkWhatsAppTemplates(): Promise<TemplateCheckResult> {
-  const wabaId = process.env.WABA_ID ?? "";
   const token = process.env.WHATSAPP_TOKEN ?? "";
   const apiBase = process.env.GRAPH_API_BASE ?? "https://graph.facebook.com/v21.0";
+  const waba = await resolveWabaId({ token, wabaId: process.env.WABA_ID, phoneNumberId: process.env.PHONE_NUMBER_ID, apiBase });
+  const wabaId = waba.wabaId ?? "";
   if (!wabaId || !token) {
     return {
       ok: false,
       templates: [],
-      error: "WABA_ID ou WHATSAPP_TOKEN non configuré côté serveur — impossible d'interroger Meta.",
+      error: `Compte WhatsApp Business introuvable (${waba.error ?? "WABA_ID et WHATSAPP_TOKEN non configurés"}) — impossible d'interroger Meta.`,
     };
   }
   try {
@@ -82,11 +85,12 @@ export interface CreateTemplateResult {
 export async function createRelanceTemplate(
   language = "fr",
 ): Promise<CreateTemplateResult> {
-  const wabaId = process.env.WABA_ID ?? "";
   const token = process.env.WHATSAPP_TOKEN ?? "";
   const apiBase = process.env.GRAPH_API_BASE ?? "https://graph.facebook.com/v21.0";
+  const waba = await resolveWabaId({ token, wabaId: process.env.WABA_ID, phoneNumberId: process.env.PHONE_NUMBER_ID, apiBase });
+  const wabaId = waba.wabaId ?? "";
   if (!wabaId || !token) {
-    return { ok: false, error: "WABA_ID ou WHATSAPP_TOKEN non configuré côté serveur." };
+    return { ok: false, error: `Compte WhatsApp Business introuvable : ${waba.error ?? "WABA_ID et WHATSAPP_TOKEN non configurés"}` };
   }
   try {
     const response = await fetch(`${apiBase}/${wabaId}/message_templates`, {

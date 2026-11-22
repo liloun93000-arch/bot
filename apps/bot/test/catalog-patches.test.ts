@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { APPLE_EDITS } from "../src/apple-moq-edits";
 import { applyLlcSection, applyMotosSection, LLC_MARKER, MOTOS_MARKER, patchAppleNoMoq, patchCatalogue, patchOgFactory } from "../src/catalog-patches";
 import { buildStaticPrompt } from "../src/prompt";
 import { testCore } from "./helpers";
@@ -135,8 +136,9 @@ describe("Fournisseur Apple : plus de MOQ de 20 pièces", () => {
   });
 
   it("met à jour le catalogue en ligne (ancien texte livré) sans doublon, historique conservé", async () => {
-    const { execFileSync } = await import("node:child_process");
-    const old = execFileSync("git", ["show", "HEAD:data/catalogue.md"], { cwd: join(__dirname, "../../.."), maxBuffer: 50_000_000 }).toString();
+    // « Ancien » catalogue : le livré sans le bloc Apple, auquel on remet les anciens passages « 20 pièces ».
+    const sansBloc = FILE.replace(/<!-- ARBI:APPLE-NOMOQ-V1 -->[\s\S]*?<!-- \/ARBI:APPLE-NOMOQ-V1 -->\n?/, "");
+    const old = `${sansBloc}\n${APPLE_EDITS.map(([from]) => from).join("\n")}`;
     const core = testCore();
     core.catalogue.save(old, "avant");
     expect(old).toMatch(/20 pièces/);

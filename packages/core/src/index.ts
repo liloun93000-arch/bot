@@ -27,3 +27,4 @@ export * from "./vision";
 export * from "./telegram";
 export * from "./whatsapp";
 export * as schema from "./schema";
+export * from "./meta-templates";

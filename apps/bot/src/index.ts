@@ -15,6 +15,8 @@ import {
   withUsageMetering,
   type AlertDeps,
   reclassifyQuestions,
+  ensureRelanceTemplate,
+  RELANCE_TEMPLATE_NAME,
 } from "@arbi/core";
 import { readFile } from "node:fs/promises";
 import { cleanupSmallTalkAlerts, installCatalogues, installScript, fixCasquettesPrice, auditCasquettes } from "./catalog-seed";
@@ -45,6 +47,25 @@ async function main(): Promise<void> {
   patchCatalogue(core, log);
   patchOgFactory(core, log);
   patchAppleNoMoq(core, log);
+  // Templates WhatsApp (relance hors fenêtre 24 h) : retrouve le compte WABA, journalise l'état réel chez Meta et
+  // soumet le template de relance s'il n'existe pas. En arrière-plan : ne retarde jamais le démarrage.
+  void (async () => {
+    try {
+      const env = { token: config.WHATSAPP_TOKEN, wabaId: process.env.WABA_ID, phoneNumberId: process.env.PHONE_NUMBER_ID, apiBase: process.env.GRAPH_API_BASE };
+      const out = await ensureRelanceTemplate(env);
+      log.info(
+        { action: out.action, detail: out.detail, wabaId: out.wabaId, templates: out.templates.map((t) => `${t.name}|${t.language}|${t.status}|${t.category ?? ""}`) },
+        "meta_templates_check",
+      );
+      const usable = out.action === "deja_approuve" || out.action === "en_attente" || out.action === "soumis";
+      if (usable && !String(core.settings.get("relance_template_name") ?? "").trim()) {
+        core.settings.set("relance_template_name", RELANCE_TEMPLATE_NAME);
+        log.info({ nom: RELANCE_TEMPLATE_NAME }, "relance_template_name_set");
+      }
+    } catch (err) {
+      log.error({ err: String(err) }, "meta_templates_check_failed");
+    }
+  })();
   // Recalcul unique des anciennes demandes (catégories + exclusion des politesses), sans IA ni suppression.
   if (core.settings.get("demandes_recalcul_v1") !== true) {
     const r = reclassifyQuestions(core);

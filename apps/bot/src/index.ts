@@ -54,8 +54,7 @@ async function main(): Promise<void> {
       const env = { token: config.WHATSAPP_TOKEN, wabaId: process.env.WABA_ID, phoneNumberId: process.env.PHONE_NUMBER_ID, apiBase: process.env.GRAPH_API_BASE };
       const out = await ensureRelanceTemplate(env);
       log.info(
-        { action: out.action, detail: out.detail, wabaId: out.wabaId, templates: out.templates.map((t) => `${t.name}|${t.language}|${t.status}|${t.category ?? ""}`) },
-        "meta_templates_check",
+        `meta_templates_check action=${out.action} waba=${out.wabaId ?? "?"} detail=${String(out.detail ?? "").slice(0, 300)} templates=[${out.templates.map((t) => `${t.name}|${t.language}|${t.status}|${t.category ?? ""}`).join(", ")}]`,
       );
       const usable = out.action === "deja_approuve" || out.action === "en_attente" || out.action === "soumis";
       if (usable && !String(core.settings.get("relance_template_name") ?? "").trim()) {

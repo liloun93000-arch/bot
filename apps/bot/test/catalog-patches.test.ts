@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { applyLlcSection, applyMotosSection, LLC_MARKER, MOTOS_MARKER, patchCatalogue, patchOgFactory } from "../src/catalog-patches";
+import { applyLlcSection, applyMotosSection, LLC_MARKER, MOTOS_MARKER, patchAppleNoMoq, patchCatalogue, patchOgFactory } from "../src/catalog-patches";
 import { buildStaticPrompt } from "../src/prompt";
 import { testCore } from "./helpers";
 
@@ -120,3 +120,33 @@ describe("OG Factory : nouveau Telegram + site + numéro", () => {
   });
 });
 const patchOgFactoryOnce = (core: ReturnType<typeof testCore>) => patchOgFactory(core, silent);
+
+describe("Fournisseur Apple : plus de MOQ de 20 pièces", () => {
+  it("le catalogue livré n'impose plus 20 pièces, ne touche pas aux prix et pose le bloc prioritaire", () => {
+    // Les seules mentions de « 20 pièces » restantes sont des NÉGATIONS (« ne parle jamais… », « plus de MOQ… »).
+    const mentions = FILE.split("\n").filter((l) => /20 pi[eè]ces/i.test(l));
+    for (const l of mentions) expect(l, l).toMatch(/jamais|plus de MOQ|n'existe plus|atteindre 20/i);
+    expect(FILE).not.toMatch(/QUANTITÉ MINIMUM \(MOQ\) : 20/);
+    expect(FILE).toContain("AUCUNE QUANTITÉ MINIMUM (PAS DE MOQ)");
+    expect(FILE).toContain("iPhone 17 256 Go : 789 €");
+    expect(FILE).toContain("iPhone 18 Pro Max 256 Go : 1 204 à 1 388 €");
+    expect(FILE.split("<!-- ARBI:APPLE-NOMOQ-V1 -->")).toHaveLength(2);
+    expect(FILE.trimEnd().endsWith("FIN DU SCRIPT V9.2\n" + BAR)).toBe(true);
+  });
+
+  it("met à jour le catalogue en ligne (ancien texte livré) sans doublon, historique conservé", async () => {
+    const { execFileSync } = await import("node:child_process");
+    const old = execFileSync("git", ["show", "HEAD:data/catalogue.md"], { cwd: join(__dirname, "../../.."), maxBuffer: 50_000_000 }).toString();
+    const core = testCore();
+    core.catalogue.save(old, "avant");
+    expect(old).toMatch(/20 pièces/);
+    expect(patchAppleNoMoq(core, silent)).toBe(true);
+    const txt = core.catalogue.current().contenu;
+    expect(txt).not.toMatch(/20 pi[eè]ces minimum/i);
+    expect(txt).not.toMatch(/MOQ\) : 20/);
+    expect(txt).toContain("iPhone 17 256 Go : 789 €");
+    expect(patchAppleNoMoq(core, silent)).toBe(false);
+    expect(txt.split("<!-- ARBI:APPLE-NOMOQ-V1 -->")).toHaveLength(2);
+    core.close();
+  });
+});

@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import type { Core, Logger } from "@arbi/core";
+import { APPLE_EDITS } from "./apple-moq-edits";
 
 /**
  * Sections « gérées » du catalogue EN LIGNE (novembre 2026) : discours LLC / LTD, trois formules,
@@ -282,5 +283,43 @@ export function patchOgFactory(core: Core, log: Logger): boolean {
   if (next === current) return false;
   core.catalogue.save(next, "OG Factory : nouveau Telegram @Ogfactoryshop_bot + site + numéro — novembre 2026");
   log.info({ stamp }, "catalogue_ogfactory_patched");
+  return true;
+}
+
+export const APPLE_MARKER = "ARBI:APPLE-NOMOQ-V1";
+
+export const APPLE_SECTION = `==============================================================
+FOURNISSEUR APPLE / MULTIMARQUES (SECTION 38) — AUCUN MOQ
+==============================================================
+
+⚠️ CETTE SECTION PRIME sur toute mention contraire du catalogue.
+
+Le fournisseur Apple / multimarques de Hong Kong n'a AUCUNE quantité minimum (plus de MOQ de 20 pièces,
+mixable ou non). Le client peut commander à partir d'UNE SEULE pièce : iPhone, iPad, Mac, AirPods, consoles,
+photo/vidéo, neuf ou occasion. Le bot ne parle JAMAIS d'un minimum de 20 pièces pour ce fournisseur et ne
+propose plus de « compléter avec des accessoires pour atteindre 20 ». Les prix du catalogue ne changent pas ;
+le port reste inclus quelle que soit la quantité.
+`;
+
+/** Retire le MOQ de 20 pièces d'Apple : remplace les passages exacts connus, puis pose le bloc prioritaire. */
+export function applyAppleNoMoq(content: string): string {
+  let out = content;
+  for (const [from, to] of APPLE_EDITS) if (out.includes(from)) out = out.replace(from, to);
+  const block = `${open(APPLE_MARKER)}\n${APPLE_SECTION}${close(APPLE_MARKER)}`;
+  if (out.includes(open(APPLE_MARKER))) return replaceBlock(out, APPLE_MARKER, APPLE_SECTION);
+  const fin = /\n={10,}\nFIN DU SCRIPT[^\n]*\n={10,}\s*$/.exec(out);
+  if (fin) return `${out.slice(0, fin.index).trimEnd()}\n\n${block}\n${out.slice(fin.index)}`;
+  return `${out.trimEnd()}\n\n${block}\n`;
+}
+
+export function patchAppleNoMoq(core: Core, log: Logger): boolean {
+  const current = core.catalogue.current().contenu;
+  if (!current) return false;
+  const stamp = shortHash(APPLE_SECTION + JSON.stringify(APPLE_EDITS));
+  if (!core.sends.claim(`patch:catalogue-apple-nomoq:${stamp}`)) return false;
+  const next = applyAppleNoMoq(current);
+  if (next === current) return false;
+  core.catalogue.save(next, "Fournisseur Apple : suppression du MOQ de 20 pièces — novembre 2026");
+  log.info({ stamp }, "catalogue_apple_nomoq_patched");
   return true;
 }

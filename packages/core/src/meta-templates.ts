@@ -64,6 +64,27 @@ export async function listMetaTemplates(e: MetaEnv, wabaId: string): Promise<{ o
   }
 }
 
+/** Comptes WhatsApp Business d'une entreprise Meta ; renvoie celui qui possède le numéro (ou le premier). */
+export async function wabasOfBusiness(e: MetaEnv, businessId: string): Promise<string | null> {
+  try {
+    const ids: string[] = [];
+    for (const edge of ["owned_whatsapp_business_accounts", "client_whatsapp_business_accounts"]) {
+      const r = await getJson(e, `/${businessId}/${edge}?fields=id&limit=50`);
+      for (const w of (r.json?.data ?? []) as Array<{ id?: string }>) if (w.id) ids.push(w.id);
+    }
+    if (ids.length === 0) return null;
+    if (e.phoneNumberId) {
+      for (const id of ids) {
+        const nums = await getJson(e, `/${id}/phone_numbers?fields=id`);
+        if ((nums.json?.data ?? []).some((p: { id?: string }) => p.id === e.phoneNumberId)) return id;
+      }
+    }
+    return ids[0]!;
+  } catch {
+    return null;
+  }
+}
+
 export const RELANCE_TEMPLATE_NAME = "relance_client";
 /** {{1}} = message personnalisé. Meta refuse un corps qui commence ou finit par une variable : texte fixe autour. */
 export const RELANCE_TEMPLATE_BODY = "ARBI JACOB\n\n{{1}}\n\nRéponds ici pour continuer.";
@@ -103,7 +124,15 @@ export interface RelanceTemplateOutcome {
 export async function ensureRelanceTemplate(e: MetaEnv, language = "fr"): Promise<RelanceTemplateOutcome> {
   const waba = await resolveWabaId(e);
   if (!waba.wabaId) return { action: "sans_compte", detail: waba.error ?? "compte WhatsApp Business introuvable", templates: [], wabaId: null };
-  const list = await listMetaTemplates(e, waba.wabaId);
+  let list = await listMetaTemplates(e, waba.wabaId);
+  if (!list.ok && e.wabaId) {
+    // L'identifiant fourni est peut-être celui de l'entreprise (portefeuille), pas celui du compte WhatsApp.
+    const found = await wabasOfBusiness(e, e.wabaId);
+    if (found) {
+      waba.wabaId = found;
+      list = await listMetaTemplates(e, found);
+    }
+  }
   if (!list.ok) return { action: "echec", detail: list.error ?? "lecture des templates impossible", templates: [], wabaId: waba.wabaId };
   const mine = list.templates.filter((t) => t.name === RELANCE_TEMPLATE_NAME);
   const approved = mine.find((t) => t.status === "APPROVED" && t.language.startsWith(language));

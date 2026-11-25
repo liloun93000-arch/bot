@@ -81,12 +81,16 @@ const webhookStatusSchema = z.looseObject({
 export function recordStatuses(
   core: Pick<Core, "delivery">,
   statuses: z.infer<typeof webhookStatusSchema>[],
+  log?: { info: (msg: string) => void },
 ): number {
   let recorded = 0;
   for (const s of statuses) {
     if (!s.id || !isDeliveryStatus(s.status)) continue;
     const seconds = Number(s.timestamp);
     const err = s.errors?.[0];
+    if (s.status === "failed") {
+      log?.info(`delivery_failed to=${s.recipient_id ?? "?"} code=${err?.code ?? "?"} titre=${String(err?.title ?? "").slice(0, 120)} message=${String(err?.message ?? "").slice(0, 300)}`);
+    }
     core.delivery.record({
       wamid: s.id,
       status: s.status,
@@ -255,7 +259,7 @@ export function buildServer(deps: ServerDeps): FastifyInstance {
         const value = change.value;
         if (value.statuses?.length) {
           try {
-            const recorded = recordStatuses(core, value.statuses);
+            const recorded = recordStatuses(core, value.statuses, log);
             log.debug({ count: value.statuses.length, recorded }, "statuses_received");
           } catch (err) {
             // Un accusé non enregistré ne doit jamais faire échouer le webhook.

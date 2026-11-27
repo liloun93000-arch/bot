@@ -160,9 +160,12 @@ export async function ensureRelanceTemplate(e: MetaEnv, language = "fr"): Promis
     }
   }
   if (!list.ok) {
-    const node = await getJson(e, `/${waba.wabaId}?fields=id,name,verified_name,display_phone_number,whatsapp_business_account`);
-    const phone = e.phoneNumberId ? await getJson(e, `/${e.phoneNumberId}?fields=id,verified_name,display_phone_number,whatsapp_business_account`) : null;
-    const diag = ` | id_fourni=${JSON.stringify(node.json).slice(0, 300)} (HTTP ${node.status}) | PHONE_NUMBER_ID==id_fourni:${e.phoneNumberId === waba.wabaId} | numero=${phone ? JSON.stringify(phone.json).slice(0, 300) : "?"}`;
+    const node = await getJson(e, `/${waba.wabaId}?metadata=1&fields=id,name`);
+    const own = await getJson(e, `/${waba.wabaId}/owned_whatsapp_business_accounts?fields=id,name&limit=20`);
+    const cli = await getJson(e, `/${waba.wabaId}/client_whatsapp_business_accounts?fields=id,name&limit=20`);
+    const apps = await getJson(e, `/${waba.wabaId}/subscribed_apps`);
+    const type = (node.json as { metadata?: { type?: string } })?.metadata?.type ?? "?";
+    const diag = ` | type=${type} node=${JSON.stringify({ id: node.json?.id, name: node.json?.name, err: node.json?.error?.message }).slice(0, 200)} | owned=${JSON.stringify(own.json).slice(0, 250)} | client=${JSON.stringify(cli.json).slice(0, 250)} | subscribed=${JSON.stringify(apps.json).slice(0, 150)}`;
     list.error = `${list.error ?? ""}${diag}`;
   }
   if (!list.ok) return { action: "echec", detail: list.error ?? "lecture des templates impossible", templates: [], wabaId: waba.wabaId };

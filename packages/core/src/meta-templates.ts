@@ -159,6 +159,12 @@ export async function ensureRelanceTemplate(e: MetaEnv, language = "fr"): Promis
       list = await listMetaTemplates(e, found);
     }
   }
+  if (!list.ok) {
+    const node = await getJson(e, `/${waba.wabaId}?fields=id,name,verified_name,display_phone_number,whatsapp_business_account`);
+    const phone = e.phoneNumberId ? await getJson(e, `/${e.phoneNumberId}?fields=id,verified_name,display_phone_number,whatsapp_business_account`) : null;
+    const diag = ` | id_fourni=${JSON.stringify(node.json).slice(0, 300)} (HTTP ${node.status}) | PHONE_NUMBER_ID==id_fourni:${e.phoneNumberId === waba.wabaId} | numero=${phone ? JSON.stringify(phone.json).slice(0, 300) : "?"}`;
+    list.error = `${list.error ?? ""}${diag}`;
+  }
   if (!list.ok) return { action: "echec", detail: list.error ?? "lecture des templates impossible", templates: [], wabaId: waba.wabaId };
   const mine = list.templates.filter((t) => t.name === RELANCE_TEMPLATE_NAME);
   const approved = mine.find((t) => t.status === "APPROVED" && t.language.startsWith(language));

@@ -23,6 +23,7 @@ import { cleanupSmallTalkAlerts, installCatalogues, installScript, fixCasquettes
 import { patchAppleNoMoq, patchCatalogue, patchOgFactory } from "./catalog-patches";
 import { seedKnowledgeBase } from "./kb-seed";
 import { relanceTick } from "./relance";
+import { resendFailedMessages } from "./resend-failed";
 import { dirname, join } from "node:path";
 import { SalesAgent } from "./agent";
 import { loadConfig } from "./config";
@@ -269,6 +270,14 @@ async function main(): Promise<void> {
   }, 15 * 60 * 1000);
 
   // Relance automatique des clients silencieux (désactivée par défaut, réglée dans Réglages).
+  // Renvoi unique des messages refusés par Meta pour cause de paiement (code 131042), une fois le paiement réglé.
+  setTimeout(() => {
+    void resendFailedMessages({
+      core,
+      sendText: (waId, text) => wa.sendText(waId, text),
+      log: { info: (m) => log.info(m), warn: (m) => log.warn(m) },
+    }).catch((err) => log.error({ err: String(err) }, "resend_failed_crashed"));
+  }, 60_000);
   const relanceTimer = setInterval(() => {
     void relanceTick({ core, wa, llm, model: config.ANTHROPIC_MODEL, log });
   }, 5 * 60 * 1000);

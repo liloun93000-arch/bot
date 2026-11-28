@@ -16,6 +16,7 @@ import {
   type AlertDeps,
   reclassifyQuestions,
   ensureRelanceTemplate,
+  isDirector,
   RELANCE_TEMPLATE_NAME,
 } from "@arbi/core";
 import { readFile } from "node:fs/promises";
@@ -24,6 +25,7 @@ import { patchAppleNoMoq, patchCatalogue, patchOgFactory } from "./catalog-patch
 import { seedKnowledgeBase } from "./kb-seed";
 import { relanceTick } from "./relance";
 import { resendFailedMessages } from "./resend-failed";
+import { answerUnanswered } from "./catchup";
 import { dirname, join } from "node:path";
 import { SalesAgent } from "./agent";
 import { loadConfig } from "./config";
@@ -278,6 +280,15 @@ async function main(): Promise<void> {
       log: { info: (m) => log.info(m), warn: (m) => log.warn(m) },
     }).catch((err) => log.error({ err: String(err) }, "resend_failed_crashed"));
   }, 60_000);
+  // Rattrapage unique : répondre aux clients restés sans réponse pendant la panne de l'IA (fenêtre 24 h ouverte).
+  setTimeout(() => {
+    void answerUnanswered({
+      core,
+      push: (waId, item) => queue.push(waId, item),
+      isDirector: (waId) => isDirector(core, waId),
+      log: { info: (m) => log.info(m) },
+    }).catch((err) => log.error({ err: String(err) }, "catchup_crashed"));
+  }, 90_000);
   const relanceTimer = setInterval(() => {
     void relanceTick({ core, wa, llm, model: config.ANTHROPIC_MODEL, log });
   }, 5 * 60 * 1000);

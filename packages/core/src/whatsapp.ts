@@ -409,7 +409,7 @@ export class WhatsAppClient {
       const metaCode = metaErrorCode(errorBody);
       this.log.error(
         { waId, kind, status: response.status, metaCode, body: errorBody.slice(0, 500) },
-        "whatsapp_send_failed",
+        `whatsapp_send_failed to=${waId} kind=${kind} http=${response.status} code=${metaCode ?? "?"} body=${errorBody.slice(0, 300)}`,
       );
       const reason =
         metaCode !== undefined && META_OUTSIDE_WINDOW_CODES.has(metaCode)

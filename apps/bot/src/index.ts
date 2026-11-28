@@ -169,7 +169,7 @@ async function main(): Promise<void> {
     config.DEBOUNCE_MS,
     handler,
     (err, waId) => {
-      log.error({ waId, err: String(err) }, "batch_processing_error");
+      log.error({ waId, err: String(err) }, `batch_processing_error wa=${waId} err=${String(err).slice(0, 400)} stack=${String((err as Error)?.stack ?? "").split("\n").slice(1, 4).join(" | ").slice(0, 400)}`);
     },
     // Un message qui arrive pendant que le bot rédige rend sa réponse
     // obsolète : on coupe, et la reprise repart avec le fil complet.

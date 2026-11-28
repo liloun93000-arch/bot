@@ -69,7 +69,7 @@ export async function describeImage(
     return text.slice(0, 800);
   } catch (err) {
     // Typiquement : le modèle ou l'endpoint n'accepte pas les images.
-    log.error({ err: String(err) }, "image_analysis_failed");
+    log.error({ err: String(err) }, `image_analysis_failed err=${String(err).slice(0, 400)}`);
     return null;
   }
 }

@@ -89,7 +89,7 @@ async function askLlm(
       .trim();
     return text || null;
   } catch (err) {
-    deps.log.error({ err: String(err), tag }, "director_llm_failed");
+    deps.log.error({ err: String(err), tag }, `director_llm_failed tag=${tag} err=${String(err).slice(0, 400)}`);
     return null;
   }
 }
